@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Target, Activity, Dumbbell, Zap } from 'lucide-react';
+import { Users, Target, Activity, Dumbbell, Zap, User } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -17,7 +17,11 @@ interface WorkoutCalendarViewProps {
   plan: GenerateTailoredWorkoutPlanOutput;
 }
 
-const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: GenerateTailoredWorkoutPlanOutput['strength_focus_plan']}) => {
+const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: NonNullable<GenerateTailoredWorkoutPlanOutput['strength_focus_plan' | 'individual_plan']>}) => {
+  if (!dailyWorkouts || dailyWorkouts.length === 0) {
+    return <p className="text-muted-foreground">No workouts scheduled for this plan.</p>
+  }
+  
   return (
      <div className="grid grid-cols-1 gap-4">
       {dailyWorkouts.map((dailyWorkout) => (
@@ -82,13 +86,15 @@ const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: GenerateTailore
 
 
 export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
+  const isIndividualPlan = !!plan.individual_plan;
+
   return (
     <div className="space-y-6">
       
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Target className="mr-2" /> Common Unit Weaknesses
+              <Target className="mr-2" /> {isIndividualPlan ? 'Personal Weaknesses' : 'Common Unit Weaknesses'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -102,25 +108,28 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
       
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center"><Activity className="mr-2" /> Weekly Schedule</h2>
-        <Tabs defaultValue="strength">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="strength">
-              <Dumbbell className="mr-2" /> Strength Plan
-            </TabsTrigger>
-            <TabsTrigger value="running">
-              <Zap className="mr-2" /> Running Plan
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="strength" className="mt-4">
-             <DailyWorkoutDisplay dailyWorkouts={plan.strength_focus_plan} />
-          </TabsContent>
-          <TabsContent value="running" className="mt-4">
-            <DailyWorkoutDisplay dailyWorkouts={plan.running_focus_plan} />
-          </TabsContent>
-        </Tabs>
+        
+        {isIndividualPlan && plan.individual_plan ? (
+            <DailyWorkoutDisplay dailyWorkouts={plan.individual_plan} />
+        ) : (
+            <Tabs defaultValue="strength">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="strength">
+                    <Dumbbell className="mr-2" /> Strength Plan
+                    </TabsTrigger>
+                    <TabsTrigger value="running">
+                    <Zap className="mr-2" /> Running Plan
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="strength" className="mt-4">
+                    {plan.strength_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.strength_focus_plan} />}
+                </TabsContent>
+                <TabsContent value="running" className="mt-4">
+                    {plan.running_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.running_focus_plan} />}
+                </TabsContent>
+            </Tabs>
+        )}
       </div>
     </div>
   );
 }
-
-    

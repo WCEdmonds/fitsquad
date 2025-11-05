@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Generates tailored workout plans for units based on aggregated fitness data and training goals.
+ * @fileOverview Generates tailored workout plans for units or individuals based on fitness data, goals, and equipment.
  *
  * - generateTailoredWorkoutPlan - A function that generates tailored workout plans.
  * - GenerateTailoredWorkoutPlanInput - The input type for the generateTailoredWorkoutPlan function.
@@ -15,21 +15,22 @@ const GenerateTailoredWorkoutPlanInputSchema = z.object({
   fitnessData: z
     .string()
     .describe(
-      'A collection of fitness data for all soldiers in the unit. Each entry includes AFT scores, run times, and other relevant health information.'
+      'A collection of fitness data for all soldiers in the unit, or for a single soldier. Each entry includes AFT scores, run times, and other relevant health information.'
     ),
   trainingGoals: z
     .string()
-
     .describe(
-      'Specific training goals for the unit, such as improving AFT scores, reducing run times, or increasing overall fitness levels.'
+      'Specific training goals for the unit or individual, such as improving AFT scores, reducing run times, or increasing overall fitness levels.'
     ),
   additionalContext: z
     .string()
     .optional()
     .describe(
-      'Additional context or specific needs for the unit, such as upcoming deployments or specific mission requirements.'
+      'Additional context or specific needs, such as upcoming deployments or specific mission requirements.'
     ),
-  days: z.array(z.string()).describe('The days of the week to generate the plan for.')
+  days: z.array(z.string()).describe('The days of the week to generate the plan for.'),
+  equipmentAccess: z.enum(['gym', 'bodyweight']).optional().describe("The user's access to equipment. Either 'gym' or 'bodyweight' only."),
+  planType: z.enum(['unit', 'individual']).describe("The type of plan to generate, either for a 'unit' or an 'individual' soldier.")
 });
 export type GenerateTailoredWorkoutPlanInput = z.infer<
   typeof GenerateTailoredWorkoutPlanInputSchema
@@ -55,8 +56,10 @@ const DailyWorkoutSchema = z.object({
 const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   title: z.string().describe("A title for the workout plan, e.g., 'Weekly Fitness Plan: Focus on Endurance'."),
   common_weaknesses: z.array(z.string()).describe('A list of common weaknesses identified from the data.'),
-  strength_focus_plan: z.array(DailyWorkoutSchema).describe('A complete weekly workout plan for the Strength Focus Group.'),
-  running_focus_plan: z.array(DailyWorkoutSchema).describe('A complete weekly workout plan for the Running Focus Group.'),
+  // Conditionally return one of these
+  strength_focus_plan: z.array(DailyWorkoutSchema).optional().describe('A complete weekly workout plan for the Strength Focus Group. (For unit plans)'),
+  running_focus_plan: z.array(DailyWorkoutSchema).optional().describe('A complete weekly workout plan for the Running Focus Group. (For unit plans)'),
+  individual_plan: z.array(DailyWorkoutSchema).optional().describe('A complete weekly workout plan for an individual soldier. (For individual plans)'),
 });
 
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
@@ -73,11 +76,15 @@ const prompt = ai.definePrompt({
   name: 'generateTailoredWorkoutPlanPrompt',
   input: {schema: GenerateTailoredWorkoutPlanInputSchema},
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
-  prompt: `You are an expert fitness trainer specializing in designing workout plans for military units.
+  prompt: `You are an expert fitness trainer specializing in designing workout plans for military personnel.
 
-Your task is to create two distinct, structured workout plans in JSON format for the specified days of the week: one for a 'Strength Focus Group' and one for a 'Running Focus Group'.
+Your task is to create a structured workout plan in JSON format based on the 'planType' provided.
 
-1.  **Analyze Data**: Analyze the provided fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
+**Plan Type: {{{planType}}}**
+
+{{#if (eq planType 'unit')}}
+### UNIT PLAN INSTRUCTIONS
+1.  **Analyze Data**: Analyze the provided unit fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
 2.  **Create Two Weekly Plans**: Generate two separate and complete workout plans for the specified days: {{#each days}}{{{this}}} {{/each}}.
     *   **Strength Focus Plan**: This plan should be designed for soldiers who need to improve their strength. It should emphasize strength-building exercises.
     *   **Running Focus Plan**: This plan should be for soldiers needing to improve their cardiovascular endurance and run times. It should include more running and endurance-focused activities.
@@ -87,7 +94,22 @@ Your task is to create two distinct, structured workout plans in JSON format for
     *   A simple warm-up routine.
     *   A list of main workout exercises for that group, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
     *   A simple cool-down routine.
-4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Ensure you populate both 'strength_focus_plan' and 'running_focus_plan' fields.
+4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Populate both 'strength_focus_plan' and 'running_focus_plan' fields. Do not populate 'individual_plan'.
+{{/if}}
+
+{{#if (eq planType 'individual')}}
+### INDIVIDUAL PLAN INSTRUCTIONS
+1.  **Analyze Data**: Analyze the provided individual soldier's fitness data to identify their personal weaknesses.
+2.  **Consider Equipment**: The soldier has access to: **{{{equipmentAccess}}}**. Tailor all exercises accordingly. If 'bodyweight', do not include exercises requiring gym equipment. If 'gym', you can include a mix of both.
+3.  **Create One Weekly Plan**: Generate a single, personalized workout plan for the specified days: {{#each days}}{{{this}}} {{/each}}.
+4.  **For the plan**, provide a complete schedule for the selected days. For each day, include:
+    *   Day of the week.
+    *   A clear focus (e.g., 'Full Body Strength', 'Interval Training').
+    *   A simple warm-up routine.
+    *   A list of main workout exercises tailored to the soldier's needs and equipment, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
+    *   A simple cool-down routine.
+5.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Populate the 'individual_plan' field. Do not populate 'strength_focus_plan' or 'running_focus_plan'.
+{{/if}}
 
 **Fitness Data:**
 {{{fitnessData}}}

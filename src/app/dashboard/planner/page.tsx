@@ -58,26 +58,49 @@ export default function PlannerPage() {
   }, [teamMembers, firestore]);
 
   async function handleFormSubmit(values: PlannerFormValues) {
-    if (!allSoldierData || allSoldierData.length === 0) {
-      toast({
-        title: "No Soldier Data",
-        description: "Cannot generate a plan without soldier fitness data.",
-        variant: "destructive",
-      });
-      return;
+    if (!user || !userAccount) return;
+    
+    let fitnessData;
+    let planType: 'unit' | 'individual';
+
+    if (userAccount.accountType === 'Soldier') {
+        const soldierData = allSoldierData.find(s => s.accountId === user.uid);
+        if (!soldierData) {
+            toast({
+                title: "No Fitness Data",
+                description: "You must log your benchmark fitness data before generating a plan.",
+                variant: "destructive",
+            });
+            return;
+        }
+        fitnessData = `Soldier: MDL score ${soldierData.mdl}, HRP score ${soldierData.hrp}, SDC score ${soldierData.sdc}, PLK score ${soldierData.plk}, 2MR score ${soldierData.twoMileRun}. Notes: ${soldierData.healthInfo}`;
+        planType = 'individual';
+    } else {
+        if (!allSoldierData || allSoldierData.length === 0) {
+            toast({
+                title: "No Soldier Data",
+                description: "Cannot generate a plan without soldier fitness data in your unit.",
+                variant: "destructive",
+            });
+            return;
+        }
+        fitnessData = allSoldierData.map(s => (
+            `Soldier (${s.memberEmail}): MDL score ${s.mdl}, HRP score ${s.hrp}, SDC score ${s.sdc}, PLK score ${s.plk}, 2MR score ${s.twoMileRun}. Notes: ${s.healthInfo}`
+        )).join('\n');
+        planType = 'unit';
     }
 
     setIsGenerating(true);
     setWorkoutPlan(null);
 
-    const fitnessData = allSoldierData.map(s => (
-      `Soldier (${s.memberEmail}): MDL score ${s.mdl}, HRP score ${s.hrp}, SDC score ${s.sdc}, PLK score ${s.plk}, 2MR score ${s.twoMileRun}. Notes: ${s.healthInfo}`
-    )).join('\n');
-
     try {
       const result = await generateTailoredWorkoutPlan({
-        ...values,
         fitnessData,
+        trainingGoals: values.trainingGoals,
+        additionalContext: values.additionalContext,
+        days: values.days,
+        equipmentAccess: values.equipmentAccess,
+        planType: planType,
       });
       setWorkoutPlan(result);
     } catch (error) {
@@ -135,11 +158,18 @@ export default function PlannerPage() {
           <CardHeader>
             <CardTitle>Fitness Plan Generator</CardTitle>
             <CardDescription>
-              Create a tailored workout plan for your unit based on their latest data.
+              {userAccount?.accountType === 'Soldier' 
+                ? "Create a workout plan tailored to your personal goals and data."
+                : "Create a tailored workout plan for your unit based on their latest data."
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PlannerForm onSubmit={handleFormSubmit} isLoading={isGenerating} />
+            <PlannerForm 
+                onSubmit={handleFormSubmit} 
+                isLoading={isGenerating} 
+                accountType={userAccount?.accountType}
+            />
           </CardContent>
         </Card>
       </div>
