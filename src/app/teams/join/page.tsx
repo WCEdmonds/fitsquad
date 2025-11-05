@@ -34,7 +34,7 @@ export default function JoinTeamPage() {
   const handleJoinTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamId) {
-      setError('Team ID is required.');
+      setError('Team Code is required.');
       return;
     }
      if (!user) {
@@ -51,7 +51,7 @@ export default function JoinTeamPage() {
       const teamSnapshot = await getDocs(query(collection(firestore, 'teams'), where('id', '==', teamId)));
 
       if (teamSnapshot.empty) {
-        setError('Team not found. Please check the ID and try again.');
+        setError('Team not found. Please check the code and try again.');
         setIsLoading(false);
         return;
       }
@@ -101,16 +101,16 @@ export default function JoinTeamPage() {
           </div>
           <CardTitle className="text-2xl">Join an Existing Team</CardTitle>
           <CardDescription>
-            Enter the Team ID provided by your supervisor or commander.
+            Enter the Team Code provided by your supervisor or commander.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleJoinTeam} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="team-id">Team ID</Label>
+              <Label htmlFor="team-id">Team Code</Label>
               <Input
                 id="team-id"
-                placeholder="Enter Team ID"
+                placeholder="Enter Team Code"
                 required
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
