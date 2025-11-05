@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Run, Dumbbell } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -158,7 +158,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                     <div className="font-medium">{soldier.name.split('@')[0]}</div>
                     {soldier.twoMileRun > 0 && soldier.twoMileRun < RUN_TIME_SCORE_THRESHOLD && (
                       <Badge variant="outline" className="text-blue-600 border-blue-600">
-                        <Run className="mr-1 h-3 w-3" /> Running Focus
+                        <Activity className="mr-1 h-3 w-3" /> Running Focus
                       </Badge>
                     )}
                     {soldier.hrp > 0 && soldier.hrp < HRP_SCORE_THRESHOLD && (
