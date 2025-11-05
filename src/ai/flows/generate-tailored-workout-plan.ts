@@ -140,7 +140,7 @@ const generateTailoredWorkoutPlanFlow = ai.defineFlow(
         if (error.message.includes('503')) {
             console.warn('Default model unavailable, falling back to gemini-pro.');
             const { output } = await ai.generate({
-                prompt: prompt.compile(input)!,
+                prompt: prompt.compile(input, { helpers: { eq: (a:any, b:any) => a === b } })!,
                 model: 'googleai/gemini-pro',
                 output: { schema: GenerateTailoredWorkoutPlanOutputSchema },
             });
