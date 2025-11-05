@@ -22,17 +22,28 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const [fallback, setFallback] = React.useState('');
 
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, 'accounts', user.uid);
   }, [firestore, user]);
 
-  const { data: userAccount } = useDoc<{firstName: string, lastName: string, accountType: string}>(userAccountRef);
+  const { data: userAccount, isLoading: isAccountLoading } = useDoc<{firstName: string, lastName: string, accountType: string}>(userAccountRef);
+
+  React.useEffect(() => {
+    if (!isUserLoading && !isAccountLoading) {
+      const firstInitial = userAccount?.firstName?.charAt(0) ?? '';
+      const lastInitial = userAccount?.lastName?.charAt(0) ?? '';
+      const emailInitial = user?.email?.charAt(0) ?? '';
+      setFallback(firstInitial + lastInitial || emailInitial);
+    }
+  }, [user, userAccount, isUserLoading, isAccountLoading]);
+
 
   const handleLogout = () => {
     auth.signOut();
@@ -52,7 +63,7 @@ export default function DashboardLayout({
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage src={user?.photoURL ?? 'https://picsum.photos/seed/user/100/100'} alt="Commander" data-ai-hint="person portrait" />
-                    <AvatarFallback>{userAccount?.lastName?.charAt(0) ?? user?.email?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{fallback}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
