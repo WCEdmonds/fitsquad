@@ -10,16 +10,17 @@ import {
 } from '@/components/ui/card';
 import { PlannerForm, type PlannerFormValues } from '@/components/planner-form';
 import { useToast } from "@/hooks/use-toast";
-import { generateTailoredWorkoutPlan } from '@/ai/flows/generate-tailored-workout-plan';
+import { generateTailoredWorkoutPlan, type GenerateTailoredWorkoutPlanOutput } from '@/ai/flows/generate-tailored-workout-plan';
 import { Bot, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
+import { WorkoutCalendarView } from '@/components/workout-calendar-view';
 
 export default function PlannerPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [workoutPlan, setWorkoutPlan] = useState<string | null>(null);
+  const [workoutPlan, setWorkoutPlan] = useState<GenerateTailoredWorkoutPlanOutput | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -68,7 +69,7 @@ export default function PlannerPage() {
     setWorkoutPlan(null);
 
     const fitnessData = allSoldierData.map(s => (
-      `Soldier (${s.memberEmail}): MDL ${s.mdl} lbs, HRP ${s.hrp} reps, SDC ${s.sdc}s, PLK ${s.plk}s, 2MR ${s.twoMileRun}s. Notes: ${s.healthInfo}`
+      `Soldier (${s.memberEmail}): MDL score ${s.mdl}, HRP score ${s.hrp}, SDC score ${s.sdc}, PLK score ${s.plk}, 2MR score ${s.twoMileRun}. Notes: ${s.healthInfo}`
     )).join('\n');
 
     try {
@@ -76,7 +77,7 @@ export default function PlannerPage() {
         ...values,
         fitnessData,
       });
-      setWorkoutPlan(result.workoutPlan);
+      setWorkoutPlan(result);
     } catch (error) {
       console.error('AI workout plan generation failed:', error);
       toast({
@@ -105,13 +106,13 @@ export default function PlannerPage() {
         </Card>
       </div>
       <div className="lg:col-span-2">
-        <Card className="h-full">
+        <Card className="h-full min-h-[600px]">
           <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle>Generated Plan</CardTitle>
+                  <CardTitle>{workoutPlan?.title ?? 'Generated Plan'}</CardTitle>
                   <CardDescription>
-                    Your AI-generated workout plan will appear here.
+                    {workoutPlan ? 'Review the weekly plan below.' : 'Your AI-generated workout plan will appear here.'}
                   </CardDescription>
                 </div>
                 {workoutPlan && (
@@ -142,11 +143,7 @@ export default function PlannerPage() {
                 <p className="text-muted-foreground">Fill out the form on the left to get started.</p>
               </div>
             )}
-            {workoutPlan && (
-              <div className="text-sm rounded-lg bg-muted p-4 whitespace-pre-wrap font-sans">
-                {workoutPlan}
-              </div>
-            )}
+            {workoutPlan && <WorkoutCalendarView plan={workoutPlan} />}
           </CardContent>
         </Card>
       </div>

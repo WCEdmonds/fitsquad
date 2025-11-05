@@ -33,13 +33,34 @@ export type GenerateTailoredWorkoutPlanInput = z.infer<
   typeof GenerateTailoredWorkoutPlanInputSchema
 >;
 
-const GenerateTailoredWorkoutPlanOutputSchema = z.object({
-  workoutPlan: z
-    .string()
-    .describe(
-      'A detailed workout plan. It should identify common weaknesses, suggest focus groups (e.g., running, strength), and provide specific exercises, sets, and reps for each group.'
-    ),
+const ExerciseSchema = z.object({
+  name: z.string().describe('Name of the exercise.'),
+  sets: z.string().describe('Number of sets.'),
+  reps: z.string().describe('Number of repetitions or duration.'),
+  rest: z.string().describe('Rest period between sets.'),
 });
+
+const DailyWorkoutSchema = z.object({
+  day: z.string().describe('Day of the week (e.g., Monday).'),
+  focus: z.string().describe('The main focus of the day (e.g., Strength, Endurance, Recovery).'),
+  warmup: z.string().describe('A brief description of the warm-up routine.'),
+  main_workout: z.array(ExerciseSchema).describe('A list of exercises for the main workout.'),
+  cooldown: z.string().describe('A brief description of the cool-down routine.'),
+});
+
+const FocusGroupSchema = z.object({
+  name: z.string().describe('Name of the focus group (e.g., "Running Focus Group").'),
+  description: z.string().describe('Who this group is for.'),
+  modifications: z.string().describe('Specific modifications or additional exercises for this group for the week.')
+});
+
+const GenerateTailoredWorkoutPlanOutputSchema = z.object({
+  title: z.string().describe("A title for the workout plan, e.g., 'Weekly Fitness Plan: Focus on Endurance'."),
+  common_weaknesses: z.array(z.string()).describe('A list of common weaknesses identified from the data.'),
+  focus_groups: z.array(FocusGroupSchema).describe('Suggested focus groups based on weaknesses.'),
+  weekly_plan: z.array(DailyWorkoutSchema).describe('A 5-day workout plan (Monday to Friday).'),
+});
+
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
   typeof GenerateTailoredWorkoutPlanOutputSchema
 >;
@@ -56,20 +77,27 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
   prompt: `You are an expert fitness trainer specializing in designing workout plans for military units.
 
-You will analyze the provided fitness data to identify common weaknesses and suggest logical focus groups (e.g., a "Running Focus Group" for slower runners, a "Strength Focus Group" for those needing to improve push-ups/sit-ups).
+Your task is to create a structured, one-week (5-day, Monday-Friday) workout plan in JSON format.
 
-Based on this analysis and the training goals, generate a tailored workout plan. The plan must be structured to cater to the different focus groups you've identified, providing specific exercises, sets, reps, and goals for each.
+1.  **Analyze Data**: Analyze the provided fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
+2.  **Define Focus Groups**: Based on the weaknesses, define 2-3 logical focus groups (e.g., a "Running Endurance Group" for slower runners, a "Core Strength Crew" for plank scores). Provide a brief description for each group and suggest specific modifications or extra work for them.
+3.  **Create Weekly Plan**: Generate a 5-day (Monday to Friday) workout plan. For each day, provide:
+    *   Day of the week.
+    *   A clear focus (e.g., 'Upper Body Strength', 'Cardio & Endurance', 'Active Recovery').
+    *   A simple warm-up routine.
+    *   A list of main workout exercises, including name, sets, reps (or duration), and rest time.
+    *   A simple cool-down routine.
+4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema.
 
-Fitness Data:
+**Fitness Data:**
 {{{fitnessData}}}
 
-Training Goals:
+**Training Goals:**
 {{{trainingGoals}}}
 
-Additional Context:
+**Additional Context:**
 {{{additionalContext}}}
-
-Generated Workout Plan:`,
+`,
 });
 
 const generateTailoredWorkoutPlanFlow = ai.defineFlow(
