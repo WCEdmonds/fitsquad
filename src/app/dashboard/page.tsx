@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Activity, Bot, Copy, Dumbbell, MoreHorizontal, Shield, ShieldCheck, Swords, UserPlus, Weight, Zap } from 'lucide-react';
+import { Activity, Bot, Copy, Dumbbell, MoreHorizontal, Shield, ShieldCheck, Swords, UserPlus, Users, Weight, Zap } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
