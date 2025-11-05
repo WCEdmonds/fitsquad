@@ -19,6 +19,7 @@ const GenerateTailoredWorkoutPlanInputSchema = z.object({
     ),
   trainingGoals: z
     .string()
+
     .describe(
       'Specific training goals for the unit, such as improving AFT scores, reducing run times, or increasing overall fitness levels.'
     ),
@@ -50,17 +51,12 @@ const DailyWorkoutSchema = z.object({
   cooldown: z.string().describe('A brief description of the cool-down routine.'),
 });
 
-const FocusGroupSchema = z.object({
-  name: z.string().describe('Name of the focus group (e.g., "Running Focus Group").'),
-  description: z.string().describe('Who this group is for.'),
-  modifications: z.string().describe('Specific modifications or additional exercises for this group for the week.')
-});
 
 const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   title: z.string().describe("A title for the workout plan, e.g., 'Weekly Fitness Plan: Focus on Endurance'."),
   common_weaknesses: z.array(z.string()).describe('A list of common weaknesses identified from the data.'),
-  focus_groups: z.array(FocusGroupSchema).describe('Suggested focus groups based on weaknesses.'),
-  weekly_plan: z.array(DailyWorkoutSchema).describe('A workout plan for the selected days.'),
+  strength_focus_plan: z.array(DailyWorkoutSchema).describe('A complete weekly workout plan for the Strength Focus Group.'),
+  running_focus_plan: z.array(DailyWorkoutSchema).describe('A complete weekly workout plan for the Running Focus Group.'),
 });
 
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
@@ -79,17 +75,19 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
   prompt: `You are an expert fitness trainer specializing in designing workout plans for military units.
 
-Your task is to create a structured, workout plan in JSON format for the specified days of the week.
+Your task is to create two distinct, structured workout plans in JSON format for the specified days of the week: one for a 'Strength Focus Group' and one for a 'Running Focus Group'.
 
 1.  **Analyze Data**: Analyze the provided fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
-2.  **Define Focus Groups**: Based on the weaknesses, define 2 logical focus groups: a "Running Focus Group" and a "Strength Focus Group". For each group, provide a brief description of who it's for and suggest specific, actionable modifications or extra work for them to do throughout the week. For example, the running group might add an extra half-mile to their runs, while the strength group adds an extra set to their pushups.
-3.  **Create Weekly Plan**: Generate a workout plan for the specified days: {{#each days}}{{{this}}} {{/each}}. For each day, provide:
+2.  **Create Two Weekly Plans**: Generate two separate and complete workout plans for the specified days: {{#each days}}{{{this}}} {{/each}}.
+    *   **Strength Focus Plan**: This plan should be designed for soldiers who need to improve their strength. It should emphasize strength-building exercises.
+    *   **Running Focus Plan**: This plan should be for soldiers needing to improve their cardiovascular endurance and run times. It should include more running and endurance-focused activities.
+3.  **For EACH of the two plans**, provide a complete schedule for the selected days. For each day, include:
     *   Day of the week.
-    *   A clear focus (e.g., 'Upper Body Strength', 'Cardio & Endurance', 'Active Recovery').
+    *   A clear focus (e.g., 'Upper Body Strength', 'Tempo Run', 'Active Recovery').
     *   A simple warm-up routine.
-    *   A list of main workout exercises for the whole unit, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
+    *   A list of main workout exercises for that group, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
     *   A simple cool-down routine.
-4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema.
+4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Ensure you populate both 'strength_focus_plan' and 'running_focus_plan' fields.
 
 **Fitness Data:**
 {{{fitnessData}}}
