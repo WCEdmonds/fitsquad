@@ -28,6 +28,7 @@ const GenerateTailoredWorkoutPlanInputSchema = z.object({
     .describe(
       'Additional context or specific needs for the unit, such as upcoming deployments or specific mission requirements.'
     ),
+  days: z.array(z.string()).describe('The days of the week to generate the plan for.')
 });
 export type GenerateTailoredWorkoutPlanInput = z.infer<
   typeof GenerateTailoredWorkoutPlanInputSchema
@@ -38,6 +39,7 @@ const ExerciseSchema = z.object({
   sets: z.string().describe('Number of sets.'),
   reps: z.string().describe('Number of repetitions or duration.'),
   rest: z.string().describe('Rest period between sets.'),
+  description: z.string().describe('A brief (1-2 sentence) description of how to perform the exercise.')
 });
 
 const DailyWorkoutSchema = z.object({
@@ -58,7 +60,7 @@ const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   title: z.string().describe("A title for the workout plan, e.g., 'Weekly Fitness Plan: Focus on Endurance'."),
   common_weaknesses: z.array(z.string()).describe('A list of common weaknesses identified from the data.'),
   focus_groups: z.array(FocusGroupSchema).describe('Suggested focus groups based on weaknesses.'),
-  weekly_plan: z.array(DailyWorkoutSchema).describe('A 5-day workout plan (Monday to Friday).'),
+  weekly_plan: z.array(DailyWorkoutSchema).describe('A workout plan for the selected days.'),
 });
 
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
@@ -77,15 +79,15 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
   prompt: `You are an expert fitness trainer specializing in designing workout plans for military units.
 
-Your task is to create a structured, one-week (5-day, Monday-Friday) workout plan in JSON format.
+Your task is to create a structured, workout plan in JSON format for the specified days of the week.
 
 1.  **Analyze Data**: Analyze the provided fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
 2.  **Define Focus Groups**: Based on the weaknesses, define 2 logical focus groups: a "Running Focus Group" and a "Strength Focus Group". For each group, provide a brief description of who it's for and suggest specific, actionable modifications or extra work for them to do throughout the week. For example, the running group might add an extra half-mile to their runs, while the strength group adds an extra set to their pushups.
-3.  **Create Weekly Plan**: Generate a 5-day (Monday to Friday) workout plan for the entire unit. For each day, provide:
+3.  **Create Weekly Plan**: Generate a workout plan for the specified days: {{#each days}}{{{this}}} {{/each}}. For each day, provide:
     *   Day of the week.
     *   A clear focus (e.g., 'Upper Body Strength', 'Cardio & Endurance', 'Active Recovery').
     *   A simple warm-up routine.
-    *   A list of main workout exercises for the whole unit, including name, sets, reps (or duration), and rest time.
+    *   A list of main workout exercises for the whole unit, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
     *   A simple cool-down routine.
 4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema.
 

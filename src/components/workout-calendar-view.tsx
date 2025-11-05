@@ -6,6 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users, Target, Activity } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface WorkoutCalendarViewProps {
   plan: GenerateTailoredWorkoutPlanOutput;
@@ -71,6 +77,7 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
                 
                 <div>
                   <h4 className="font-semibold text-sm mb-2">Main Workout</h4>
+                  <TooltipProvider>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -83,7 +90,16 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
                     <TableBody>
                       {dailyWorkout.main_workout.map((exercise, index) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{exercise.name}</TableCell>
+                          <TableCell className="font-medium">
+                             <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help underline decoration-dotted">{exercise.name}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">{exercise.description}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
                           <TableCell>{exercise.sets}</TableCell>
                           <TableCell>{exercise.reps}</TableCell>
                           <TableCell>{exercise.rest}</TableCell>
@@ -91,6 +107,7 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
                       ))}
                     </TableBody>
                   </Table>
+                  </TooltipProvider>
                 </div>
 
                 <div>

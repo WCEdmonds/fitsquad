@@ -6,6 +6,7 @@ import { z } from 'zod';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -14,10 +15,16 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Calendar, Loader2 } from 'lucide-react';
+import { Checkbox } from './ui/checkbox';
+
+const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
 
 const formSchema = z.object({
   trainingGoals: z.string().min(10, 'Please provide detailed training goals.'),
   additionalContext: z.string().optional(),
+  days: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: "You have to select at least one day.",
+  }),
 });
 
 export type PlannerFormValues = z.infer<typeof formSchema>;
@@ -33,6 +40,7 @@ export function PlannerForm({ onSubmit, isLoading }: PlannerFormProps) {
     defaultValues: {
       trainingGoals: 'Improve average AFT score by 15 points and reduce average 2-mile run time by 30 seconds.',
       additionalContext: 'Preparing for a field training exercise in 2 months.',
+      days: ["Monday", "Tuesday", "Thursday", "Friday"],
     },
   });
 
@@ -65,6 +73,56 @@ export function PlannerForm({ onSubmit, isLoading }: PlannerFormProps) {
               <FormControl>
                 <Textarea placeholder="e.g., Upcoming deployment, focus on ruck marching." {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="days"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Workout Days</FormLabel>
+                <FormDescription>
+                  Select the days you want to generate a plan for.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+              {daysOfWeek.map((item) => (
+                <FormField
+                  key={item}
+                  control={form.control}
+                  name="days"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={item}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(item)}
+                            onCheckedChange={(checked) => {
+                              return checked
+                                ? field.onChange([...field.value, item])
+                                : field.onChange(
+                                    field.value?.filter(
+                                      (value) => value !== item
+                                    )
+                                  )
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          {item}
+                        </FormLabel>
+                      </FormItem>
+                    )
+                  }}
+                />
+              ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}
