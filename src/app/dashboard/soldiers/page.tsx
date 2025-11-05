@@ -255,10 +255,11 @@ export default function SoldiersPage() {
             return;
         }
         const subject = `You're invited to join ${teamData.name} on FitSquad!`;
+        const joinUrl = `https://mysquad.fit/teams/join?code=${teamData.teamCode}`;
         const body = `<p>Hello,</p>
 <p>You have been invited to join the team "<strong>${teamData.name}</strong>" on FitSquad.</p>
 <p>Use the following code to join: <strong>${teamData.teamCode}</strong></p>
-<p>Or click this link: <a href="${window.location.origin}/teams/join">${window.location.origin}/teams/join</a></p>
+<p>Or click this link: <a href="${joinUrl}">${joinUrl}</a></p>
 <br>
 <p>Thank you,<br>The FitSquad Team</p>`;
 

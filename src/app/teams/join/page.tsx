@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useFirestore, useUser } from '@/firebase';
 import {
   collection,
@@ -32,7 +32,15 @@ export default function JoinTeamPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const codeFromQuery = searchParams.get('code');
+    if (codeFromQuery) {
+      setTeamCode(codeFromQuery);
+    }
+  }, [searchParams]);
 
   const handleJoinTeam = async (e: React.FormEvent) => {
     e.preventDefault();
