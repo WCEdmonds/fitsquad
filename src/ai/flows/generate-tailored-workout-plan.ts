@@ -80,12 +80,12 @@ const prompt = ai.definePrompt({
 Your task is to create a structured, one-week (5-day, Monday-Friday) workout plan in JSON format.
 
 1.  **Analyze Data**: Analyze the provided fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
-2.  **Define Focus Groups**: Based on the weaknesses, define 2-3 logical focus groups (e.g., a "Running Endurance Group" for slower runners, a "Core Strength Crew" for plank scores). Provide a brief description for each group and suggest specific modifications or extra work for them.
-3.  **Create Weekly Plan**: Generate a 5-day (Monday to Friday) workout plan. For each day, provide:
+2.  **Define Focus Groups**: Based on the weaknesses, define 2 logical focus groups: a "Running Focus Group" and a "Strength Focus Group". For each group, provide a brief description of who it's for and suggest specific, actionable modifications or extra work for them to do throughout the week. For example, the running group might add an extra half-mile to their runs, while the strength group adds an extra set to their pushups.
+3.  **Create Weekly Plan**: Generate a 5-day (Monday to Friday) workout plan for the entire unit. For each day, provide:
     *   Day of the week.
     *   A clear focus (e.g., 'Upper Body Strength', 'Cardio & Endurance', 'Active Recovery').
     *   A simple warm-up routine.
-    *   A list of main workout exercises, including name, sets, reps (or duration), and rest time.
+    *   A list of main workout exercises for the whole unit, including name, sets, reps (or duration), and rest time.
     *   A simple cool-down routine.
 4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema.
 
