@@ -58,54 +58,40 @@ export default function SoldiersPage() {
         if (memberList && firestore) {
             const fetchSoldierData = async () => {
                 const soldierPromises = memberList.map(async (member) => {
-                    const memberId = userAccount?.accountType === 'Admin' ? member.id : member.id;
+                    const memberId = member.id; // Works for both full account docs and member refs
+                    
+                    // In admin view, 'member' is the full account doc, otherwise we need to fetch it
+                    const accData = userAccount?.accountType === 'Admin' 
+                        ? member 
+                        : await getDocNonBlocking<any>(doc(firestore, 'accounts', memberId));
+
+                    if (!accData) return null; // Skip if account data can't be fetched
 
                     const soldierDataColRef = collection(firestore, 'accounts', memberId, 'soldierData');
                     const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
+                    // Get the most recent data entry
                     const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-                    
-                    // In admin view, 'member' is the full account doc, otherwise it's a member reference
-                    const accData = userAccount?.accountType === 'Admin' ? member : await getDocNonBlocking<any>(doc(firestore, 'accounts', memberId));
 
-                    const defaultSoldier: Soldier = {
+                    const soldier: Soldier = {
                         id: memberId,
-                        name: accData?.email || 'Unknown',
-                        firstName: accData?.firstName,
-                        lastName: accData?.lastName,
-                        rank: accData?.accountType || 'Soldier',
-                        mdl: 0,
-                        hrp: 0,
-                        sdc: 0,
-                        plk: 0,
-                        twoMileRun: 0,
-                        gender: accData?.gender || 'Other',
-                        weight: 0,
-                        height: 0,
-                        healthNotes: 'No data',
+                        name: accData.email || 'Unknown',
+                        firstName: accData.firstName || '',
+                        lastName: accData.lastName || '',
+                        rank: accData.accountType || 'Soldier',
+                        mdl: sData?.mdl || 0,
+                        hrp: sData?.hrp || 0,
+                        sdc: sData?.sdc || 0,
+                        plk: sData?.plk || 0,
+                        twoMileRun: sData?.twoMileRun || 0,
+                        gender: accData.gender || 'Other',
+                        weight: sData?.weight || 0,
+                        height: sData?.height || 0,
+                        healthNotes: sData?.healthInfo || 'No data',
+                        restingHeartRate: sData?.restingHeartRate,
+                        bodyFatPercentage: sData?.bodyFatPercentage,
                     };
-
-                    if (sData && accData) {
-                        return {
-                            ...defaultSoldier,
-                            healthNotes: sData.healthInfo,
-                            mdl: sData.mdl,
-                            hrp: sData.hrp,
-                            sdc: sData.sdc,
-                            plk: sData.plk,
-                            twoMileRun: sData.twoMileRun,
-                            weight: sData.weight,
-                            height: sData.height,
-                            restingHeartRate: sData.restingHeartRate,
-                            bodyFatPercentage: sData.bodyFatPercentage,
-                        };
-                    }
-                    if(accData){
-                         return {
-                            ...defaultSoldier,
-                            gender: accData.gender
-                         };
-                    }
-                    return null;
+                    
+                    return soldier;
                 });
 
                 const soldiers = (await Promise.all(soldierPromises)).filter(s => s !== null) as Soldier[];
