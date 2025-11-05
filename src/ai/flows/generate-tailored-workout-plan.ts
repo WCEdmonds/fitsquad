@@ -82,7 +82,7 @@ Your task is to create a structured workout plan in JSON format based on the 'pl
 
 **Plan Type: {{{planType}}}**
 
-{{#if (eq planType 'unit')}}
+{{#if (eq planType "unit")}}
 ### UNIT PLAN INSTRUCTIONS
 1.  **Analyze Data**: Analyze the provided unit fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
 2.  **Create Two Weekly Plans**: Generate two separate and complete workout plans for the specified days: {{#each days}}{{{this}}} {{/each}}.
@@ -97,7 +97,7 @@ Your task is to create a structured workout plan in JSON format based on the 'pl
 4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Populate both 'strength_focus_plan' and 'running_focus_plan' fields. Do not populate 'individual_plan'.
 {{/if}}
 
-{{#if (eq planType 'individual')}}
+{{#if (eq planType "individual")}}
 ### INDIVIDUAL PLAN INSTRUCTIONS
 1.  **Analyze Data**: Analyze the provided individual soldier's fitness data to identify their personal weaknesses.
 2.  **Consider Equipment**: The soldier has access to: **{{{equipmentAccess}}}**. Tailor all exercises accordingly. If 'bodyweight', do not include exercises requiring gym equipment. If 'gym', you can include a mix of both.
@@ -130,7 +130,11 @@ const generateTailoredWorkoutPlanFlow = ai.defineFlow(
   },
   async input => {
     try {
-        const { output } = await prompt(input);
+        const { output } = await prompt(input, {
+          helpers: {
+            eq: (a: any, b: any) => a === b,
+          }
+        });
         return output!;
     } catch (error: any) {
         if (error.message.includes('503')) {
