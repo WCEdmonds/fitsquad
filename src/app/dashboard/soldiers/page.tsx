@@ -11,8 +11,8 @@ import { SoldierTable } from '@/components/soldier-table';
 import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
-import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, getDocs, query, where } from 'firebase/firestore';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getDocNonBlocking, getCollectionNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
 const RUN_TIME_THRESHOLD = 15; // 15:00 in minutes
@@ -37,17 +37,15 @@ export default function SoldiersPage() {
     const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
     
     useEffect(() => {
-        if (teamMembers) {
+        if (teamMembers && firestore) {
             const fetchSoldierData = async () => {
                 const soldierPromises = teamMembers.map(async (member) => {
                     const soldierDataColRef = collection(firestore, 'accounts', member.uid, 'soldierData');
-                    const soldierDataSnap = await getDocs(soldierDataColRef);
-                    // Assuming one soldierData doc per soldier for simplicity
-                    const sData = soldierDataSnap.docs[0]?.data();
+                    const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
+                    const sData = soldierDataList[0];
                     
-                    const accountSnap = await getDocs(query(collection(firestore, 'accounts'), where('id', '==', member.uid)))
-                    const accData = accountSnap.docs[0]?.data();
-
+                    const accountRef = doc(firestore, 'accounts', member.uid);
+                    const accData = await getDocNonBlocking<any>(accountRef);
 
                     if (sData && accData) {
                         return {

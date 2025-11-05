@@ -8,6 +8,7 @@ import {
   FirestoreError,
   QuerySnapshot,
   CollectionReference,
+  getDocs,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -107,8 +108,33 @@ export function useCollection<T = any>(
 
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
-  if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
-  }
+  
   return { data, isLoading, error };
+}
+
+
+export async function getCollectionNonBlocking<T>(
+  memoizedTargetRefOrQuery: CollectionReference<DocumentData> | Query<DocumentData>
+): Promise<WithId<T>[]> {
+  try {
+    const snapshot = await getDocs(memoizedTargetRefOrQuery);
+    const results: WithId<T>[] = [];
+    for (const doc of snapshot.docs) {
+      results.push({ ...(doc.data() as T), id: doc.id });
+    }
+    return results;
+  } catch (err) {
+      const path: string =
+      memoizedTargetRefOrQuery.type === 'collection'
+        ? (memoizedTargetRefOrQuery as CollectionReference).path
+        : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+
+    const contextualError = new FirestorePermissionError({
+      operation: 'list',
+      path,
+    });
+    errorEmitter.emit('permission-error', contextualError);
+    // Return empty array or throw error, depending on desired behavior on permission failure
+    return [];
+  }
 }

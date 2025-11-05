@@ -9,8 +9,8 @@ import {
 import { Target, Users, Activity, BarChart3, Swords, Shield } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
-import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc, getDocs, query } from 'firebase/firestore';
+import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -49,16 +49,15 @@ export default function DashboardPage() {
   const { data: teamMembers } = useCollection(teamMembersRef);
 
   useEffect(() => {
-    if (teamMembers) {
+    if (teamMembers && firestore) {
         const fetchSoldierData = async () => {
             const soldierPromises = teamMembers.map(async (member) => {
                 const soldierDataColRef = collection(firestore, 'accounts', member.uid, 'soldierData');
-                const soldierDataSnap = await getDocs(soldierDataColRef);
-                const sData = soldierDataSnap.docs[0]?.data();
+                const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
+                const sData = soldierDataList[0];
                 
-                const q = query(collection(firestore, 'accounts'));
-                const accountSnap = await getDocs(q);
-                const accData = accountSnap.docs.find(doc => doc.id === member.uid)?.data();
+                const accountRef = doc(firestore, 'accounts', member.uid);
+                const accData = await getDocNonBlocking<any>(accountRef);
 
                 if (sData && accData) {
                     return {

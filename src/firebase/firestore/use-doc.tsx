@@ -7,6 +7,7 @@ import {
   DocumentData,
   FirestoreError,
   DocumentSnapshot,
+  getDoc,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -90,4 +91,24 @@ export function useDoc<T = any>(
   }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
 
   return { data, isLoading, error };
+}
+
+
+export async function getDocNonBlocking<T>(
+  docRef: DocumentReference<DocumentData>
+): Promise<WithId<T> | null> {
+  try {
+    const snapshot = await getDoc(docRef);
+    if (snapshot.exists()) {
+      return { ...(snapshot.data() as T), id: snapshot.id };
+    }
+    return null;
+  } catch (err) {
+    const contextualError = new FirestorePermissionError({
+      operation: 'get',
+      path: docRef.path,
+    });
+    errorEmitter.emit('permission-error', contextualError);
+    return null;
+  }
 }

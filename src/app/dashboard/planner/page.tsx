@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateTailoredWorkoutPlan } from '@/ai/flows/generate-tailored-workout-plan';
 import { Bot, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 
@@ -38,18 +38,15 @@ export default function PlannerPage() {
   }, [firestore, userAccount]);
   const { data: teamMembers } = useCollection(teamMembersRef);
 
-  // 3. For each member, get their soldierData. This is a bit complex.
-  // We will fetch them individually for now. This could be optimized in the future.
+  // 3. For each member, get their soldierData.
   const [allSoldierData, setAllSoldierData] = useState<any[]>([]);
   useEffect(() => {
-    if (teamMembers) {
+    if (teamMembers && firestore) {
       const fetchData = async () => {
-        const dataPromises = teamMembers.map(member => {
+        const dataPromises = teamMembers.map(async (member) => {
             const soldierDataRef = collection(firestore, 'accounts', member.uid, 'soldierData');
-            // This is a simplified fetch, ideally we'd get the latest document
-            return getDocs(soldierDataRef).then(snap => 
-              snap.docs.map(d => ({...d.data(), memberEmail: member.email}))
-            );
+            const data = await getCollectionNonBlocking<any>(soldierDataRef);
+            return data.map(d => ({ ...d, memberEmail: member.email }));
         });
         const results = await Promise.all(dataPromises);
         setAllSoldierData(results.flat());
