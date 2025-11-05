@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair, MoreHorizontal, Copy, UserPlus } from 'lucide-react';
+import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair, MoreHorizontal, Copy, UserPlus, Dumbbell, Weight, Bot, Run } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -30,6 +30,9 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [account, setAccount] = useState<any>(null);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
+  const [avgMdl, setAvgMdl] = useState<number | string>('--');
+  const [avgSdc, setAvgSdc] = useState<number | string>('--');
+  const [avgPlk, setAvgPlk] = useState<number | string>('--');
   const [avgHrp, setAvgHrp] = useState<number | string>('--');
   const [avgRunTime, setAvgRunTime] = useState<string>('--');
   const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
@@ -127,15 +130,23 @@ export default function DashboardPage() {
             const soldiers = (await Promise.all(soldierPromises)).filter(s => s !== null) as Soldier[];
             setAllSoldiers(soldiers);
 
-            const soldiersWithData = soldiers.filter(s => s.hrp > 0 || s.twoMileRun > 0);
+            const soldiersWithData = soldiers.filter(s => s.mdl > 0 || s.hrp > 0 || s.sdc > 0 || s.plk > 0 || s.twoMileRun > 0);
 
             if (soldiersWithData.length > 0) {
+              const totalMdl = soldiersWithData.reduce((acc, s) => acc + s.mdl, 0);
+              setAvgMdl(Math.round(totalMdl / soldiersWithData.length));
+
               const totalHrp = soldiersWithData.reduce((acc, s) => acc + s.hrp, 0);
               setAvgHrp(Math.round(totalHrp / soldiersWithData.length));
 
+              const totalSdc = soldiersWithData.reduce((acc, s) => acc + s.sdc, 0);
+              setAvgSdc(Math.round(totalSdc / soldiersWithData.length));
+              
+              const totalPlk = soldiersWithData.reduce((acc, s) => acc + s.plk, 0);
+              setAvgPlk(Math.round(totalPlk / soldiersWithData.length));
+              
               const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
-              const avgScore = Math.round(totalRunTime / soldiersWithData.length);
-              setAvgRunTime(`${avgScore}`);
+              setAvgRunTime(`${Math.round(totalRunTime / soldiersWithData.length)}`);
             }
         };
 
@@ -230,7 +241,7 @@ export default function DashboardPage() {
         </DropdownMenu>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Soldiers</CardTitle>
@@ -243,8 +254,18 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. HRP</CardTitle>
-            <PersonStanding className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Avg. MDL Score</CardTitle>
+            <Weight className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{avgMdl}</div>
+            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg. HRP Score</CardTitle>
+            <Dumbbell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgHrp}</div>
@@ -253,22 +274,32 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. 2-Mile Run Score</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Avg. SDC Score</CardTitle>
+            <Bot className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgRunTime}</div>
+            <div className="text-2xl font-bold">{avgSdc}</div>
             <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Readiness</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Avg. PLK Score</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--%</div>
-            <p className="text-xs text-muted-foreground">No data yet</p>
+            <div className="text-2xl font-bold">{avgPlk}</div>
+            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg. 2MR Score</CardTitle>
+            <Run className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{avgRunTime}</div>
+            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
           </CardContent>
         </Card>
       </div>
@@ -300,5 +331,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

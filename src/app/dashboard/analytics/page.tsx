@@ -18,7 +18,7 @@ import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getColle
 import { collection, doc, query, orderBy } from 'firebase/firestore';
 import { AnalyticsChart } from '@/components/analytics-chart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LineChart } from 'lucide-react';
+import { LineChart, Users } from 'lucide-react';
 
 export default function AnalyticsPage() {
     const { user } = useUser();
