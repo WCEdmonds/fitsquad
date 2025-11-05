@@ -92,6 +92,9 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
       id: newSoldierDataRef.id,
       accountId: soldierId,
       ...values,
+      bodyFatPercentage: values.bodyFatPercentage ?? null,
+      restingHeartRate: values.restingHeartRate ?? null,
+      healthInfo: values.healthInfo ?? null,
       createdAt: new Date().toISOString(),
     };
 
