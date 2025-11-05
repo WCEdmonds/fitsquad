@@ -25,7 +25,7 @@ import { Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function JoinTeamPage() {
-  const [teamId, setTeamId] = useState('');
+  const [teamCode, setTeamCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,7 +36,7 @@ export default function JoinTeamPage() {
 
   const handleJoinTeam = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!teamId) {
+    if (!teamCode) {
       setError('Team Code is required.');
       return;
     }
@@ -49,14 +49,20 @@ export default function JoinTeamPage() {
     setIsLoading(true);
 
     try {
-      const teamRef = doc(firestore, 'teams', teamId);
-      const teamSnapshot = await getDoc(teamRef);
+      const teamsRef = collection(firestore, 'teams');
+      const q = query(teamsRef, where('teamCode', '==', teamCode));
+      const querySnapshot = await getDocs(q);
 
-      if (!teamSnapshot.exists()) {
+
+      if (querySnapshot.empty) {
         setError('Team not found. Please check the code and try again.');
         setIsLoading(false);
         return;
       }
+      
+      const teamDoc = querySnapshot.docs[0];
+      const teamId = teamDoc.id;
+      const teamData = teamDoc.data();
 
       const userAccountRef = doc(firestore, 'accounts', user.uid);
       const userAccountSnap = await getDoc(userAccountRef);
@@ -93,7 +99,7 @@ export default function JoinTeamPage() {
 
       toast({
         title: 'Successfully Joined Team!',
-        description: `You are now a member of ${teamSnapshot.data().name}.`,
+        description: `You are now a member of ${teamData.name}.`,
       });
 
       router.push('/dashboard');
@@ -114,19 +120,19 @@ export default function JoinTeamPage() {
           </div>
           <CardTitle className="text-2xl">Join a Team</CardTitle>
           <CardDescription>
-            Enter the Team Code provided by your supervisor or commander to join or switch teams.
+            Enter the 8-digit Team Code provided by your supervisor or commander to join or switch teams.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleJoinTeam} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="team-id">Team Code</Label>
+              <Label htmlFor="team-code">Team Code</Label>
               <Input
-                id="team-id"
-                placeholder="Enter Team Code"
+                id="team-code"
+                placeholder="e.g., 12345678"
                 required
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
+                value={teamCode}
+                onChange={(e) => setTeamCode(e.target.value)}
               />
             </div>
             {error && (
@@ -141,3 +147,5 @@ export default function JoinTeamPage() {
     </div>
   );
 }
+
+    

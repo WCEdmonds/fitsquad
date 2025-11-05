@@ -144,8 +144,8 @@ export default function DashboardPage() {
 }, [teamMembers, firestore]);
 
   const handleCopyTeamCode = () => {
-    if (teamId) {
-      navigator.clipboard.writeText(teamId);
+    if (teamData?.teamCode) {
+      navigator.clipboard.writeText(teamData.teamCode);
       toast({
         title: "Team Code Copied!",
         description: "You can now share it with new members.",
@@ -300,3 +300,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

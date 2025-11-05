@@ -21,6 +21,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Swords } from 'lucide-react';
 import { addDocumentNonBlocking } from '@/firebase';
 
+function generateTeamCode() {
+  return Math.floor(10000000 + Math.random() * 90000000).toString();
+}
+
 export default function CreateTeamPage() {
   const [teamName, setTeamName] = useState('');
   const [teamDescription, setTeamDescription] = useState('');
@@ -53,6 +57,7 @@ export default function CreateTeamPage() {
         name: teamName,
         description: teamDescription,
         createdBy: user.uid,
+        teamCode: generateTeamCode(),
       };
 
       // 2. Add the current user as the first member of the team
@@ -128,3 +133,5 @@ export default function CreateTeamPage() {
     </div>
   );
 }
+
+    
