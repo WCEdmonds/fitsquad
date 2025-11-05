@@ -11,7 +11,7 @@ import {
 import { PlannerForm, type PlannerFormValues } from '@/components/planner-form';
 import { useToast } from "@/hooks/use-toast";
 import { generateTailoredWorkoutPlan, type GenerateTailoredWorkoutPlanOutput } from '@/ai/flows/generate-tailored-workout-plan';
-import { Bot, FileText, Loader2, Save } from 'lucide-react';
+import { Calendar, FileText, Loader2, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
@@ -81,7 +81,7 @@ export default function PlannerPage() {
       });
       setWorkoutPlan(result);
     } catch (error) {
-      console.error('AI workout plan generation failed:', error);
+      console.error('Workout plan generation failed:', error);
       toast({
         title: "Error",
         description: "Failed to generate workout plan. Please try again.",
@@ -134,7 +134,7 @@ export default function PlannerPage() {
           <CardHeader>
             <CardTitle>Fitness Plan Generator</CardTitle>
             <CardDescription>
-              Use AI to create a tailored workout plan for your unit based on their latest data.
+              Create a tailored workout plan for your unit based on their latest data.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -149,7 +149,7 @@ export default function PlannerPage() {
                 <div>
                   <CardTitle>{workoutPlan?.title ?? 'Generated Plan'}</CardTitle>
                   <CardDescription>
-                    {workoutPlan ? 'Review the weekly plan below.' : 'Your AI-generated workout plan will appear here.'}
+                    {workoutPlan ? 'Review the weekly plan below.' : 'Your generated workout plan will appear here.'}
                   </CardDescription>
                 </div>
                 {workoutPlan && (
@@ -181,7 +181,7 @@ export default function PlannerPage() {
             )}
             {!isGenerating && !workoutPlan && (
               <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
-                <Bot className="w-16 h-16 text-muted-foreground mb-4"/>
+                <Calendar className="w-16 h-16 text-muted-foreground mb-4"/>
                 <h3 className="text-xl font-semibold">Ready to build your plan?</h3>
                 <p className="text-muted-foreground">Fill out the form on the left to get started.</p>
               </div>

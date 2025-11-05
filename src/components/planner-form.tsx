@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Bot, Loader2 } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   trainingGoals: z.string().min(10, 'Please provide detailed training goals.'),
@@ -77,7 +77,7 @@ export function PlannerForm({ onSubmit, isLoading }: PlannerFormProps) {
             </>
           ) : (
             <>
-              <Bot className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4" />
               Generate Plan
             </>
           )}

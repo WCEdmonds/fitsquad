@@ -15,43 +15,21 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
   return (
     <div className="space-y-6">
       
-      {/* Weaknesses and Focus Groups */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Target className="mr-2" /> Common Weaknesses
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc list-inside space-y-1">
-              {plan.common_weaknesses.map((weakness, index) => (
-                <li key={index} className="text-sm">{weakness}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2" /> Suggested Focus Groups
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-             <Accordion type="single" collapsible className="w-full">
-              {plan.focus_groups.map((group, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger>{group.name}</AccordionTrigger>
-                  <AccordionContent>
-                    <p className="text-sm text-muted-foreground mb-2">{group.description}</p>
-                    <p className="text-sm">{group.modifications}</p>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Weaknesses */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Target className="mr-2" /> Common Weaknesses Identified
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc list-inside space-y-1">
+            {plan.common_weaknesses.map((weakness, index) => (
+              <li key={index} className="text-sm">{weakness}</li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* Weekly Plan */}
       <div>

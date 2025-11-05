@@ -2,32 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger,
-} from "@/components/ui/menubar"
-import { BarChart3, Users, Bot, Dumbbell } from 'lucide-react';
-import { Button } from './ui/button';
+import { BarChart3, Users, Bot, Dumbbell, Archive } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
   { href: '/dashboard/planner', label: 'Fitness Planner', icon: Bot },
+  { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex h-16 items-center border-b px-4 md:px-6">
-       <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <Dumbbell className="h-6 w-6" />
+    <div className="flex h-full items-center">
+       <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg mr-8">
+          <Dumbbell className="h-7 w-7" />
           <span className="">FitSquad</span>
         </Link>
-      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 ml-6">
+      <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-8 md:text-base">
         {navItems.map((item) => (
             <Link
               key={item.href}
@@ -38,7 +31,6 @@ export function DashboardNav() {
             </Link>
         ))}
       </nav>
-      {/* Add user menu or other items here */}
     </div>
   );
 }
