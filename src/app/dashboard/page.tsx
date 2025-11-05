@@ -196,6 +196,10 @@ export default function DashboardPage() {
     }
   }
 
+  const handleDataSaved = () => {
+    setHasSoldierData(true);
+    setRefetchTrigger(prev => prev + 1);
+  };
   
   if (account && !account.teamId) {
     return (
@@ -264,7 +268,7 @@ export default function DashboardPage() {
           <CardContent>
             <SoldierDataForm 
               soldierId={user!.uid} 
-              onSave={() => setRefetchTrigger(prev => prev + 1)} 
+              onSave={handleDataSaved}
               defaultValues={{
                   gender: account.gender
               }}
@@ -422,3 +426,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
