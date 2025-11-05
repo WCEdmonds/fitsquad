@@ -39,7 +39,7 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow create: if isSelfCreate(accountId);
       allow update: if (isExistingOwner(accountId) && isAccountIdNotChanged()) || isAdmin();
-      allow delete: if isExistingOwner(accountId) || isAdmin();
+      allow delete: if isAdmin();
 
       /**
        * @description Controls access to a commander's list of managed teams.
@@ -137,3 +137,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

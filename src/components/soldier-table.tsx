@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -45,10 +45,11 @@ interface SoldierTableProps {
   soldiers: Soldier[];
   isLoading?: boolean;
   accountType?: string;
-  onDeleteSoldier?: (soldierId: string, teamId: string | null | undefined) => void;
+  onRemoveSoldier?: (soldierId: string, teamId: string | null | undefined) => void;
+  onDeleteUser?: (soldierId: string, teamId: string | null | undefined) => void;
 }
 
-export function SoldierTable({ soldiers, isLoading = false, accountType, onDeleteSoldier }: SoldierTableProps) {
+export function SoldierTable({ soldiers, isLoading = false, accountType, onRemoveSoldier, onDeleteUser }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
 
@@ -220,12 +221,12 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onDelet
                         <BookOpenCheck className="mr-2 h-4 w-4" />
                         Log AFT
                       </DropdownMenuItem>
-                       {(accountType === 'Admin' || accountType === 'Supervisor') && onDeleteSoldier && (
+                       {(accountType === 'Admin' || accountType === 'Supervisor') && onRemoveSoldier && (
                         <>
                           <DropdownMenuSeparator />
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                               <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                  <Trash2 className="mr-2 h-4 w-4" />
                                  Remove from Team
                                </DropdownMenuItem>
@@ -239,13 +240,37 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onDelet
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDeleteSoldier(soldier.id, soldier.teamId)} className="bg-destructive hover:bg-destructive/90">
+                                <AlertDialogAction onClick={() => onRemoveSoldier(soldier.id, soldier.teamId)}>
                                     Confirm Removal
                                 </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
                         </>
+                       )}
+                       {accountType === 'Admin' && onDeleteUser && (
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                               <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                                 <UserX className="mr-2 h-4 w-4" />
+                                 Delete User
+                               </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Permanently Delete User?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action is irreversible. It will permanently delete the user's account data from Firestore. It will not remove the user from Firebase Authentication.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDeleteUser(soldier.id, soldier.teamId)} className="bg-destructive hover:bg-destructive/90">
+                                    Confirm Deletion
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                        )}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -258,3 +283,5 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onDelet
     </>
   );
 }
+
+    

@@ -12,7 +12,7 @@ import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Mail, UserPlus } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getDocNonBlocking, getCollectionNonBlocking } from '@/firebase';
-import { collection, doc, getDocs, query, where, writeBatch, getDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -222,7 +222,7 @@ export default function SoldiersPage() {
         }
     };
 
-    const handleDeleteSoldier = async (soldierId: string, teamId: string | null | undefined) => {
+    const handleRemoveSoldier = async (soldierId: string, teamId: string | null | undefined) => {
         if (!firestore) return;
         if (!teamId) {
              toast({ title: 'Error', description: 'Cannot remove soldier. Team ID is missing.', variant: 'destructive' });
@@ -246,6 +246,37 @@ export default function SoldiersPage() {
         } catch (error: any) {
             console.error("Error removing soldier: ", error);
              toast({ title: 'Error', description: 'Could not remove soldier from the team.', variant: 'destructive' });
+        }
+    }
+    
+    const handleDeleteUser = async (soldierId: string, teamId: string | null | undefined) => {
+        if (!firestore || userAccount?.accountType !== 'Admin') {
+            toast({ title: 'Error', description: 'You do not have permission to delete users.', variant: 'destructive'});
+            return;
+        };
+
+        try {
+            const batch = writeBatch(firestore);
+
+            // 1. Delete the user's account document
+            const accountRef = doc(firestore, 'accounts', soldierId);
+            batch.delete(accountRef);
+
+            // 2. If they are in a team, remove them from the team's members subcollection
+            if (teamId) {
+                const teamMemberRef = doc(firestore, 'teams', teamId, 'members', soldierId);
+                batch.delete(teamMemberRef);
+            }
+
+            // Note: This does not delete subcollections under the user's account or the user from Firebase Auth.
+            // A Firebase Function would be required for a full cleanup.
+
+            await batch.commit();
+            toast({ title: 'User Deleted', description: 'The user account has been permanently deleted from Firestore.' });
+
+        } catch (error: any) {
+             console.error("Error deleting user: ", error);
+             toast({ title: 'Error', description: 'Could not delete the user.', variant: 'destructive' });
         }
     }
 
@@ -320,7 +351,8 @@ export default function SoldiersPage() {
                 soldiers={allSoldiers} 
                 isLoading={isLoading} 
                 accountType={userAccount?.accountType}
-                onDeleteSoldier={handleDeleteSoldier}
+                onRemoveSoldier={handleRemoveSoldier}
+                onDeleteUser={handleDeleteUser}
             />
           </TabsContent>
           <TabsContent value="running" className="mt-4">
@@ -328,7 +360,8 @@ export default function SoldiersPage() {
                 soldiers={runningFocusGroup} 
                 isLoading={isLoading} 
                 accountType={userAccount?.accountType}
-                onDeleteSoldier={handleDeleteSoldier}
+                onRemoveSoldier={handleRemoveSoldier}
+                onDeleteUser={handleDeleteUser}
             />
           </TabsContent>
           <TabsContent value="strength" className="mt-4">
@@ -336,7 +369,8 @@ export default function SoldiersPage() {
                 soldiers={strengthFocusGroup} 
                 isLoading={isLoading} 
                 accountType={userAccount?.accountType}
-                onDeleteSoldier={handleDeleteSoldier}
+                onRemoveSoldier={handleRemoveSoldier}
+                onDeleteUser={handleDeleteUser}
              />
           </TabsContent>
         </Tabs>
@@ -345,3 +379,5 @@ export default function SoldiersPage() {
     </>
   );
 }
+
+    
