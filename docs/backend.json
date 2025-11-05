@@ -1,0 +1,365 @@
+{
+  "entities": {
+    "Account": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Account",
+      "type": "object",
+      "description": "Represents a user account within the FitSquad application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the account."
+        },
+        "accountType": {
+          "type": "string",
+          "description": "Type of account (Supervisor, Soldier, Commander)."
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Reference to the Team this account belongs to. (Relationship: Team 1:N Account)"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address associated with the account.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "accountType",
+        "teamId",
+        "email"
+      ]
+    },
+    "Team": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Team",
+      "type": "object",
+      "description": "Represents a team of soldiers, such as a section, squad, platoon, or company.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the team."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the team (e.g., Section 1, Alpha Platoon)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the team."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "SoldierData": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SoldierData",
+      "type": "object",
+      "description": "Represents fitness and health data for a soldier.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the soldier data entry."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to the Account this data belongs to. (Relationship: Account 1:N SoldierData)"
+        },
+        "aftScore": {
+          "type": "number",
+          "description": "Army Fitness Test score."
+        },
+        "runTime": {
+          "type": "number",
+          "description": "Run time in minutes."
+        },
+        "healthInfo": {
+          "type": "string",
+          "description": "Additional health information."
+        }
+      },
+      "required": [
+        "id",
+        "accountId",
+        "aftScore",
+        "runTime",
+        "healthInfo"
+      ]
+    },
+    "WorkoutPlan": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkoutPlan",
+      "type": "object",
+      "description": "Represents a workout plan tailored for a specific team.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the workout plan."
+        },
+        "teamId": {
+          "type": "string",
+          "description": "Reference to the Team this workout plan is assigned to. (Relationship: Team 1:N WorkoutPlan)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the workout plan."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the workout plan."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date of the workout plan.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date of the workout plan.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "teamId",
+        "name",
+        "description",
+        "startDate",
+        "endDate"
+      ]
+    },
+    "Exercise": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Exercise",
+      "type": "object",
+      "description": "Represents a specific exercise within a workout plan.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the exercise."
+        },
+        "workoutPlanId": {
+          "type": "string",
+          "description": "Reference to the WorkoutPlan this exercise belongs to. (Relationship: WorkoutPlan 1:N Exercise)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the exercise (e.g., Push-ups, Squats)."
+        },
+        "sets": {
+          "type": "number",
+          "description": "Number of sets for the exercise."
+        },
+        "reps": {
+          "type": "number",
+          "description": "Number of repetitions for each set."
+        },
+        "goal": {
+          "type": "string",
+          "description": "Specific goal for this exercise (e.g., Improve upper body strength)."
+        }
+      },
+      "required": [
+        "id",
+        "workoutPlanId",
+        "name",
+        "sets",
+        "reps",
+        "goal"
+      ]
+    },
+    "Progress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Progress",
+      "type": "object",
+      "description": "Represents a soldier's progress on a specific exercise.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the progress entry."
+        },
+        "accountId": {
+          "type": "string",
+          "description": "Reference to the Account who is tracking progress. (Relationship: Account 1:N Progress)"
+        },
+        "exerciseId": {
+          "type": "string",
+          "description": "Reference to the Exercise this progress is for. (Relationship: Exercise 1:N Progress)"
+        },
+        "completedReps": {
+          "type": "number",
+          "description": "Number of repetitions completed."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Any notes on the exercise (e.g., felt easier today, increased weight)."
+        },
+        "date": {
+          "type": "string",
+          "description": "Date when the progress was recorded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "accountId",
+        "exerciseId",
+        "completedReps",
+        "notes",
+        "date"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/accounts/{accountId}",
+        "definition": {
+          "entityName": "Account",
+          "schema": {
+            "$ref": "#/backend/entities/Account"
+          },
+          "description": "Stores user account information. Account data is stored under `/accounts/{accountId}` with path-based ownership.",
+          "params": [
+            {
+              "name": "accountId",
+              "description": "The unique identifier for the user account."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}",
+        "definition": {
+          "entityName": "Team",
+          "schema": {
+            "$ref": "#/backend/entities/Team"
+          },
+          "description": "Stores team information.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/members/{userId}",
+        "definition": {
+          "entityName": "member",
+          "schema": {
+            "$ref": "#/backend/entities/Account"
+          },
+          "description": "stores the members of each team. Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection to grant roles. Each user must be represented as document to have access to the team content",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team."
+            },
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/accounts/{accountId}/soldierData/{soldierDataId}",
+        "definition": {
+          "entityName": "SoldierData",
+          "schema": {
+            "$ref": "#/backend/entities/SoldierData"
+          },
+          "description": "Stores fitness and health data for a soldier. Soldier data is nested under `/accounts/{accountId}/soldierData/{soldierDataId}`.",
+          "params": [
+            {
+              "name": "accountId",
+              "description": "The unique identifier for the user account."
+            },
+            {
+              "name": "soldierDataId",
+              "description": "The unique identifier for the soldier data."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/workoutPlans/{workoutPlanId}",
+        "definition": {
+          "entityName": "WorkoutPlan",
+          "schema": {
+            "$ref": "#/backend/entities/WorkoutPlan"
+          },
+          "description": "Stores workout plans for teams. Workout plans are stored under `/teams/{teamId}/workoutPlans/{workoutPlanId}`.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team."
+            },
+            {
+              "name": "workoutPlanId",
+              "description": "The unique identifier for the workout plan."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}",
+        "definition": {
+          "entityName": "Exercise",
+          "schema": {
+            "$ref": "#/backend/entities/Exercise"
+          },
+          "description": "Stores exercises for workout plans. Exercises related to a workout plan are nested under `/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}`.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team."
+            },
+            {
+              "name": "workoutPlanId",
+              "description": "The unique identifier for the workout plan."
+            },
+            {
+              "name": "exerciseId",
+              "description": "The unique identifier for the exercise."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/accounts/{accountId}/exercisesProgress/{progressId}",
+        "definition": {
+          "entityName": "Progress",
+          "schema": {
+            "$ref": "#/backend/entities/Progress"
+          },
+          "description": "Stores progress of exercises for soldiers. The progress of each soldier on each exercise is recorded under `/accounts/{accountId}/exercisesProgress/{progressId}`.",
+          "params": [
+            {
+              "name": "accountId",
+              "description": "The unique identifier for the user account."
+            },
+            {
+              "name": "progressId",
+              "description": "The unique identifier for the progress."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for FitSquad is designed to prioritize authorization independence and facilitate efficient data retrieval. It incorporates denormalization to avoid complex security rules involving `get()` calls. Path-based ownership is used for private user data, while membership maps are employed for collaborative data access. Segregation of data into collections with homogeneous security needs ensures simplified rule management and supports QAPs (Queries are not filters).\n\nSpecifically:\n\n*   **Accounts:** Account data is stored under `/accounts/{accountId}` with path-based ownership.\n*   **Teams:** Team data is stored under `/teams/{teamId}`. Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection to grant roles.\n*   **SoldierData:** Soldier data is nested under `/accounts/{accountId}/soldierData/{soldierDataId}`. This structure ensures that soldier data is directly associated with the account, enabling path-based ownership security rules. This enforces privacy, ensures that each soldier can only update or view their data.\n*   **WorkoutPlans:** Workout plans are stored under `/teams/{teamId}/workoutPlans/{workoutPlanId}`. This allows efficient retrieval of workout plans for a specific team.\n*   **Exercises:** Exercises related to a workout plan are nested under `/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}`.\n*   **Progress:** The progress of each soldier on each exercise is recorded under `/accounts/{accountId}/exercisesProgress/{progressId}`. This structure, combined with appropriate security rules, ensures that a soldier can only update his own progress.\n\nThis structure enables simple and robust security rules because authorization context is denormalized into each document, avoiding complex `get()` calls. Collection segregation ensures homogeneous security postures, further simplifying rules and supporting QAPs."
+  }
+}

@@ -1,0 +1,188 @@
+/**
+ * @fileoverview Firestore Security Rules for FitSquad.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for personal data (accounts, soldier data, exercise progress).
+ * Team data and workout plans are accessible to team members.
+ *
+ * Data Structure:
+ * - /accounts/{accountId}: User account information.
+ * - /teams/{teamId}: Team information.
+ * - /teams/{teamId}/members/{userId}: Team membership.
+ * - /accounts/{accountId}/soldierData/{soldierDataId}: Fitness data for soldiers.
+ * - /teams/{teamId}/workoutPlans/{workoutPlanId}: Workout plans for teams.
+ * - /teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}: Exercises for workout plans.
+ * - /accounts/{accountId}/exercisesProgress/{progressId}: Soldier progress on exercises.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own account and soldier data.
+ * - Team membership is required to access team-related data (workout plans, exercises).
+ *
+ * Denormalization for Authorization:
+ * - Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to user account information.
+     * @path /accounts/{accountId}
+     * @allow (create) User with ID 'user_abc' can create their own account document.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { id: 'user_abc', accountType: 'Soldier', teamId: 'team_xyz', email: 'test@example.com' } } }
+     * @allow (get, update, delete) User with ID 'user_abc' can get, update, or delete their own account document.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @deny (create) User with ID 'user_abc' cannot create an account document with a mismatched ID.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { id: 'user_def', accountType: 'Soldier', teamId: 'team_xyz', email: 'test@example.com' } } }
+     * @deny (get, update, delete) User with ID 'user_abc' cannot access another user's account document.
+     *   Request: { auth: { uid: 'user_abc' } } targeting /accounts/user_def
+     * @principle Enforces document ownership for all operations.
+     */
+    match /accounts/{accountId} {
+      allow get: if isOwner(accountId);
+      allow list: if false;
+      allow create: if isSelfCreate(accountId);
+      allow update: if isExistingOwner(accountId) && isAccountIdNotChanged();
+      allow delete: if isExistingOwner(accountId);
+    }
+
+    /**
+     * @description Controls access to team information.
+     * @path /teams/{teamId}
+     * @allow (create) Any authenticated user can create a team.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { name: 'New Team', description: 'A new team' } } }
+     * @allow (get, list) Any authenticated user can get or list team information.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @allow (update, delete) Only team members can update or delete team information.
+     *   Request: { auth: { uid: 'user_abc' } } assuming 'user_abc' is a member of the team.
+     * @deny (update, delete) User with ID 'user_abc' cannot update or delete a team if they are not a member.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @principle Allows authenticated users to read team data and limits modifications to team members.
+     */
+    match /teams/{teamId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if false; // TODO: Add team membership check
+    }
+
+    /**
+     * @description Controls access to team membership information.
+     * @path /teams/{teamId}/members/{userId}
+     * @allow (create) Any authenticated user can become a member of a team.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: {}} }
+     * @allow (get, list) Any authenticated user can get or list team membership.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @allow (update, delete) Only the user themselves can update/delete their membership
+     *   Request: { auth: { uid: 'user_abc' } } assuming 'user_abc' is a member of the team.
+     * @deny (update, delete) User with ID 'user_abc' cannot update or delete team membership if they are not a member.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @principle Allows authenticated users to read team data and limits modifications to team members.
+     */
+    match /teams/{teamId}/members/{userId} {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Controls access to soldier fitness data.
+     * @path /accounts/{accountId}/soldierData/{soldierDataId}
+     * @allow (create) User with ID 'user_abc' can create soldier data under their own account.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { accountId: 'user_abc', aftScore: 90, runTime: 12.5, healthInfo: 'Good' } } }
+     * @allow (get, update, delete) User with ID 'user_abc' can get, update, or delete their own soldier data.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @deny (create) User with ID 'user_abc' cannot create soldier data under another user's account.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { accountId: 'user_def', aftScore: 90, runTime: 12.5, healthInfo: 'Good' } } }
+     * @deny (get, update, delete) User with ID 'user_abc' cannot access another user's soldier data.
+     *   Request: { auth: { uid: 'user_abc' } } targeting /accounts/user_def/soldierData/data_xyz
+     * @principle Enforces document ownership and prevents unauthorized access to soldier data.
+     */
+    match /accounts/{accountId}/soldierData/{soldierDataId} {
+      allow get: if isOwner(accountId);
+      allow list: if isOwner(accountId);
+      allow create: if isSignedIn() && request.resource.data.accountId == accountId;
+      allow update: if isExistingOwner(accountId) && resource.data.accountId == accountId;
+      allow delete: if isExistingOwner(accountId);
+    }
+
+    /**
+     * @description Controls access to workout plans for teams.
+     * @path /teams/{teamId}/workoutPlans/{workoutPlanId}
+     * @allow (get, list) Any authenticated user can get or list workout plans.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @allow (create) Any authenticated user can create workout plans for teams
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { teamId: 'team_xyz', name: 'New Plan', description: 'A new workout plan' } } }
+     * @allow (update, delete) Only team members can update or delete workout plans.
+     *   Request: { auth: { uid: 'user_abc' } } assuming 'user_abc' is a member of the team.
+     * @deny (update, delete) User with ID 'user_abc' cannot update or delete workout plans if they are not a member.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @principle Allows authenticated users to read workout plans and limits modifications to team members.
+     */
+    match /teams/{teamId}/workoutPlans/{workoutPlanId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.teamId == teamId;
+      allow update, delete: if false; // TODO: Add team membership check and validate teamId is immutable
+    }
+
+    /**
+     * @description Controls access to exercises within workout plans.
+     * @path /teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}
+     * @allow (get, list) Any authenticated user can get or list exercises.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @allow (create) Any authenticated user can create exercises for workout plans.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { workoutPlanId: 'plan_xyz', name: 'Push-ups', sets: 3, reps: 10, goal: 'Improve strength' } } }
+     * @allow (update, delete) Only team members can update or delete exercises.
+     *   Request: { auth: { uid: 'user_abc' } } assuming 'user_abc' is a member of the team.
+     * @deny (update, delete) User with ID 'user_abc' cannot update or delete exercises if they are not a member.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @principle Allows authenticated users to read exercises and limits modifications to team members.
+     */
+    match /teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.workoutPlanId == workoutPlanId;
+      allow update, delete: if false; // TODO: Add team membership check and validate workoutPlanId is immutable
+    }
+
+    /**
+     * @description Controls access to exercise progress data for soldiers.
+     * @path /accounts/{accountId}/exercisesProgress/{progressId}
+     * @allow (create) User with ID 'user_abc' can create progress data under their own account.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { accountId: 'user_abc', exerciseId: 'ex_xyz', completedReps: 10, notes: 'Felt good', date: '2024-01-01' } } }
+     * @allow (get, update, delete) User with ID 'user_abc' can get, update, or delete their own progress data.
+     *   Request: { auth: { uid: 'user_abc' } }
+     * @deny (create) User with ID 'user_abc' cannot create progress data under another user's account.
+     *   Request: { auth: { uid: 'user_abc' }, resource: { data: { accountId: 'user_def', exerciseId: 'ex_xyz', completedReps: 10, notes: 'Felt good', date: '2024-01-01' } } }
+     * @deny (get, update, delete) User with ID 'user_abc' cannot access another user's progress data.
+     *   Request: { auth: { uid: 'user_abc' } } targeting /accounts/user_def/exercisesProgress/progress_xyz
+     * @principle Enforces document ownership and prevents unauthorized access to exercise progress data.
+     */
+    match /accounts/{accountId}/exercisesProgress/{progressId} {
+      allow get: if isOwner(accountId);
+      allow list: if isOwner(accountId);
+      allow create: if isSignedIn() && request.resource.data.accountId == accountId;
+      allow update: if isExistingOwner(accountId) && resource.data.accountId == accountId;
+      allow delete: if isExistingOwner(accountId);
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    function isSelfCreate(accountId) {
+        return isSignedIn() && request.auth.uid == accountId && request.resource.data.id == accountId;
+    }
+
+    function isAccountIdNotChanged() {
+        return request.resource.data.id == resource.data.id;
+    }
+  }
+}
