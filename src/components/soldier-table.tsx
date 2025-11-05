@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Run, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,6 +34,9 @@ interface SoldierTableProps {
   soldiers: Soldier[];
   isLoading?: boolean;
 }
+
+const RUN_TIME_SCORE_THRESHOLD = 60; 
+const HRP_SCORE_THRESHOLD = 60; 
 
 export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
@@ -151,7 +154,19 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                 </Avatar>
               </TableCell>
               <TableCell className="font-medium">
-                <div className="font-medium">{soldier.name.split('@')[0]}</div>
+                 <div className="flex items-center gap-2">
+                    <div className="font-medium">{soldier.name.split('@')[0]}</div>
+                    {soldier.twoMileRun > 0 && soldier.twoMileRun < RUN_TIME_SCORE_THRESHOLD && (
+                      <Badge variant="outline" className="text-blue-600 border-blue-600">
+                        <Run className="mr-1 h-3 w-3" /> Running Focus
+                      </Badge>
+                    )}
+                    {soldier.hrp > 0 && soldier.hrp < HRP_SCORE_THRESHOLD && (
+                       <Badge variant="outline" className="text-red-600 border-red-600">
+                        <Dumbbell className="mr-1 h-3 w-3" /> Strength Focus
+                      </Badge>
+                    )}
+                 </div>
                 <div className="hidden text-sm text-muted-foreground md:inline">
                   {soldier.rank}
                 </div>
