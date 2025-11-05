@@ -9,13 +9,14 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
@@ -27,15 +28,27 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { SoldierDataForm } from './soldier-data-form';
 
 interface SoldierTableProps {
   soldiers: Soldier[];
   isLoading?: boolean;
   accountType?: string;
+  onDeleteSoldier?: (soldierId: string, teamId: string | null | undefined) => void;
 }
 
-export function SoldierTable({ soldiers, isLoading = false, accountType }: SoldierTableProps) {
+export function SoldierTable({ soldiers, isLoading = false, accountType, onDeleteSoldier }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
 
@@ -69,6 +82,7 @@ export function SoldierTable({ soldiers, isLoading = false, accountType }: Soldi
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
+            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead>Team</TableHead>}
             <TableHead>MDL</TableHead>
             <TableHead className="hidden md:table-cell">HRP</TableHead>
             <TableHead className="hidden md:table-cell">SDC</TableHead>
@@ -91,6 +105,7 @@ export function SoldierTable({ soldiers, isLoading = false, accountType }: Soldi
                   <Skeleton className="h-3 w-[50px]" />
                 </div>
               </TableCell>
+              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>}
               <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
@@ -145,6 +160,7 @@ export function SoldierTable({ soldiers, isLoading = false, accountType }: Soldi
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
+            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead>Team</TableHead>}
             <TableHead>MDL</TableHead>
             <TableHead>HRP</TableHead>
             <TableHead className="hidden lg:table-cell">SDC</TableHead>
@@ -183,6 +199,7 @@ export function SoldierTable({ soldiers, isLoading = false, accountType }: Soldi
                   {soldier.rank}
                 </div>
               </TableCell>
+              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell>{soldier.teamName || 'N/A'}</TableCell>}
               <TableCell>{soldier.mdl || 'N/A'}</TableCell>
               <TableCell>{soldier.hrp || 'N/A'}</TableCell>
               <TableCell className="hidden lg:table-cell">{soldier.sdc || 'N/A'}</TableCell>
@@ -203,6 +220,33 @@ export function SoldierTable({ soldiers, isLoading = false, accountType }: Soldi
                         <BookOpenCheck className="mr-2 h-4 w-4" />
                         Log AFT
                       </DropdownMenuItem>
+                       {(accountType === 'Admin' || accountType === 'Supervisor') && onDeleteSoldier && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                               <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                 <Trash2 className="mr-2 h-4 w-4" />
+                                 Remove from Team
+                               </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action will remove the soldier from their current team. It will not delete their account.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDeleteSoldier(soldier.id, soldier.teamId)} className="bg-destructive hover:bg-destructive/90">
+                                    Confirm Removal
+                                </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}

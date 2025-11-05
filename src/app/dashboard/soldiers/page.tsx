@@ -12,7 +12,7 @@ import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getDocNonBlocking, getCollectionNonBlocking } from '@/firebase';
-import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, writeBatch, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -67,6 +67,14 @@ export default function SoldiersPage() {
 
                     if (!accData) return null; // Skip if account data can't be fetched
 
+                    let teamName = "N/A";
+                    if (accData.teamId) {
+                        const teamDoc = await getDocNonBlocking<any>(doc(firestore, 'teams', accData.teamId));
+                        if(teamDoc) {
+                           teamName = teamDoc.name;
+                        }
+                    }
+
                     const soldierDataColRef = collection(firestore, 'accounts', memberId, 'soldierData');
                     const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
                     // Get the most recent data entry
@@ -78,6 +86,8 @@ export default function SoldiersPage() {
                         firstName: accData.firstName || '',
                         lastName: accData.lastName || '',
                         rank: accData.accountType || 'Soldier',
+                        teamId: accData.teamId,
+                        teamName: teamName,
                         mdl: sData?.mdl || 0,
                         hrp: sData?.hrp || 0,
                         sdc: sData?.sdc || 0,
@@ -203,6 +213,33 @@ export default function SoldiersPage() {
         }
     };
 
+    const handleDeleteSoldier = async (soldierId: string, teamId: string | null | undefined) => {
+        if (!firestore) return;
+        if (!teamId) {
+             toast({ title: 'Error', description: 'Cannot remove soldier. Team ID is missing.', variant: 'destructive' });
+            return;
+        }
+
+        try {
+            const batch = writeBatch(firestore);
+            
+            // 1. Remove user from the team's members subcollection
+            const teamMemberRef = doc(firestore, 'teams', teamId, 'members', soldierId);
+            batch.delete(teamMemberRef);
+            
+            // 2. Unset the teamId on the user's account
+            const soldierAccountRef = doc(firestore, 'accounts', soldierId);
+            batch.update(soldierAccountRef, { teamId: null });
+
+            await batch.commit();
+            toast({ title: 'Soldier Removed', description: 'The soldier has been removed from the team.' });
+
+        } catch (error: any) {
+            console.error("Error removing soldier: ", error);
+             toast({ title: 'Error', description: 'Could not remove soldier from the team.', variant: 'destructive' });
+        }
+    }
+
     const isLoading = userAccount?.accountType === 'Admin' ? allUsersLoading : teamMembersLoading;
     const runningFocusGroup: Soldier[] = allSoldiers.filter(s => hasBenchmark(s) && s.twoMileRun <= s.hrp);
     const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => hasBenchmark(s) && s.hrp < s.twoMileRun);
@@ -236,13 +273,28 @@ export default function SoldiersPage() {
             <TabsTrigger value="strength">Strength Focus</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-4">
-            <SoldierTable soldiers={allSoldiers} isLoading={isLoading} accountType={userAccount?.accountType} />
+            <SoldierTable 
+                soldiers={allSoldiers} 
+                isLoading={isLoading} 
+                accountType={userAccount?.accountType}
+                onDeleteSoldier={handleDeleteSoldier}
+            />
           </TabsContent>
           <TabsContent value="running" className="mt-4">
-            <SoldierTable soldiers={runningFocusGroup} isLoading={isLoading} accountType={userAccount?.accountType} />
+             <SoldierTable 
+                soldiers={runningFocusGroup} 
+                isLoading={isLoading} 
+                accountType={userAccount?.accountType}
+                onDeleteSoldier={handleDeleteSoldier}
+            />
           </TabsContent>
           <TabsContent value="strength" className="mt-4">
-            <SoldierTable soldiers={strengthFocusGroup} isLoading={isLoading} accountType={userAccount?.accountType} />
+             <SoldierTable 
+                soldiers={strengthFocusGroup} 
+                isLoading={isLoading} 
+                accountType={userAccount?.accountType}
+                onDeleteSoldier={handleDeleteSoldier}
+             />
           </TabsContent>
         </Tabs>
       </CardContent>

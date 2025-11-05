@@ -4,6 +4,8 @@ export type Soldier = {
   firstName?: string;
   lastName?: string;
   rank: string;
+  teamId?: string | null;
+  teamName?: string;
   
   // ACFT Events
   mdl: number; // Max Deadlift
