@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 interface InviteDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onSendInvite: (email: string) => void;
+  onSendInvite: (email: string) => Promise<void>;
 }
 
 export function InviteDialog({ isOpen, onOpenChange, onSendInvite }: InviteDialogProps) {
@@ -32,8 +32,7 @@ export function InviteDialog({ isOpen, onOpenChange, onSendInvite }: InviteDialo
       return;
     }
     setIsLoading(true);
-    onSendInvite(email);
-    // The parent component will handle closing the dialog and showing feedback
+    await onSendInvite(email);
     setIsLoading(false);
     setEmail(''); // Reset email field
   };
@@ -45,7 +44,7 @@ export function InviteDialog({ isOpen, onOpenChange, onSendInvite }: InviteDialo
           <DialogHeader>
             <DialogTitle>Invite a New Member</DialogTitle>
             <DialogDescription>
-              Enter the email address of the person you want to invite to your team. An email will be prepared for you to send.
+              Enter the email address of the person you want to invite to your team.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -66,7 +65,7 @@ export function InviteDialog({ isOpen, onOpenChange, onSendInvite }: InviteDialo
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? <><Loader2 className="mr-2 animate-spin"/> Preparing...</> : 'Send Invite'}
+              {isLoading ? <><Loader2 className="mr-2 animate-spin"/> Sending...</> : 'Send Invite'}
             </Button>
           </DialogFooter>
         </form>

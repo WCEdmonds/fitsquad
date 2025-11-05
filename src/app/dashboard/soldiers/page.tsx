@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InviteDialog } from '@/components/invite-dialog';
+import { sendInviteEmail } from '@/ai/flows/send-invite-email';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -248,25 +249,26 @@ export default function SoldiersPage() {
         }
     }
 
-    const handleSendInvite = (email: string) => {
+    const handleSendInvite = async (email: string) => {
         if (!teamData) {
             toast({ title: "Cannot send invite", description: "Team information is not available.", variant: "destructive" });
             return;
         }
         const subject = `You're invited to join ${teamData.name} on FitSquad!`;
-        const body = `Hello,
+        const body = `<p>Hello,</p>
+<p>You have been invited to join the team "<strong>${teamData.name}</strong>" on FitSquad.</p>
+<p>Use the following code to join: <strong>${teamData.teamCode}</strong></p>
+<p>Or click this link: <a href="${window.location.origin}/teams/join">${window.location.origin}/teams/join</a></p>
+<br>
+<p>Thank you,<br>The FitSquad Team</p>`;
 
-You have been invited to join the team "${teamData.name}" on FitSquad.
-
-Use the following code to join: ${teamData.teamCode}
-
-Or click this link: ${window.location.origin}/teams/join
-
-Thank you,
-The FitSquad Team`;
-
-        window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        toast({ title: "Email client opened", description: "Your invitation is ready to be sent."});
+        const result = await sendInviteEmail({ to: email, subject, body });
+        
+        if (result.success) {
+            toast({ title: "Invite Sent!", description: `An invitation email has been sent to ${email}.` });
+        } else {
+            toast({ title: "Error", description: `Failed to send invite: ${result.error}`, variant: "destructive" });
+        }
         setIsInviteDialogOpen(false);
     }
 

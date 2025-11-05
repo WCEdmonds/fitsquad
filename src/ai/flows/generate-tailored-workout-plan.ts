@@ -2,14 +2,14 @@
 
 /**
  * @fileOverview Generates tailored workout plans for units or individuals based on fitness data, goals, and equipment.
+ * This file is currently not using Genkit and the AI functionality is disabled.
  *
  * - generateTailoredWorkoutPlan - A function that generates tailored workout plans.
  * - GenerateTailoredWorkoutPlanInput - The input type for the generateTailoredWorkoutPlan function.
  * - GenerateTailoredWorkoutPlanOutput - The return type for the generateTailoredWorkoutPlan function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { z } from 'zod';
 
 const GenerateTailoredWorkoutPlanInputSchema = z.object({
   fitnessData: z
@@ -69,79 +69,8 @@ export type GenerateTailoredWorkoutPlanOutput = z.infer<
 export async function generateTailoredWorkoutPlan(
   input: GenerateTailoredWorkoutPlanInput
 ): Promise<GenerateTailoredWorkoutPlanOutput> {
-  return generateTailoredWorkoutPlanFlow(input);
+   // AI functionality is disabled due to dependency removal.
+  // Returning a default response.
+  console.warn("AI functionality for generateTailoredWorkoutPlan is disabled.");
+  throw new Error("Workout plan generation is currently disabled due to a build issue. The Genkit dependencies were removed. To re-enable this, please reinstall Genkit and its dependencies.");
 }
-
-const prompt = ai.definePrompt({
-  name: 'generateTailoredWorkoutPlanPrompt',
-  input: {schema: GenerateTailoredWorkoutPlanInputSchema},
-  output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
-  prompt: `You are an expert fitness trainer specializing in designing workout plans for military personnel.
-
-Your task is to create a structured workout plan in JSON format based on the provided inputs.
-
-{{#if isUnitPlan}}
-### UNIT PLAN INSTRUCTIONS
-1.  **Analyze Data**: Analyze the provided unit fitness data to identify 2-3 common weaknesses (e.g., 'Lower than average 2-mile run scores', 'Poor plank performance').
-2.  **Create Two Weekly Plans**: Generate two separate and complete workout plans for the specified days: {{#each days}}{{{this}}} {{/each}}.
-    *   **Strength Focus Plan**: This plan should be designed for soldiers who need to improve their strength. It should emphasize strength-building exercises.
-    *   **Running Focus Plan**: This plan should be for soldiers needing to improve their cardiovascular endurance and run times. It should include more running and endurance-focused activities.
-3.  **For EACH of the two plans**, provide a complete schedule for the selected days. For each day, include:
-    *   Day of the week.
-    *   A clear focus (e.g., 'Upper Body Strength', 'Tempo Run', 'Active Recovery').
-    *   A simple warm-up routine.
-    *   A list of main workout exercises for that group, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
-    *   A simple cool-down routine.
-4.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Populate both 'strength_focus_plan' and 'running_focus_plan' fields. Do not populate 'individual_plan'.
-{{/if}}
-
-{{#if isIndividualPlan}}
-### INDIVIDUAL PLAN INSTRUCTIONS
-1.  **Analyze Data**: Analyze the provided individual soldier's fitness data to identify their personal weaknesses.
-2.  **Consider Equipment**: The soldier has access to: **{{{equipmentAccess}}}**. Tailor all exercises accordingly. If 'bodyweight', do not include exercises requiring gym equipment. If 'gym', you can include a mix of both.
-3.  **Create One Weekly Plan**: Generate a single, personalized workout plan for the specified days: {{#each days}}{{{this}}} {{/each}}.
-4.  **For the plan**, provide a complete schedule for the selected days. For each day, include:
-    *   Day of the week.
-    *   A clear focus (e.g., 'Full Body Strength', 'Interval Training').
-    *   A simple warm-up routine.
-    *   A list of main workout exercises tailored to the soldier's needs and equipment, including name, sets, reps (or duration), rest time, and a brief (1-2 sentence) description of how to perform the exercise.
-    *   A simple cool-down routine.
-5.  **Format**: The entire output must be a single, valid JSON object conforming to the output schema. Populate the 'individual_plan' field. Do not populate 'strength_focus_plan' or 'running_focus_plan'.
-{{/if}}
-
-**Fitness Data:**
-{{{fitnessData}}}
-
-**Training Goals:**
-{{{trainingGoals}}}
-
-**Additional Context:**
-{{{additionalContext}}}
-`,
-});
-
-const generateTailoredWorkoutPlanFlow = ai.defineFlow(
-  {
-    name: 'generateTailoredWorkoutPlanFlow',
-    inputSchema: GenerateTailoredWorkoutPlanInputSchema,
-    outputSchema: GenerateTailoredWorkoutPlanOutputSchema,
-  },
-  async input => {
-    try {
-        const { output } = await prompt(input);
-        return output!;
-    } catch (error: any) {
-        if (error.message.includes('503')) {
-            console.warn('Default model unavailable, falling back to gemini-pro.');
-            const { output } = await ai.generate({
-                prompt: prompt.compile(input)!,
-                model: 'googleai/gemini-pro',
-                output: { schema: GenerateTailoredWorkoutPlanOutputSchema },
-            });
-            return output!;
-        }
-        // Re-throw other errors
-        throw error;
-    }
-  }
-);
