@@ -44,6 +44,7 @@ export default function DashboardPage() {
   const [avgRunTime, setAvgRunTime] = useState<string>('--');
   const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -85,7 +86,7 @@ export default function DashboardPage() {
   const userSoldierDataRef = useMemoFirebase(() => {
     if (!user) return null;
     return collection(firestore, 'accounts', user.uid, 'soldierData');
-  }, [firestore, user]);
+  }, [firestore, user, refetchTrigger]);
 
   const { data: soldierData, isLoading: soldierDataLoading } = useCollection(userSoldierDataRef);
 
@@ -263,7 +264,7 @@ export default function DashboardPage() {
           <CardContent>
             <SoldierDataForm 
               soldierId={user!.uid} 
-              onSave={() => setHasSoldierData(true)} 
+              onSave={() => setRefetchTrigger(prev => prev + 1)} 
               defaultValues={{
                   gender: account.gender
               }}
