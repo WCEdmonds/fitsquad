@@ -15,6 +15,7 @@ import { WorkoutCalendarView } from '@/components/workout-calendar-view';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { WorkoutPrintView } from '@/components/workout-print-view';
 
 export default function SavedPlanDetailPage() {
   const { planId } = useParams();
@@ -42,53 +43,58 @@ export default function SavedPlanDetailPage() {
   }
 
   return (
-    <div>
-        <div className="mb-4">
-            <Button asChild variant="outline">
-                <Link href="/dashboard/saved-plans">
-                    <ArrowLeft className="mr-2" />
-                    Back to Saved Plans
-                </Link>
-            </Button>
+    <>
+        <div className="hidden print-only">
+            {parsedPlan && <WorkoutPrintView plan={parsedPlan} />}
         </div>
-        <Card className="h-full min-h-[600px]">
-            <CardHeader className="print:hidden">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>{plan?.name ?? 'Loading...'}</CardTitle>
-                  <CardDescription>
-                    {plan?.description ?? '...'}
-                  </CardDescription>
-                </div>
-                {plan && (
-                    <Button variant="outline" onClick={handleDownloadPdf}>
-                      <FileText className="mr-2" />
-                      Download PDF
-                    </Button>
-                )}
-              </div>
-          </CardHeader>
-            <CardContent>
-                {isLoading && (
-                <div className="space-y-4">
-                    <Skeleton className="h-8 w-1/2" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <br />
-                    <Skeleton className="h-8 w-1/3" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                </div>
-                )}
-                {parsedPlan && <WorkoutCalendarView plan={parsedPlan} />}
-                {!isLoading && !parsedPlan && (
-                    <div className="text-center py-12">
-                        <p>Plan not found or data is corrupted.</p>
+        <div className="no-print">
+            <div className="mb-4">
+                <Button asChild variant="outline">
+                    <Link href="/dashboard/saved-plans">
+                        <ArrowLeft className="mr-2" />
+                        Back to Saved Plans
+                    </Link>
+                </Button>
+            </div>
+            <Card className="h-full min-h-[600px]">
+                <CardHeader>
+                <div className="flex justify-between items-center">
+                    <div>
+                    <CardTitle>{plan?.name ?? 'Loading...'}</CardTitle>
+                    <CardDescription>
+                        {plan?.description ?? '...'}
+                    </CardDescription>
                     </div>
-                )}
-            </CardContent>
-        </Card>
-    </div>
+                    {plan && (
+                        <Button variant="outline" onClick={handleDownloadPdf}>
+                        <FileText className="mr-2" />
+                        Download PDF
+                        </Button>
+                    )}
+                </div>
+            </CardHeader>
+                <CardContent>
+                    {isLoading && (
+                    <div className="space-y-4">
+                        <Skeleton className="h-8 w-1/2" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <br />
+                        <Skeleton className="h-8 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                    </div>
+                    )}
+                    {parsedPlan && <WorkoutCalendarView plan={parsedPlan} />}
+                    {!isLoading && !parsedPlan && (
+                        <div className="text-center py-12">
+                            <p>Plan not found or data is corrupted.</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    </>
   );
 }
