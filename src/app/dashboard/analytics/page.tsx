@@ -15,10 +15,11 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking } from '@/firebase';
-import { collection, doc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, query, orderBy, getDoc } from 'firebase/firestore';
 import { AnalyticsChart } from '@/components/analytics-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LineChart, Users } from 'lucide-react';
+import { Soldier } from '@/lib/types';
 
 export default function AnalyticsPage() {
     const { user } = useUser();
@@ -27,6 +28,7 @@ export default function AnalyticsPage() {
     const [selectedSoldierId, setSelectedSoldierId] = useState<string | null>(null);
     const [progressData, setProgressData] = useState<any[]>([]);
     const [isLoadingProgress, setIsLoadingProgress] = useState(false);
+    const [teamMembersWithNames, setTeamMembersWithNames] = useState<{id: string, firstName: string, lastName: string}[]>([]);
 
     const userAccountRef = useMemoFirebase(() => {
         if (!user) return null;
@@ -39,6 +41,27 @@ export default function AnalyticsPage() {
         return collection(firestore, 'teams', userAccount.teamId, 'members');
     }, [firestore, userAccount]);
     const { data: teamMembers, isLoading: teamMembersLoading } = useCollection(teamMembersRef);
+    
+    useEffect(() => {
+        const fetchMemberNames = async () => {
+            if (teamMembers) {
+                const membersWithData = await Promise.all(
+                    teamMembers.map(async (member) => {
+                        const accountRef = doc(firestore, 'accounts', member.id);
+                        const accountSnap = await getDoc(accountRef);
+                        const accountData = accountSnap.data();
+                        return {
+                            id: member.id,
+                            firstName: accountData?.firstName || 'Unknown',
+                            lastName: accountData?.lastName || 'Soldier'
+                        };
+                    })
+                );
+                setTeamMembersWithNames(membersWithData);
+            }
+        };
+        fetchMemberNames();
+    }, [teamMembers, firestore]);
 
     useEffect(() => {
         if (selectedSoldierId) {
@@ -77,9 +100,9 @@ export default function AnalyticsPage() {
                             {teamMembersLoading ? (
                                 <SelectItem value="loading" disabled>Loading...</SelectItem>
                             ) : (
-                                teamMembers?.map(member => (
+                                teamMembersWithNames?.map(member => (
                                     <SelectItem key={member.id} value={member.id}>
-                                        {member.email}
+                                        {member.firstName} {member.lastName}
                                     </SelectItem>
                                 ))
                             )}
