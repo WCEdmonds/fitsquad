@@ -62,7 +62,8 @@ export default function PlannerPage() {
     if (!user || !userAccount) return;
     
     let fitnessData;
-    let planType: 'unit' | 'individual';
+    let isUnitPlan = false;
+    let isIndividualPlan = false;
 
     if (userAccount.accountType === 'Soldier') {
         const soldierData = allSoldierData.find(s => s.accountId === user.uid);
@@ -75,7 +76,7 @@ export default function PlannerPage() {
             return;
         }
         fitnessData = `Soldier: MDL score ${soldierData.mdl}, HRP score ${soldierData.hrp}, SDC score ${soldierData.sdc}, PLK score ${soldierData.plk}, 2MR score ${soldierData.twoMileRun}. Notes: ${soldierData.healthInfo}`;
-        planType = 'individual';
+        isIndividualPlan = true;
     } else {
         if (!allSoldierData || allSoldierData.length === 0) {
             toast({
@@ -88,7 +89,7 @@ export default function PlannerPage() {
         fitnessData = allSoldierData.map(s => (
             `Soldier (${s.memberEmail}): MDL score ${s.mdl}, HRP score ${s.hrp}, SDC score ${s.sdc}, PLK score ${s.plk}, 2MR score ${s.twoMileRun}. Notes: ${s.healthInfo}`
         )).join('\n');
-        planType = 'unit';
+        isUnitPlan = true;
     }
 
     setIsGenerating(true);
@@ -101,7 +102,8 @@ export default function PlannerPage() {
         additionalContext: values.additionalContext,
         days: values.days,
         equipmentAccess: values.equipmentAccess,
-        planType: planType,
+        isUnitPlan,
+        isIndividualPlan,
       });
       setWorkoutPlan(result);
     } catch (error) {
