@@ -6,7 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
 import { MoreHorizontal, Activity, Dumbbell, Loader2 } from 'lucide-react';
@@ -216,12 +216,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
             <TableRow key={soldier.id}>
               <TableCell className="hidden sm:table-cell">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={soldier.avatar}
-                    alt={soldier.name}
-                    data-ai-hint="person portrait"
-                  />
-                  <AvatarFallback>{soldier.lastName?.charAt(0) ?? soldier.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{soldier.firstName?.charAt(0)}{soldier.lastName?.charAt(0)}</AvatarFallback>
                 </Avatar>
               </TableCell>
               <TableCell className="font-medium">

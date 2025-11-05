@@ -122,7 +122,6 @@ export default function DashboardPage() {
                     weight: accData?.weight || 0,
                     height: accData?.height || 0,
                     healthNotes: 'No data',
-                    avatar: `https://picsum.photos/seed/${member.id}/100/100`,
                 };
 
                 if (sData && accData) {

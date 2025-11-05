@@ -18,7 +18,6 @@ export type Soldier = {
   height: number; // in inches
   
   healthNotes: string;
-  avatar: string;
 };
 
 export type WorkoutPlan = {

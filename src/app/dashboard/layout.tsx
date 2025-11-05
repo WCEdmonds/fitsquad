@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
@@ -36,7 +36,7 @@ export default function DashboardLayout({
   const { data: userAccount, isLoading: isAccountLoading } = useDoc<{firstName: string, lastName: string, accountType: string}>(userAccountRef);
 
   React.useEffect(() => {
-    if (!isUserLoading && !isAccountLoading) {
+    if (!isUserLoading && !isAccountLoading && (userAccount || user)) {
       const firstInitial = userAccount?.firstName?.charAt(0) ?? '';
       const lastInitial = userAccount?.lastName?.charAt(0) ?? '';
       const emailInitial = user?.email?.charAt(0) ?? '';
@@ -62,7 +62,6 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src={user?.photoURL ?? 'https://picsum.photos/seed/user/100/100'} alt="Commander" data-ai-hint="person portrait" />
                     <AvatarFallback>{fallback}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>

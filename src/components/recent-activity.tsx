@@ -22,8 +22,7 @@ export function RecentActivity({ data }: RecentActivityProps) {
       {recentSoldiers.map((soldier) => (
         <div key={soldier.id} className="flex items-center">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={soldier.avatar} alt="Avatar" data-ai-hint="person portrait" />
-            <AvatarFallback>{soldier.lastName?.charAt(0) ?? soldier.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{soldier.firstName?.charAt(0)}{soldier.lastName?.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="ml-4 space-y-1">
             <p className="text-sm font-medium leading-none">{soldier.firstName} {soldier.lastName}</p>
