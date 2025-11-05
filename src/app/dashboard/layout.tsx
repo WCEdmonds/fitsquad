@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShieldCheck, Swords } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck, Swords, Menu } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export default function DashboardLayout({
   children,
@@ -53,7 +54,22 @@ export default function DashboardLayout({
   return (
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
-          <DashboardNav />
+          <DashboardNav className="hidden md:flex" />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <DashboardNav isMobile={true} />
+            </SheetContent>
+          </Sheet>
           <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
             <div className="ml-auto flex-1 sm:flex-initial">
               {/* Optional Search Bar */}
