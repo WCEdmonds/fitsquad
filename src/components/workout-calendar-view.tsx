@@ -5,24 +5,47 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Target, Activity, Dumbbell, Zap, User } from 'lucide-react';
+import { Users, Target, Activity, Dumbbell, Zap, User, BookPlus } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useState } from 'react';
+import { LogProgressDialog } from './log-progress-dialog';
+import { Button } from './ui/button';
 
-interface WorkoutCalendarViewProps {
-  plan: GenerateTailoredWorkoutPlanOutput;
+
+interface DailyWorkoutDisplayProps {
+    dailyWorkouts: NonNullable<GenerateTailoredWorkoutPlanOutput['strength_focus_plan' | 'individual_plan']>;
+    workoutPlanId: string; // Assuming we can pass this down
 }
 
-const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: NonNullable<GenerateTailoredWorkoutPlanOutput['strength_focus_plan' | 'individual_plan']>}) => {
+
+const DailyWorkoutDisplay = ({ dailyWorkouts, workoutPlanId }: DailyWorkoutDisplayProps) => {
+  const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string } | null>(null);
+
+  const handleOpenLogDialog = (exercise: { id: string, name: string }) => {
+    setSelectedExercise(exercise);
+    setIsLogDialogOpen(true);
+  };
+  
   if (!dailyWorkouts || dailyWorkouts.length === 0) {
     return <p className="text-muted-foreground">No workouts scheduled for this plan.</p>
   }
   
   return (
+     <>
+     {selectedExercise && (
+        <LogProgressDialog
+          isOpen={isLogDialogOpen}
+          onOpenChange={setIsLogDialogOpen}
+          exercise={selectedExercise}
+          workoutPlanId={workoutPlanId}
+        />
+     )}
      <div className="grid grid-cols-1 gap-4">
       {dailyWorkouts.map((dailyWorkout) => (
         <Card key={dailyWorkout.day}>
@@ -48,6 +71,7 @@ const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: NonNullable<Gen
                     <TableHead>Sets</TableHead>
                     <TableHead>Reps / Duration</TableHead>
                     <TableHead>Rest</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -66,6 +90,12 @@ const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: NonNullable<Gen
                       <TableCell>{exercise.sets}</TableCell>
                       <TableCell>{exercise.reps}</TableCell>
                       <TableCell>{exercise.rest}</TableCell>
+                       <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenLogDialog({id: `ex-${index}`, name: exercise.name})}>
+                          <BookPlus className="mr-2 h-4 w-4" />
+                          Log
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -81,11 +111,12 @@ const DailyWorkoutDisplay = ({ dailyWorkouts }: { dailyWorkouts: NonNullable<Gen
         </Card>
       ))}
     </div>
+    </>
   );
 };
 
 
-export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
+export function WorkoutCalendarView({ plan, planId }: { plan: GenerateTailoredWorkoutPlanOutput, planId: string }) {
   const isIndividualPlan = !!plan.individual_plan;
 
   return (
@@ -110,7 +141,7 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
         <h2 className="text-2xl font-bold mb-4 flex items-center"><Activity className="mr-2" /> Weekly Schedule</h2>
         
         {isIndividualPlan && plan.individual_plan ? (
-            <DailyWorkoutDisplay dailyWorkouts={plan.individual_plan} />
+            <DailyWorkoutDisplay dailyWorkouts={plan.individual_plan} workoutPlanId={planId}/>
         ) : (
             <Tabs defaultValue="strength">
                 <TabsList className="grid w-full grid-cols-2">
@@ -122,10 +153,10 @@ export function WorkoutCalendarView({ plan }: WorkoutCalendarViewProps) {
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="strength" className="mt-4">
-                    {plan.strength_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.strength_focus_plan} />}
+                    {plan.strength_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.strength_focus_plan} workoutPlanId={planId} />}
                 </TabsContent>
                 <TabsContent value="running" className="mt-4">
-                    {plan.running_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.running_focus_plan} />}
+                    {plan.running_focus_plan && <DailyWorkoutDisplay dailyWorkouts={plan.running_focus_plan} workoutPlanId={planId} />}
                 </TabsContent>
             </Tabs>
         )}

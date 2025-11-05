@@ -24,6 +24,7 @@ export default function PlannerPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState<GenerateTailoredWorkoutPlanOutput | null>(null);
+  const [generatedPlanId, setGeneratedPlanId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -94,6 +95,7 @@ export default function PlannerPage() {
 
     setIsGenerating(true);
     setWorkoutPlan(null);
+    setGeneratedPlanId(null);
 
     try {
       const result = await generateTailoredWorkoutPlan({
@@ -106,6 +108,7 @@ export default function PlannerPage() {
         isIndividualPlan,
       });
       setWorkoutPlan(result);
+      setGeneratedPlanId(`temp-${Date.now()}`); // Create a temporary ID for the unsaved plan
     } catch (error) {
       console.error('Workout plan generation failed:', error);
       toast({
@@ -132,7 +135,7 @@ export default function PlannerPage() {
       const year = startDate.getFullYear();
       const week = getISOWeek(startDate);
 
-      await addDoc(workoutPlansRef, {
+      const docRef = await addDoc(workoutPlansRef, {
         teamId: userAccount.teamId,
         name: workoutPlan.title,
         description: `Week ${week}, ${year} workout plan`,
@@ -141,6 +144,7 @@ export default function PlannerPage() {
         createdAt: new Date().toISOString(),
       });
 
+      setGeneratedPlanId(docRef.id); // Update with the real ID from Firestore
       toast({ title: "Success", description: "Workout plan saved!" });
     } catch(err: any) {
       console.error(err);
@@ -224,7 +228,7 @@ export default function PlannerPage() {
                   <p className="text-muted-foreground">Fill out the form on the left to get started.</p>
                 </div>
               )}
-              {workoutPlan && <WorkoutCalendarView plan={workoutPlan} />}
+              {workoutPlan && generatedPlanId && <WorkoutCalendarView plan={workoutPlan} planId={generatedPlanId} />}
             </CardContent>
           </Card>
         </div>

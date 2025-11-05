@@ -45,6 +45,17 @@ service cloud.firestore {
       match /managedTeams/{teamId} {
         allow read, write: if isOwner(accountId) && isCommander(accountId);
       }
+      
+      /**
+       * @description Controls access to exercise progress data for soldiers.
+       */
+      match /exercisesProgress/{progressId} {
+        allow get: if isOwner(accountId);
+        allow list: if isOwner(accountId);
+        allow create: if isOwner(accountId) && request.resource.data.accountId == accountId;
+        allow update: if isOwner(accountId) && resource.data.accountId == accountId;
+        allow delete: if isOwner(accountId);
+      }
     }
 
     /**
@@ -92,17 +103,6 @@ service cloud.firestore {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.workoutPlanId == workoutPlanId;
       allow update, delete: if false; // TODO: Add team membership check and validate workoutPlanId is immutable
-    }
-
-    /**
-     * @description Controls access to exercise progress data for soldiers.
-     */
-    match /accounts/{accountId}/exercisesProgress/{progressId} {
-      allow get: if isOwner(accountId);
-      allow list: if isOwner(accountId);
-      allow create: if isSignedIn() && request.resource.data.accountId == accountId;
-      allow update: if isExistingOwner(accountId) && resource.data.accountId == accountId;
-      allow delete: if isExistingOwner(accountId);
     }
 
     // Helper functions

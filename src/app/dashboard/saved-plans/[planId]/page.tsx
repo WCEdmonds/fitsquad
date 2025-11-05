@@ -86,7 +86,7 @@ export default function SavedPlanDetailPage() {
                         <Skeleton className="h-4 w-5/6" />
                     </div>
                     )}
-                    {parsedPlan && <WorkoutCalendarView plan={parsedPlan} />}
+                    {parsedPlan && <WorkoutCalendarView plan={parsedPlan} planId={planId as string} />}
                     {!isLoading && !parsedPlan && (
                         <div className="text-center py-12">
                             <p>Plan not found or data is corrupted.</p>
