@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShieldCheck, Swords, Menu } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck, Swords, Menu, Dumbbell } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ import {
 import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({
   children,
@@ -54,24 +55,42 @@ export default function DashboardLayout({
   return (
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
-          <DashboardNav className="hidden md:flex" />
+           <Link
+              href="/dashboard"
+              className="flex items-center gap-2 font-semibold text-lg"
+            >
+              <Dumbbell className="h-7 w-7" />
+              <span className="">FitSquad</span>
+          </Link>
+          <div className="hidden md:flex ml-8">
+            <DashboardNav />
+          </div>
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 md:hidden"
+                className="shrink-0 md:hidden ml-auto"
               >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
-              <DashboardNav isMobile={true} />
+               <nav className="grid gap-6 text-lg font-medium">
+                 <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 font-semibold text-lg mb-4"
+                  >
+                    <Dumbbell className="h-7 w-7" />
+                    <span className="">FitSquad</span>
+                </Link>
+                <DashboardNav isMobile={true} />
+               </nav>
             </SheetContent>
           </Sheet>
-          <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-            <div className="ml-auto flex-1 sm:flex-initial">
+          <div className="flex items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+            <div className="flex-1 sm:flex-initial">
               {/* Optional Search Bar */}
             </div>
             <DropdownMenu>

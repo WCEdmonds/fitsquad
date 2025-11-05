@@ -21,11 +21,10 @@ const commanderNavItems = [
 ]
 
 interface DashboardNavProps {
-  className?: string;
   isMobile?: boolean;
 }
 
-export function DashboardNav({ className, isMobile = false }: DashboardNavProps) {
+export function DashboardNav({ isMobile = false }: DashboardNavProps) {
   const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -39,34 +38,28 @@ export function DashboardNav({ className, isMobile = false }: DashboardNavProps)
 
   const navClasses = isMobile
     ? 'flex flex-col items-start gap-4 text-lg font-medium'
-    : 'flex-row items-center gap-8 text-base';
+    : 'flex flex-row items-center gap-8 text-base';
+
+  const allNavItems = [...navItems];
+  if (userAccount?.accountType === 'Commander') {
+    allNavItems.push(...commanderNavItems);
+  }
 
   return (
-    <div className={cn("flex h-full items-center w-full", className)}>
-       <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg mb-4 md:mb-0 md:mr-8">
-          <Dumbbell className="h-7 w-7" />
-          <span className="">FitSquad</span>
-        </Link>
-      <nav className={cn(navClasses, "w-full")}>
-        {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`transition-colors hover:text-foreground ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground'}`}
-            >
-              {item.label}
-            </Link>
-        ))}
-         {userAccount?.accountType === 'Commander' && commanderNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`transition-colors hover:text-foreground ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground'}`}
-            >
-              {item.label}
-            </Link>
-        ))}
-      </nav>
-    </div>
+    <>
+      {allNavItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'transition-colors hover:text-foreground',
+               pathname === item.href ? 'text-foreground' : 'text-muted-foreground',
+               isMobile && 'text-xl'
+            )}
+          >
+            {item.label}
+          </Link>
+      ))}
+    </>
   );
 }
