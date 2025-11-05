@@ -34,11 +34,11 @@ const formSchema = z.object({
   weight: z.coerce.number().min(0, 'Weight must be positive.'),
   height: z.coerce.number().min(0, 'Height must be positive.'),
   // ACFT Events
-  mdl: z.coerce.number().min(0, 'Score must be positive.'),
-  hrp: z.coerce.number().min(0, 'Score must be positive.'),
-  sdc: z.coerce.number().min(0, 'Time must be positive.'),
-  plk: z.coerce.number().min(0, 'Time must be positive.'),
-  twoMileRun: z.coerce.number().min(0, 'Time must be positive.'),
+  mdl: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
+  hrp: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
+  sdc: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
+  plk: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
+  twoMileRun: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   healthInfo: z.string().optional(),
 });
 
@@ -155,7 +155,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
             )}
           />
         </div>
-        <h3 className="text-lg font-semibold border-b pb-2">ACFT Events</h3>
+        <h3 className="text-lg font-semibold border-b pb-2">ACFT Event Scores (0-100)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -164,7 +164,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
               <FormItem>
                 <FormLabel>Max Deadlift (MDL)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 340" {...field} />
+                  <Input type="number" placeholder="e.g., 80" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -177,7 +177,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
               <FormItem>
                 <FormLabel>Hand-Release Pushups (HRP)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 50" {...field} />
+                  <Input type="number" placeholder="e.g., 75" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -190,7 +190,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
               <FormItem>
                 <FormLabel>Sprint-Drag-Carry (SDC)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
+                  <Input type="number" placeholder="e.g., 70" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -203,7 +203,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
               <FormItem>
                 <FormLabel>Plank (PLK)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
+                  <Input type="number" placeholder="e.g., 65" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -216,7 +216,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
               <FormItem>
                 <FormLabel>2-Mile Run (2MR)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
+                  <Input type="number" placeholder="e.g., 85" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

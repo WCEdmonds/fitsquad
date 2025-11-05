@@ -17,8 +17,8 @@ import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-const RUN_TIME_THRESHOLD_SECONDS = 1260; // 21:00 in seconds
-const HRP_THRESHOLD = 10; // reps
+const RUN_TIME_SCORE_THRESHOLD = 60; 
+const HRP_SCORE_THRESHOLD = 60; 
 
 export default function SoldiersPage() {
     const { user } = useUser();
@@ -141,8 +141,8 @@ export default function SoldiersPage() {
   };
 
 
-    const runningFocusGroup: Soldier[] = allSoldiers.filter(s => s.twoMileRun > RUN_TIME_THRESHOLD_SECONDS);
-    const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => s.hrp < HRP_THRESHOLD);
+    const runningFocusGroup: Soldier[] = allSoldiers.filter(s => s.twoMileRun < RUN_TIME_SCORE_THRESHOLD);
+    const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => s.hrp < HRP_SCORE_THRESHOLD);
 
 
   return (

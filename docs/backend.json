@@ -84,23 +84,23 @@
         },
         "mdl": {
           "type": "number",
-          "description": "Max Deadlift score."
+          "description": "Max Deadlift score (0-100 points)."
         },
         "hrp": {
           "type": "number",
-          "description": "Hand-Release Pushups score."
+          "description": "Hand-Release Pushups score (0-100 points)."
         },
         "sdc": {
           "type": "number",
-          "description": "Sprint-Drag-Carry time in seconds."
+          "description": "Sprint-Drag-Carry score (0-100 points)."
         },
         "plk": {
           "type": "number",
-          "description": "Plank time in seconds."
+          "description": "Plank score (0-100 points)."
         },
         "twoMileRun": {
           "type": "number",
-          "description": "2-mile run time in seconds."
+          "description": "2-mile run score (0-100 points)."
         },
         "healthInfo": {
           "type": "string",

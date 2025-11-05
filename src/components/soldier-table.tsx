@@ -35,15 +35,6 @@ interface SoldierTableProps {
   isLoading?: boolean;
 }
 
-function formatTime(seconds: number): string {
-  if (typeof seconds !== 'number' || isNaN(seconds) || seconds === 0) {
-    return '0:00';
-  }
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
 export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
@@ -167,9 +158,9 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
               </TableCell>
               <TableCell>{soldier.mdl || 'N/A'}</TableCell>
               <TableCell>{soldier.hrp || 'N/A'}</TableCell>
-              <TableCell className="hidden lg:table-cell">{formatTime(soldier.sdc)}</TableCell>
-              <TableCell className="hidden lg:table-cell">{formatTime(soldier.plk)}</TableCell>
-              <TableCell>{formatTime(soldier.twoMileRun)}</TableCell>
+              <TableCell className="hidden lg:table-cell">{soldier.sdc || 'N/A'}</TableCell>
+              <TableCell className="hidden lg:table-cell">{soldier.plk || 'N/A'}</TableCell>
+              <TableCell>{soldier.twoMileRun || 'N/A'}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
