@@ -20,10 +20,25 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const formSchema = z.object({
-  aftScore: z.coerce.number().min(0, 'Score must be positive.'),
-  runTime: z.coerce.number().min(0, 'Run time must be positive.'),
+  // Vitals
+  gender: z.enum(['Male', 'Female', 'Other']),
+  weight: z.coerce.number().min(0, 'Weight must be positive.'),
+  height: z.coerce.number().min(0, 'Height must be positive.'),
+  // ACFT Events
+  mdl: z.coerce.number().min(0, 'Score must be positive.'),
+  hrp: z.coerce.number().min(0, 'Score must be positive.'),
+  sdc: z.coerce.number().min(0, 'Time must be positive.'),
+  plk: z.coerce.number().min(0, 'Time must be positive.'),
+  twoMileRun: z.coerce.number().min(0, 'Time must be positive.'),
   healthInfo: z.string().optional(),
 });
 
@@ -43,8 +58,13 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
   const form = useForm<SoldierDataFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
-      aftScore: 0,
-      runTime: 0,
+      weight: 0,
+      height: 0,
+      mdl: 0,
+      hrp: 0,
+      sdc: 0,
+      plk: 0,
+      twoMileRun: 0,
       healthInfo: '',
     },
   });
@@ -62,7 +82,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
     }
 
     const soldierDataCollectionRef = collection(firestore, 'accounts', soldierId, 'soldierData');
-    const newSoldierDataRef = doc(soldierDataCollectionRef); // Creates a new doc with a unique ID
+    const newSoldierDataRef = doc(soldierDataCollectionRef);
 
     const dataToSave = {
       id: newSoldierDataRef.id,
@@ -71,7 +91,6 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
       createdAt: new Date().toISOString(),
     };
 
-    // Use setDoc with the new reference. This will create a new document each time.
     setDocumentNonBlocking(newSoldierDataRef, dataToSave, {});
     
     toast({
@@ -86,15 +105,37 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="aftScore"
+            name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Army Fitness Test (AFT) Score</FormLabel>
+                <FormLabel>Gender</FormLabel>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="weight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Weight (lbs)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 270" {...field} />
+                  <Input type="number" placeholder="e.g., 180" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,12 +143,80 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
           />
           <FormField
             control={form.control}
-            name="runTime"
+            name="height"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Run Time (in minutes)</FormLabel>
+                <FormLabel>Height (inches)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="e.g., 13.5" {...field} />
+                  <Input type="number" placeholder="e.g., 70" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <h3 className="text-lg font-semibold border-b pb-2">ACFT Events</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="mdl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Max Deadlift (MDL)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 340" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="hrp"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hand-Release Pushups (HRP)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 50" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="sdc"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sprint-Drag-Carry (SDC)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="plk"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Plank (PLK)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="twoMileRun"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>2-Mile Run (2MR)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="in seconds" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

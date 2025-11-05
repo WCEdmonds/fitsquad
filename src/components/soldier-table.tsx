@@ -36,7 +36,7 @@ interface SoldierTableProps {
 }
 
 function formatTime(seconds: number): string {
-  if (typeof seconds !== 'number' || isNaN(seconds)) {
+  if (typeof seconds !== 'number' || isNaN(seconds) || seconds === 0) {
     return '0:00';
   }
   const mins = Math.floor(seconds / 60);
@@ -53,6 +53,10 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
     setIsLogDataOpen(true);
   };
 
+  const hasBenchmark = (soldier: Soldier) => {
+    return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
+  }
+
   if (isLoading) {
     return (
       <Table>
@@ -62,10 +66,11 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>AFT Score</TableHead>
-            <TableHead className="hidden md:table-cell">Run Time</TableHead>
-            <TableHead className="hidden md:table-cell">Push-ups</TableHead>
-            <TableHead className="hidden md:table-cell">Sit-ups</TableHead>
+            <TableHead>MDL</TableHead>
+            <TableHead className="hidden md:table-cell">HRP</TableHead>
+            <TableHead className="hidden md:table-cell">SDC</TableHead>
+            <TableHead className="hidden md:table-cell">PLK</TableHead>
+            <TableHead className="hidden md:table-cell">2MR</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -83,10 +88,11 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                   <Skeleton className="h-3 w-[50px]" />
                 </div>
               </TableCell>
-              <TableCell><Skeleton className="h-6 w-[50px] rounded-full" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
+               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
               <TableCell>
                 <Skeleton className="h-8 w-8" />
               </TableCell>
@@ -108,7 +114,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
   return (
     <>
       <Dialog open={isLogDataOpen} onOpenChange={setIsLogDataOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Log Fitness Data for {selectedSoldier?.name.split('@')[0]}</DialogTitle>
             <DialogDescription>
@@ -130,10 +136,11 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>AFT Score</TableHead>
-            <TableHead className="hidden md:table-cell">Run Time</TableHead>
-            <TableHead className="hidden md:table-cell">Push-ups</TableHead>
-            <TableHead className="hidden md:table-cell">Sit-ups</TableHead>
+            <TableHead>MDL</TableHead>
+            <TableHead>HRP</TableHead>
+            <TableHead className="hidden lg:table-cell">SDC</TableHead>
+            <TableHead className="hidden lg:table-cell">PLK</TableHead>
+            <TableHead>2MR</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -158,14 +165,11 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                   {soldier.rank}
                 </div>
               </TableCell>
-              <TableCell>
-                <Badge variant={soldier.aftScore === 0 ? 'outline' : soldier.aftScore >= 270 ? 'default' : soldier.aftScore < 230 ? 'destructive' : 'secondary'}>
-                  {soldier.aftScore === 0 ? 'N/A' : soldier.aftScore}
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{formatTime(soldier.runTime)}</TableCell>
-              <TableCell className="hidden md:table-cell">{soldier.pushups}</TableCell>
-              <TableCell className="hidden md:table-cell">{soldier.situps}</TableCell>
+              <TableCell>{soldier.mdl || 'N/A'}</TableCell>
+              <TableCell>{soldier.hrp || 'N/A'}</TableCell>
+              <TableCell className="hidden lg:table-cell">{formatTime(soldier.sdc)}</TableCell>
+              <TableCell className="hidden lg:table-cell">{formatTime(soldier.plk)}</TableCell>
+              <TableCell>{formatTime(soldier.twoMileRun)}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -177,7 +181,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => openLogDataDialog(soldier)}>
-                      {soldier.aftScore === 0 ? 'Log Benchmark' : 'Log Progress'}
+                      {hasBenchmark(soldier) ? 'Log Progress' : 'Log Benchmark'}
                     </DropdownMenuItem>
                     <DropdownMenuItem>View Details</DropdownMenuItem>
                     <DropdownMenuSeparator />

@@ -22,12 +22,24 @@
           "type": "string",
           "description": "Email address associated with the account.",
           "format": "email"
+        },
+        "gender": {
+          "type": "string",
+          "description": "Gender of the user.",
+          "enum": ["Male", "Female", "Other"]
+        },
+        "weight": {
+            "type": "number",
+            "description": "Weight of the user in pounds."
+        },
+        "height": {
+            "type": "number",
+            "description": "Height of the user in inches."
         }
       },
       "required": [
         "id",
         "accountType",
-        "teamId",
         "email"
       ]
     },
@@ -70,13 +82,25 @@
           "type": "string",
           "description": "Reference to the Account this data belongs to. (Relationship: Account 1:N SoldierData)"
         },
-        "aftScore": {
+        "mdl": {
           "type": "number",
-          "description": "Army Fitness Test score."
+          "description": "Max Deadlift score."
         },
-        "runTime": {
+        "hrp": {
           "type": "number",
-          "description": "Run time in minutes."
+          "description": "Hand-Release Pushups score."
+        },
+        "sdc": {
+          "type": "number",
+          "description": "Sprint-Drag-Carry time in seconds."
+        },
+        "plk": {
+          "type": "number",
+          "description": "Plank time in seconds."
+        },
+        "twoMileRun": {
+          "type": "number",
+          "description": "2-mile run time in seconds."
         },
         "healthInfo": {
           "type": "string",
@@ -86,8 +110,11 @@
       "required": [
         "id",
         "accountId",
-        "aftScore",
-        "runTime",
+        "mdl",
+        "hrp",
+        "sdc",
+        "plk",
+        "twoMileRun",
         "healthInfo"
       ]
     },

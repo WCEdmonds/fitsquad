@@ -14,6 +14,7 @@ export function RecentActivity({ data }: RecentActivityProps) {
     );
   }
 
+  // Show most recently updated soldiers first
   const recentSoldiers = data.slice(0, 5);
 
   return (
@@ -27,10 +28,10 @@ export function RecentActivity({ data }: RecentActivityProps) {
           <div className="ml-4 space-y-1">
             <p className="text-sm font-medium leading-none">{soldier.name.split('@')[0]}</p>
             <p className="text-sm text-muted-foreground">
-              AFT Score: {soldier.aftScore}.
+              Logged new fitness data.
             </p>
           </div>
-          <div className="ml-auto font-medium text-primary">+{Math.floor(Math.random() * 5 + 1)} pts</div>
+          <div className="ml-auto font-medium text-primary">{new Date().toLocaleDateString()}</div>
         </div>
       ))}
     </div>

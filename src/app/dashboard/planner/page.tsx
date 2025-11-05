@@ -24,32 +24,31 @@ export default function PlannerPage() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // 1. Get current user's account to find their teamId
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, 'accounts', user.uid);
   }, [firestore, user]);
   const { data: userAccount } = useDoc(userAccountRef);
 
-  // 2. Get all members of the team
   const teamMembersRef = useMemoFirebase(() => {
     if (!userAccount?.teamId) return null;
     return collection(firestore, 'teams', userAccount.teamId, 'members');
   }, [firestore, userAccount]);
   const { data: teamMembers } = useCollection(teamMembersRef);
 
-  // 3. For each member, get their soldierData.
   const [allSoldierData, setAllSoldierData] = useState<any[]>([]);
   useEffect(() => {
     if (teamMembers && firestore) {
       const fetchData = async () => {
         const dataPromises = teamMembers.map(async (member) => {
-            const soldierDataRef = collection(firestore, 'accounts', member.uid, 'soldierData');
+            const soldierDataRef = collection(firestore, 'accounts', member.id, 'soldierData');
             const data = await getCollectionNonBlocking<any>(soldierDataRef);
-            return data.map(d => ({ ...d, memberEmail: member.email }));
+            // Get the most recent data entry
+            const latestData = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+            return latestData ? { ...latestData, memberEmail: member.email } : null;
         });
         const results = await Promise.all(dataPromises);
-        setAllSoldierData(results.flat());
+        setAllSoldierData(results.filter(r => r !== null));
       };
       fetchData();
     }
@@ -69,7 +68,7 @@ export default function PlannerPage() {
     setWorkoutPlan(null);
 
     const fitnessData = allSoldierData.map(s => (
-      `Soldier (${s.memberEmail}): AFT Score ${s.aftScore}, Run Time ${s.runTime} mins. Notes: ${s.healthInfo}`
+      `Soldier (${s.memberEmail}): MDL ${s.mdl} lbs, HRP ${s.hrp} reps, SDC ${s.sdc}s, PLK ${s.plk}s, 2MR ${s.twoMileRun}s. Notes: ${s.healthInfo}`
     )).join('\n');
 
     try {
@@ -95,7 +94,7 @@ export default function PlannerPage() {
       <div className="lg:col-span-1">
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Workout Plan Generator</CardTitle>
+            <CardTitle>Fitness Plan Generator</CardTitle>
             <CardDescription>
               Use AI to create a tailored workout plan for your unit based on their latest data.
             </CardDescription>

@@ -15,11 +15,16 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 import { Soldier } from "@/lib/types";
+import { useMemo } from "react";
 
 const chartConfig = {
-  score: {
-    label: "AFT Score",
-    color: "hsl(var(--primary))",
+  mdl: {
+    label: "Deadlift",
+    color: "hsl(var(--chart-1))",
+  },
+  hrp: {
+    label: "Pushups",
+    color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
 
@@ -28,10 +33,14 @@ interface PerformanceChartProps {
 }
 
 export function PerformanceChart({ data }: PerformanceChartProps) {
-  const chartData = data.map(s => ({
-    name: `${s.rank} ${s.name.split('@')[0]}`,
-    score: s.aftScore,
-  }));
+    
+  const chartData = useMemo(() => {
+    return data.map(s => ({
+        name: `${s.rank} ${s.name.split('@')[0]}`,
+        mdl: s.mdl,
+        hrp: s.hrp
+    }));
+  }, [data]);
   
   if (data.length === 0) {
     return (
@@ -44,24 +53,24 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-        <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0}}>
+        <BarChart accessibilityLayer data={chartData} margin={{ top: 20, right: 20, bottom: 60, left: 0}}>
             <XAxis
-            dataKey="name"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            angle={-45}
-            textAnchor="end"
-            height={80}
-            stroke="hsl(var(--foreground))"
-            interval={0}
+                dataKey="name"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                angle={-45}
+                textAnchor="end"
+                stroke="hsl(var(--foreground))"
+                interval={0}
             />
-            <YAxis dataKey="score" stroke="hsl(var(--foreground))" />
+            <YAxis stroke="hsl(var(--foreground))" />
             <Tooltip
-            cursor={false}
-            content={<ChartTooltipContent indicator="dot" />}
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
             />
-            <Bar dataKey="score" fill="var(--color-score)" radius={4} />
+            <Bar dataKey="mdl" fill="var(--color-mdl)" radius={4} />
+            <Bar dataKey="hrp" fill="var(--color-hrp)" radius={4} />
         </BarChart>
         </ChartContainer>
     </ResponsiveContainer>

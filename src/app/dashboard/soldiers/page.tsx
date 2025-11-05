@@ -17,8 +17,8 @@ import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-const RUN_TIME_THRESHOLD = 15; // 15:00 in minutes
-const STRENGTH_THRESHOLD = 50; // pushups or situps
+const RUN_TIME_THRESHOLD_SECONDS = 1260; // 21:00 in seconds
+const HRP_THRESHOLD = 10; // reps
 
 export default function SoldiersPage() {
     const { user } = useUser();
@@ -47,37 +47,40 @@ export default function SoldiersPage() {
                 const soldierPromises = teamMembers.map(async (member) => {
                     const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
                     const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
-                    const sData = soldierDataList[0];
+                    const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
                     
                     const accountRef = doc(firestore, 'accounts', member.id);
                     const accData = await getDocNonBlocking<any>(accountRef);
 
+                    const defaultSoldier: Soldier = {
+                        id: member.id,
+                        name: accData?.email || 'Unknown',
+                        rank: accData?.accountType || 'Soldier',
+                        mdl: 0,
+                        hrp: 0,
+                        sdc: 0,
+                        plk: 0,
+                        twoMileRun: 0,
+                        gender: accData?.gender || 'Other',
+                        weight: accData?.weight || 0,
+                        height: accData?.height || 0,
+                        healthNotes: 'No data',
+                        avatar: `https://picsum.photos/seed/${member.id}/100/100`,
+                    };
+
                     if (sData && accData) {
                         return {
-                            id: member.id,
-                            name: accData.email, // Or a 'name' field if you add it
-                            rank: accData.accountType, // Or a more specific rank
-                            aftScore: sData.aftScore,
-                            runTime: sData.runTime * 60, // converting minutes to seconds
-                            pushups: 50, // Placeholder, add to your data model
-                            situps: 50, // Placeholder, add to your data model
+                            ...defaultSoldier,
                             healthNotes: sData.healthInfo,
-                            avatar: `https://picsum.photos/seed/${member.id}/100/100`,
+                            mdl: sData.mdl,
+                            hrp: sData.hrp,
+                            sdc: sData.sdc,
+                            plk: sData.plk,
+                            twoMileRun: sData.twoMileRun
                         };
                     }
-                    // if user has account but no soldier data yet.
                     if(accData){
-                         return {
-                            id: member.id,
-                            name: accData.email,
-                            rank: accData.accountType,
-                            aftScore: 0,
-                            runTime: 0,
-                            pushups: 0,
-                            situps: 0,
-                            healthNotes: 'No data',
-                            avatar: `https://picsum.photos/seed/${member.id}/100/100`,
-                        };
+                         return defaultSoldier;
                     }
                     return null;
                 });
@@ -97,7 +100,6 @@ export default function SoldiersPage() {
     }
 
     try {
-      // Find user by email
       const usersRef = collection(firestore, 'accounts');
       const q = query(usersRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
@@ -111,13 +113,11 @@ export default function SoldiersPage() {
       const soldierId = soldierUser.id;
       const soldierData = soldierUser.data();
 
-      // Check if user is already in the team
       if (teamMembers?.some(member => member.id === soldierId)) {
         toast({ title: 'User already in team', description: 'This soldier is already a member of your team.', variant: 'destructive' });
         return;
       }
 
-      // Add soldier to team and update their account
       const batch = writeBatch(firestore);
 
       const teamMemberRef = doc(firestore, 'teams', userAccount.teamId, 'members', soldierId);
@@ -141,8 +141,8 @@ export default function SoldiersPage() {
   };
 
 
-    const runningFocusGroup: Soldier[] = allSoldiers.filter(s => (s.runTime/60) > RUN_TIME_THRESHOLD);
-    const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => s.pushups < STRENGTH_THRESHOLD || s.situps < STRENGTH_THRESHOLD);
+    const runningFocusGroup: Soldier[] = allSoldiers.filter(s => s.twoMileRun > RUN_TIME_THRESHOLD_SECONDS);
+    const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => s.hrp < HRP_THRESHOLD);
 
 
   return (

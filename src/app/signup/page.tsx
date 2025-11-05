@@ -35,6 +35,9 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accountType, setAccountType] = useState('');
+  const [gender, setGender] = useState('');
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
@@ -51,15 +54,16 @@ export default function SignupPage() {
         setError('Please select an account type.');
         return;
     }
+     if (!gender) {
+        setError('Please select a gender.');
+        return;
+    }
     setError(null);
     setIsLoading(true);
 
     try {
       const userCredential = await initiateEmailSignUp(auth, email, password);
       
-      // The onAuthStateChanged listener will catch the new user.
-      // We can get the user from there, or here for immediate actions.
-      // For this flow, let's assume we proceed after the user is created.
       const user = auth.currentUser;
 
       if (user) {
@@ -68,6 +72,9 @@ export default function SignupPage() {
           email: user.email,
           accountType: accountType,
           teamId: null, // User will create or join a team later
+          gender,
+          weight: Number(weight),
+          height: Number(height),
         };
         
         const accountRef = doc(firestore, 'accounts', user.uid);
@@ -85,8 +92,8 @@ export default function SignupPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
             <Dumbbell className="size-8" />
@@ -98,27 +105,54 @@ export default function SignupPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+             <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+
+            <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select onValueChange={setGender} value={gender}>
+                        <SelectTrigger id="gender">
+                            <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="weight">Weight (lbs)</Label>
+                    <Input id="weight" type="number" required value={weight} onChange={e => setWeight(e.target.value)} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="height">Height (in)</Label>
+                    <Input id="height" type="number" required value={height} onChange={e => setHeight(e.target.value)} />
+                </div>
             </div>
+
             <div className="space-y-2">
                 <Label htmlFor="accountType">Account Type</Label>
                 <Select onValueChange={setAccountType} value={accountType}>

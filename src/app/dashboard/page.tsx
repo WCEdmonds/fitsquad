@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Target, Users, Activity, BarChart3, Swords, Shield } from 'lucide-react';
+import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const [account, setAccount] = useState<any>(null);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
-  const [avgAftScore, setAvgAftScore] = useState<number | string>('--');
+  const [avgHrp, setAvgHrp] = useState<number | string>('--');
   const [avgRunTime, setAvgRunTime] = useState<string>('--:--');
   const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
 
@@ -70,23 +70,40 @@ export default function DashboardPage() {
             const soldierPromises = teamMembers.map(async (member) => {
                 const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
                 const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
-                const sData = soldierDataList[0];
+                const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
                 
                 const accountRef = doc(firestore, 'accounts', member.id);
                 const accData = await getDocNonBlocking<any>(accountRef);
 
+                 const defaultSoldier: Soldier = {
+                    id: member.id,
+                    name: accData?.email || 'Unknown',
+                    rank: accData?.accountType || 'Soldier',
+                    mdl: 0,
+                    hrp: 0,
+                    sdc: 0,
+                    plk: 0,
+                    twoMileRun: 0,
+                    gender: accData?.gender || 'Other',
+                    weight: accData?.weight || 0,
+                    height: accData?.height || 0,
+                    healthNotes: 'No data',
+                    avatar: `https://picsum.photos/seed/${member.id}/100/100`,
+                };
+
                 if (sData && accData) {
-                    return {
-                        id: member.id,
-                        name: accData.email,
-                        rank: accData.accountType,
-                        aftScore: sData.aftScore,
-                        runTime: sData.runTime * 60,
-                        pushups: 50, // Placeholder
-                        situps: 50,  // Placeholder
+                     return {
+                        ...defaultSoldier,
                         healthNotes: sData.healthInfo,
-                        avatar: `https://picsum.photos/seed/${member.id}/100/100`,
-                    } as Soldier;
+                        mdl: sData.mdl,
+                        hrp: sData.hrp,
+                        sdc: sData.sdc,
+                        plk: sData.plk,
+                        twoMileRun: sData.twoMileRun
+                    };
+                }
+                if(accData){
+                        return defaultSoldier;
                 }
                 return null;
             });
@@ -94,12 +111,14 @@ export default function DashboardPage() {
             const soldiers = (await Promise.all(soldierPromises)).filter(s => s !== null) as Soldier[];
             setAllSoldiers(soldiers);
 
-            if (soldiers.length > 0) {
-              const totalScore = soldiers.reduce((acc, s) => acc + s.aftScore, 0);
-              setAvgAftScore(Math.round(totalScore / soldiers.length));
+            const soldiersWithData = soldiers.filter(s => s.hrp > 0 || s.twoMileRun > 0);
 
-              const totalRunTime = soldiers.reduce((acc, s) => acc + s.runTime, 0);
-              const avgSeconds = Math.round(totalRunTime / soldiers.length);
+            if (soldiersWithData.length > 0) {
+              const totalHrp = soldiersWithData.reduce((acc, s) => acc + s.hrp, 0);
+              setAvgHrp(Math.round(totalHrp / soldiersWithData.length));
+
+              const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
+              const avgSeconds = Math.round(totalRunTime / soldiersWithData.length);
               const mins = Math.floor(avgSeconds / 60);
               const secs = avgSeconds % 60;
               setAvgRunTime(`${mins}:${secs.toString().padStart(2, '0')}`);
@@ -141,7 +160,7 @@ export default function DashboardPage() {
   if (hasSoldierData === false) {
     return (
        <div className="flex items-center justify-center h-full">
-        <Card className="w-full max-w-lg">
+        <Card className="w-full max-w-2xl">
            <CardHeader>
             <CardTitle>Log Your Benchmark</CardTitle>
             <CardDescription>
@@ -174,17 +193,17 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. AFT Score</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Avg. HRP</CardTitle>
+            <PersonStanding className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{avgAftScore}</div>
+            <div className="text-2xl font-bold">{avgHrp}</div>
             <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Run Time</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg. 2-Mile Run</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -194,8 +213,8 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ready Status</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Readiness</CardTitle>
+            <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">--%</div>
@@ -207,9 +226,9 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>AFT Score Distribution</CardTitle>
+            <CardTitle>Performance Distribution</CardTitle>
             <CardDescription>
-              Performance breakdown across the unit.
+              Event breakdown across the unit.
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
