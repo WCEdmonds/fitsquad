@@ -34,6 +34,8 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [accountType, setAccountType] = useState('');
   const [gender, setGender] = useState('');
   const [weight, setWeight] = useState('');
@@ -58,6 +60,10 @@ export default function SignupPage() {
         setError('Please select a gender.');
         return;
     }
+    if (!firstName || !lastName) {
+      setError('Please enter your first and last name.');
+      return;
+    }
     setError(null);
     setIsLoading(true);
 
@@ -70,6 +76,8 @@ export default function SignupPage() {
         const accountData = {
           id: user.uid,
           email: user.email,
+          firstName,
+          lastName,
           accountType: accountType,
           teamId: null, // User will create or join a team later
           gender,
@@ -106,6 +114,14 @@ export default function SignupPage() {
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" required value={firstName} onChange={e => setFirstName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" required value={lastName} onChange={e => setLastName(e.target.value)} />
+                </div>
                 <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input

@@ -51,6 +51,18 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
   }
 
+  const getFocusGroup = (soldier: Soldier): {type: 'running' | 'strength' | null, text: string | null} => {
+    if (!hasBenchmark(soldier)) {
+      return { type: null, text: null };
+    }
+
+    if (soldier.twoMileRun <= soldier.hrp) {
+        return { type: 'running', text: 'Running Focus'};
+    } else {
+        return { type: 'strength', text: 'Strength Focus'};
+    }
+  }
+
   if (isLoading) {
     return (
       <Table>
@@ -141,7 +153,9 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
           </TableRow>
         </TableHeader>
         <TableBody>
-          {soldiers.map((soldier) => (
+          {soldiers.map((soldier) => {
+            const focus = getFocusGroup(soldier);
+            return (
             <TableRow key={soldier.id}>
               <TableCell className="hidden sm:table-cell">
                 <Avatar className="h-10 w-10">
@@ -150,20 +164,20 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                     alt={soldier.name}
                     data-ai-hint="person portrait"
                   />
-                  <AvatarFallback>{soldier.name.substring(0, 2)}</AvatarFallback>
+                  <AvatarFallback>{soldier.lastName?.charAt(0) ?? soldier.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               </TableCell>
               <TableCell className="font-medium">
                  <div className="flex items-center gap-2">
-                    <div className="font-medium">{soldier.name.split('@')[0]}</div>
-                    {soldier.twoMileRun > 0 && soldier.twoMileRun < RUN_TIME_SCORE_THRESHOLD && (
+                    <div className="font-medium">{soldier.firstName} {soldier.lastName}</div>
+                    {focus.type === 'running' && (
                       <Badge variant="outline" className="text-blue-600 border-blue-600">
-                        <Activity className="mr-1 h-3 w-3" /> Running Focus
+                        <Activity className="mr-1 h-3 w-3" /> {focus.text}
                       </Badge>
                     )}
-                    {soldier.hrp > 0 && soldier.hrp < HRP_SCORE_THRESHOLD && (
+                    {focus.type === 'strength' && (
                        <Badge variant="outline" className="text-red-600 border-red-600">
-                        <Dumbbell className="mr-1 h-3 w-3" /> Strength Focus
+                        <Dumbbell className="mr-1 h-3 w-3" /> {focus.text}
                       </Badge>
                     )}
                  </div>
@@ -196,7 +210,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                 </DropdownMenu>
               </TableCell>
             </TableRow>
-          ))}
+          )})}
         </TableBody>
       </Table>
     </>

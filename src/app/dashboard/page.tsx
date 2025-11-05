@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const [account, setAccount] = useState<any>(null);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
   const [avgHrp, setAvgHrp] = useState<number | string>('--');
-  const [avgRunTime, setAvgRunTime] = useState<string>('--:--');
+  const [avgRunTime, setAvgRunTime] = useState<string>('--');
   const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
 
 
@@ -78,6 +78,8 @@ export default function DashboardPage() {
                  const defaultSoldier: Soldier = {
                     id: member.id,
                     name: accData?.email || 'Unknown',
+                    firstName: accData?.firstName,
+                    lastName: accData?.lastName,
                     rank: accData?.accountType || 'Soldier',
                     mdl: 0,
                     hrp: 0,
@@ -118,10 +120,8 @@ export default function DashboardPage() {
               setAvgHrp(Math.round(totalHrp / soldiersWithData.length));
 
               const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
-              const avgSeconds = Math.round(totalRunTime / soldiersWithData.length);
-              const mins = Math.floor(avgSeconds / 60);
-              const secs = avgSeconds % 60;
-              setAvgRunTime(`${mins}:${secs.toString().padStart(2, '0')}`);
+              const avgScore = Math.round(totalRunTime / soldiersWithData.length);
+              setAvgRunTime(`${avgScore}`);
             }
         };
 
@@ -203,7 +203,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. 2-Mile Run</CardTitle>
+            <CardTitle className="text-sm font-medium">Avg. 2-Mile Run Score</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

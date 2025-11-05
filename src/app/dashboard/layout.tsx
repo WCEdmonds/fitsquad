@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { doc } from 'firebase/firestore';
 
 export default function DashboardLayout({
   children,
@@ -22,7 +23,15 @@ export default function DashboardLayout({
 }) {
   const { user } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
+
+  const userAccountRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'accounts', user.uid);
+  }, [firestore, user]);
+
+  const { data: userAccount } = useDoc<{firstName: string, lastName: string}>(userAccountRef);
 
   const handleLogout = () => {
     auth.signOut();
@@ -42,13 +51,13 @@ export default function DashboardLayout({
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage src={user?.photoURL ?? 'https://picsum.photos/seed/user/100/100'} alt="Commander" data-ai-hint="person portrait" />
-                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{userAccount?.lastName?.charAt(0) ?? user?.email?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>

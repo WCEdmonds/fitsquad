@@ -17,8 +17,8 @@ import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 
-const RUN_TIME_SCORE_THRESHOLD = 60; 
-const HRP_SCORE_THRESHOLD = 60; 
+const RUN_TIME_SCORE_THRESHOLD = 70; 
+const HRP_SCORE_THRESHOLD = 70; 
 
 export default function SoldiersPage() {
     const { user } = useUser();
@@ -55,6 +55,8 @@ export default function SoldiersPage() {
                     const defaultSoldier: Soldier = {
                         id: member.id,
                         name: accData?.email || 'Unknown',
+                        firstName: accData?.firstName,
+                        lastName: accData?.lastName,
                         rank: accData?.accountType || 'Soldier',
                         mdl: 0,
                         hrp: 0,

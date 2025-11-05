@@ -23,6 +23,14 @@
           "description": "Email address associated with the account.",
           "format": "email"
         },
+        "firstName": {
+          "type": "string",
+          "description": "First name of the user."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
         "gender": {
           "type": "string",
           "description": "Gender of the user.",
@@ -40,7 +48,9 @@
       "required": [
         "id",
         "accountType",
-        "email"
+        "email",
+        "firstName",
+        "lastName"
       ]
     },
     "Team": {
