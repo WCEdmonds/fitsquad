@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
