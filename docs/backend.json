@@ -48,7 +48,7 @@
         },
         "accountType": {
           "type": "string",
-          "description": "Type of account (Supervisor, Soldier, Commander)."
+          "description": "Type of account (Admin, Supervisor, Soldier, Commander)."
         },
         "teamId": {
           "type": "string",
@@ -489,4 +489,3 @@
     "reasoning": "The Firestore structure for FitSquad is designed to prioritize authorization independence and facilitate efficient data retrieval. It incorporates denormalization to avoid complex security rules involving `get()` calls. Path-based ownership is used for private user data, while membership maps are employed for collaborative data access. Segregation of data into collections with homogeneous security needs ensures simplified rule management and supports QAPs (Queries are not filters).\n\nSpecifically:\n\n*   **Accounts:** Account data is stored under `/accounts/{accountId}` with path-based ownership.\n*   **Teams:** Team data is stored under `/teams/{teamId}`. Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection to grant roles.\n*   **SoldierData:** Soldier data is nested under `/accounts/{accountId}/soldierData/{soldierDataId}`. This structure ensures that soldier data is directly associated with the account, enabling path-based ownership security rules. This enforces privacy, ensures that each soldier can only update or view their data.\n*   **WorkoutPlans:** Workout plans are stored under `/teams/{teamId}/workoutPlans/{workoutPlanId}`. This allows efficient retrieval of workout plans for a specific team.\n*   **Exercises:** Exercises related to a workout plan are nested under `/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}`.\n*   **Progress:** The progress of each soldier on each exercise is recorded under `/accounts/{accountId}/exercisesProgress/{progressId}`.\n*   **ManagedTeams:** For commanders, a subcollection at `/accounts/{accountId}/managedTeams/{teamId}` stores references to the teams they oversee, enabling a hierarchical view of data.\n\nThis structure enables simple and robust security rules because authorization context is denormalized into each document, avoiding complex `get()` calls. Collection segregation ensures homogeneous security postures, further simplifying rules and supporting QAPs."
   }
 }
-    

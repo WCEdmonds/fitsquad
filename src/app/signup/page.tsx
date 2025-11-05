@@ -12,7 +12,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -165,6 +164,7 @@ export default function SignupPage() {
                             <SelectItem value="Soldier">Soldier</SelectItem>
                             <SelectItem value="Supervisor">Supervisor</SelectItem>
                             <SelectItem value="Commander">Commander</SelectItem>
+                            <SelectItem value="Admin">Admin</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

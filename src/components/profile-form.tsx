@@ -30,7 +30,7 @@ import {
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required.'),
   lastName: z.string().min(1, 'Last name is required.'),
-  accountType: z.enum(['Soldier', 'Supervisor', 'Commander']),
+  accountType: z.enum(['Soldier', 'Supervisor', 'Commander', 'Admin']),
   gender: z.enum(['Male', 'Female', 'Other']),
 });
 
@@ -148,6 +148,7 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
                     <SelectItem value="Soldier">Soldier</SelectItem>
                     <SelectItem value="Supervisor">Supervisor</SelectItem>
                     <SelectItem value="Commander">Commander</SelectItem>
+                     <SelectItem value="Admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

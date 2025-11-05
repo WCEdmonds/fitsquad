@@ -5,6 +5,7 @@
  * This ruleset enforces a strict user-ownership model for personal data (accounts, soldier data, exercise progress).
  * Team data and workout plans are accessible to team members.
  * Commanders can manage teams and view their data.
+ * Admins have global read and team management capabilities.
  *
  * Data Structure:
  * - /accounts/{accountId}: User account information.
@@ -20,6 +21,7 @@
  * - Users can only access their own account and soldier data.
  * - Team membership is required to access team-related data.
  * - Commanders have elevated privileges to manage teams.
+ * - Admins can read all user and team data and manage any team.
  *
  * Denormalization for Authorization:
  * - Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection.
@@ -33,11 +35,11 @@ service cloud.firestore {
      * @description Controls access to user account information.
      */
     match /accounts/{accountId} {
-      allow get: if isOwner(accountId);
-      allow list: if false;
+      allow get: if isOwner(accountId) || isAdmin();
+      allow list: if isAdmin();
       allow create: if isSelfCreate(accountId);
-      allow update: if isExistingOwner(accountId) && isAccountIdNotChanged();
-      allow delete: if isExistingOwner(accountId);
+      allow update: if (isExistingOwner(accountId) && isAccountIdNotChanged()) || isAdmin();
+      allow delete: if isExistingOwner(accountId) || isAdmin();
 
       /**
        * @description Controls access to a commander's list of managed teams.
@@ -64,7 +66,7 @@ service cloud.firestore {
     match /teams/{teamId} {
       allow get, list: if true;
       allow create: if isSignedIn();
-      allow update, delete: if false; // TODO: Add team membership check
+      allow update, delete: if isAdmin(); // Only admins can update/delete a whole team
     }
 
     /**
@@ -72,16 +74,16 @@ service cloud.firestore {
      */
     match /teams/{teamId}/members/{userId} {
         allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isOwner(userId);
+        allow create: if isSignedIn() || isAdmin(); // Users can join, admins can add
+        allow update, delete: if isOwner(userId) || isAdmin(); // Users can leave, admins can remove
     }
 
     /**
      * @description Controls access to soldier fitness data.
      */
     match /accounts/{accountId}/soldierData/{soldierDataId} {
-      allow get: if isOwner(accountId);
-      allow list: if isOwner(accountId);
+      allow get: if isOwner(accountId) || isAdmin();
+      allow list: if isOwner(accountId) || isAdmin();
       allow create: if isSignedIn() && request.resource.data.accountId == accountId;
       allow update: if isExistingOwner(accountId) && resource.data.accountId == accountId;
       allow delete: if isExistingOwner(accountId);
@@ -128,6 +130,10 @@ service cloud.firestore {
 
     function isCommander(accountId) {
       return get(/databases/$(database)/documents/accounts/$(accountId)).data.accountType == 'Commander';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.accountType == 'Admin';
     }
   }
 }

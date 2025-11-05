@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,9 +32,10 @@ import { SoldierDataForm } from './soldier-data-form';
 interface SoldierTableProps {
   soldiers: Soldier[];
   isLoading?: boolean;
+  accountType?: string;
 }
 
-export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps) {
+export function SoldierTable({ soldiers, isLoading = false, accountType }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
 
@@ -188,20 +189,23 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
               <TableCell className="hidden lg:table-cell">{soldier.plk || 'N/A'}</TableCell>
               <TableCell>{soldier.twoMileRun || 'N/A'}</TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button aria-haspopup="true" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => openLogDataDialog(soldier)}>
-                      Log AFT
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {(accountType === 'Admin' || accountType === 'Supervisor' || accountType === 'Commander') && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => openLogDataDialog(soldier)}>
+                        <BookOpenCheck className="mr-2 h-4 w-4" />
+                        Log AFT
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TableCell>
             </TableRow>
           )})}

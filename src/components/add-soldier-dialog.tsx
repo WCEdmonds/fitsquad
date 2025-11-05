@@ -16,11 +16,13 @@ import { useToast } from '@/hooks/use-toast';
 interface AddSoldierDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onAddSoldier: (email: string) => Promise<void>;
+  onAddSoldier: (email: string, teamCode?: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
-export function AddSoldierDialog({ isOpen, onOpenChange, onAddSoldier }: AddSoldierDialogProps) {
+export function AddSoldierDialog({ isOpen, onOpenChange, onAddSoldier, isAdmin = false }: AddSoldierDialogProps) {
   const [email, setEmail] = useState('');
+  const [teamCode, setTeamCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -30,8 +32,12 @@ export function AddSoldierDialog({ isOpen, onOpenChange, onAddSoldier }: AddSold
       toast({ title: 'Email is required', variant: 'destructive' });
       return;
     }
+    if (isAdmin && !teamCode) {
+        toast({ title: 'Team Code is required for Admin assignment', variant: 'destructive' });
+        return;
+    }
     setIsLoading(true);
-    await onAddSoldier(email);
+    await onAddSoldier(email, isAdmin ? teamCode : undefined);
     setIsLoading(false);
   };
 
@@ -40,31 +46,43 @@ export function AddSoldierDialog({ isOpen, onOpenChange, onAddSoldier }: AddSold
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Add Soldier</DialogTitle>
+            <DialogTitle>Add Soldier to Team</DialogTitle>
             <DialogDescription>
-              Enter the email address of the soldier you want to add to your team. They must already have a FitSquad account.
+              Enter the email address of the soldier you want to add. They must have a FitSquad account.
+              {isAdmin && " As an Admin, you must also provide the 8-digit code for the destination team."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                Email
+            <div className="space-y-2">
+              <Label htmlFor="email">
+                Soldier's Email
               </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="col-span-3"
                 placeholder="soldier@example.com"
                 required
               />
             </div>
+            {isAdmin && (
+                <div className="space-y-2">
+                    <Label htmlFor="team-code">Destination Team Code</Label>
+                    <Input
+                        id="team-code"
+                        value={teamCode}
+                        onChange={(e) => setTeamCode(e.target.value)}
+                        placeholder="e.g., 12345678"
+                        required
+                    />
+                </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Adding...' : 'Add Soldier'}
+              {isLoading ? 'Adding...' : 'Add to Team'}
             </Button>
           </DialogFooter>
         </form>
