@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -32,6 +32,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   accountType: z.enum(['Soldier', 'Supervisor', 'Commander', 'Admin']),
   gender: z.enum(['Male', 'Female', 'Other']),
+  passcode: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -52,7 +53,22 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
     defaultValues: defaultValues || {},
   });
 
+  const watchedAccountType = useWatch({
+    control: form.control,
+    name: 'accountType',
+  });
+
   const handleSubmit = (values: ProfileFormValues) => {
+    // Passcode validation
+    if (values.accountType === 'Commander' && values.passcode !== 'thunder') {
+      form.setError('passcode', { type: 'manual', message: 'Invalid Commander passcode.' });
+      return;
+    }
+    if (values.accountType === 'Admin' && values.passcode !== 'scientiaestpotestas') {
+      form.setError('passcode', { type: 'manual', message: 'Invalid Admin passcode.' });
+      return;
+    }
+
     setIsLoading(true);
     if (!firestore || !userId) {
       toast({
@@ -66,7 +82,9 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
 
     const accountRef = doc(firestore, 'accounts', userId);
 
-    updateDocumentNonBlocking(accountRef, values);
+    const { passcode, ...dataToSave } = values;
+
+    updateDocumentNonBlocking(accountRef, dataToSave);
     
     toast({
       title: 'Success',
@@ -156,6 +174,24 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
             )}
           />
         </div>
+
+         {(watchedAccountType === 'Commander' || watchedAccountType === 'Admin') &&
+            defaultValues?.accountType !== watchedAccountType && (
+            <FormField
+                control={form.control}
+                name="passcode"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Passcode</FormLabel>
+                    <FormControl>
+                    <Input type="password" placeholder="Enter passcode for new role" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
+
 
         <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
            {isLoading ? (

@@ -37,6 +37,7 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState('');
   const [accountType, setAccountType] = useState('');
   const [gender, setGender] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
@@ -45,6 +46,8 @@ export default function SignupPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (password.length < 6) {
       setError('Password should be at least 6 characters.');
       return;
@@ -61,7 +64,17 @@ export default function SignupPage() {
       setError('Please enter your first and last name.');
       return;
     }
-    setError(null);
+
+    if (accountType === 'Commander' && passcode !== 'thunder') {
+      setError('Invalid Commander passcode.');
+      return;
+    }
+
+    if (accountType === 'Admin' && passcode !== 'scientiaestpotestas') {
+      setError('Invalid Admin passcode.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -169,6 +182,20 @@ export default function SignupPage() {
                     </Select>
                 </div>
             </div>
+
+            {(accountType === 'Commander' || accountType === 'Admin') && (
+                <div className="space-y-2">
+                    <Label htmlFor="passcode">Passcode</Label>
+                    <Input
+                        id="passcode"
+                        type="password"
+                        required
+                        value={passcode}
+                        onChange={(e) => setPasscode(e.target.value)}
+                    />
+                </div>
+            )}
+
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
