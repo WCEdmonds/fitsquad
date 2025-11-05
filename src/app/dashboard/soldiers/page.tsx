@@ -12,7 +12,7 @@ import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, getDocs } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
 const RUN_TIME_THRESHOLD = 15; // 15:00 in minutes
