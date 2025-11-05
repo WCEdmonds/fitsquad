@@ -9,6 +9,7 @@ import {
   query,
   where,
   writeBatch,
+  getDoc,
 } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function JoinTeamPage() {
   const [teamId, setTeamId] = useState('');
@@ -28,8 +30,9 @@ export default function JoinTeamPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const firestore = useFirestore();
-  const { user, ...rest } = useUser();
+  const { user } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleJoinTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,42 +49,52 @@ export default function JoinTeamPage() {
     setIsLoading(true);
 
     try {
-      // 1. Check if the team exists
       const teamRef = doc(firestore, 'teams', teamId);
-      const teamSnapshot = await getDocs(query(collection(firestore, 'teams'), where('id', '==', teamId)));
+      const teamSnapshot = await getDoc(teamRef);
 
-      if (teamSnapshot.empty) {
+      if (!teamSnapshot.exists()) {
         setError('Team not found. Please check the code and try again.');
         setIsLoading(false);
         return;
       }
-      
-      // We assume the user has an account document from signup
-      const userAccountRef = doc(firestore, 'accounts', user.uid);
-      const userAccountSnap = await getDocs(query(collection(firestore, 'accounts'), where('id', '==', user.uid)));
 
-      if(userAccountSnap.empty) {
+      const userAccountRef = doc(firestore, 'accounts', user.uid);
+      const userAccountSnap = await getDoc(userAccountRef);
+
+      if(!userAccountSnap.exists()) {
          setError('User account not found.');
          setIsLoading(false);
          return;
       }
 
-      const accountData = userAccountSnap.docs[0].data();
-
-      // 2. Add user to the team's members subcollection
-      const teamMemberRef = doc(firestore, 'teams', teamId, 'members', user.uid);
-
+      const accountData = userAccountSnap.data();
+      const currentTeamId = accountData.teamId;
+      
       const batch = writeBatch(firestore);
-      batch.set(teamMemberRef, {
+
+      // If user is already in a team, remove them from the old team's member list
+      if (currentTeamId) {
+        const oldTeamMemberRef = doc(firestore, 'teams', currentTeamId, 'members', user.uid);
+        batch.delete(oldTeamMemberRef);
+      }
+
+      // Add user to the new team's members subcollection
+      const newTeamMemberRef = doc(firestore, 'teams', teamId, 'members', user.uid);
+      batch.set(newTeamMemberRef, {
         uid: user.uid,
         email: user.email,
         role: accountData.accountType, // Role from their account
       });
 
-      // 3. Update the user's account to link to the team
+      // Update the user's account to link to the new team
       batch.update(userAccountRef, { teamId: teamId });
       
       await batch.commit();
+
+      toast({
+        title: 'Successfully Joined Team!',
+        description: `You are now a member of ${teamSnapshot.data().name}.`,
+      });
 
       router.push('/dashboard');
     } catch (err: any) {
@@ -99,9 +112,9 @@ export default function JoinTeamPage() {
            <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
             <Shield className="size-8" />
           </div>
-          <CardTitle className="text-2xl">Join an Existing Team</CardTitle>
+          <CardTitle className="text-2xl">Join a Team</CardTitle>
           <CardDescription>
-            Enter the Team Code provided by your supervisor or commander.
+            Enter the Team Code provided by your supervisor or commander to join or switch teams.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -120,7 +133,7 @@ export default function JoinTeamPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Joining Team...' : 'Join Team'}
+              {isLoading ? 'Joining...' : 'Join Team'}
             </Button>
           </form>
         </CardContent>

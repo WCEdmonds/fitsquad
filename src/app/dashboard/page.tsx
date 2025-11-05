@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair } from 'lucide-react';
+import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair, MoreHorizontal, Copy, UserPlus } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -16,10 +16,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Soldier } from '@/lib/types';
 import { SoldierDataForm } from '@/components/soldier-data-form';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
   const [account, setAccount] = useState<any>(null);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
   const [avgHrp, setAvgHrp] = useState<number | string>('--');
@@ -42,6 +50,12 @@ export default function DashboardPage() {
   
 
   const teamId = account?.teamId;
+
+  const teamDocRef = useMemoFirebase(() => {
+    if (!teamId) return null;
+    return doc(firestore, 'teams', teamId);
+  }, [firestore, teamId]);
+  const { data: teamData } = useDoc(teamDocRef);
 
   const teamMembersRef = useMemoFirebase(() => {
     if (!teamId) return null;
@@ -129,6 +143,16 @@ export default function DashboardPage() {
     }
 }, [teamMembers, firestore]);
 
+  const handleCopyTeamCode = () => {
+    if (teamId) {
+      navigator.clipboard.writeText(teamId);
+      toast({
+        title: "Team Code Copied!",
+        description: "You can now share it with new members.",
+      });
+    }
+  }
+
   
   if (account && !account.teamId) {
     return (
@@ -180,6 +204,32 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-4">
+          {teamData?.name ?? "Dashboard"}
+        </h1>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Team Actions</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCopyTeamCode}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Team Code
+                </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/teams/join">
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Join a Different Team
+                    </Link>
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
