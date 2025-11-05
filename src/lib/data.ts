@@ -1,5 +1,7 @@
 import type { Soldier } from './types';
 
+// This is now mock data and not used by the main application logic anymore,
+// but kept for reference or isolated component testing.
 export const soldiers: Soldier[] = [
   {
     id: 1, name: 'John Doe', rank: 'SGT', aftScore: 270, runTime: 840, pushups: 60, situps: 65, healthNotes: 'Minor knee pain after long runs.', avatar: 'https://picsum.photos/seed/avatar1/100/100',

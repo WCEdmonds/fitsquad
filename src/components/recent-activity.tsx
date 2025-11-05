@@ -1,8 +1,20 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { soldiers } from '@/lib/data';
+import { Soldier } from '@/lib/types';
 
-export function RecentActivity() {
-  const recentSoldiers = soldiers.slice(0, 5);
+interface RecentActivityProps {
+  data: Soldier[];
+}
+
+export function RecentActivity({ data }: RecentActivityProps) {
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        No recent activity.
+      </div>
+    );
+  }
+
+  const recentSoldiers = data.slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -13,9 +25,9 @@ export function RecentActivity() {
             <AvatarFallback>{soldier.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="ml-4 space-y-1">
-            <p className="text-sm font-medium leading-none">{soldier.name}</p>
+            <p className="text-sm font-medium leading-none">{soldier.name.split('@')[0]}</p>
             <p className="text-sm text-muted-foreground">
-              Run time improved to {Math.floor(soldier.runTime / 60)}:{(soldier.runTime % 60).toString().padStart(2, '0')}.
+              AFT Score: {soldier.aftScore}.
             </p>
           </div>
           <div className="ml-auto font-medium text-primary">+{Math.floor(Math.random() * 5 + 1)} pts</div>

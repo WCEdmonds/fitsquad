@@ -1,5 +1,5 @@
 export type Soldier = {
-  id: number;
+  id: string; // Changed to string to match Firestore UID
   name: string;
   rank: string;
   aftScore: number;

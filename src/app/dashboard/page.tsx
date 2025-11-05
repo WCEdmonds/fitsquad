@@ -10,15 +10,20 @@ import { Target, Users, Activity, BarChart3, Swords, Shield } from 'lucide-react
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { collection, doc, getDocs, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Soldier } from '@/lib/types';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [account, setAccount] = useState<any>(null);
+  const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
+  const [avgAftScore, setAvgAftScore] = useState<number | string>('--');
+  const [avgRunTime, setAvgRunTime] = useState<string>('--:--');
+
 
   const userDocRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -42,6 +47,54 @@ export default function DashboardPage() {
   }, [firestore, teamId]);
 
   const { data: teamMembers } = useCollection(teamMembersRef);
+
+  useEffect(() => {
+    if (teamMembers) {
+        const fetchSoldierData = async () => {
+            const soldierPromises = teamMembers.map(async (member) => {
+                const soldierDataColRef = collection(firestore, 'accounts', member.uid, 'soldierData');
+                const soldierDataSnap = await getDocs(soldierDataColRef);
+                const sData = soldierDataSnap.docs[0]?.data();
+                
+                const q = query(collection(firestore, 'accounts'));
+                const accountSnap = await getDocs(q);
+                const accData = accountSnap.docs.find(doc => doc.id === member.uid)?.data();
+
+                if (sData && accData) {
+                    return {
+                        id: member.uid,
+                        name: accData.email,
+                        rank: accData.accountType,
+                        aftScore: sData.aftScore,
+                        runTime: sData.runTime * 60,
+                        pushups: 50, // Placeholder
+                        situps: 50,  // Placeholder
+                        healthNotes: sData.healthInfo,
+                        avatar: `https://picsum.photos/seed/${member.uid}/100/100`,
+                    } as Soldier;
+                }
+                return null;
+            });
+
+            const soldiers = (await Promise.all(soldierPromises)).filter(s => s !== null) as Soldier[];
+            setAllSoldiers(soldiers);
+
+            if (soldiers.length > 0) {
+              const totalScore = soldiers.reduce((acc, s) => acc + s.aftScore, 0);
+              setAvgAftScore(Math.round(totalScore / soldiers.length));
+
+              const totalRunTime = soldiers.reduce((acc, s) => acc + s.runTime, 0);
+              const avgSeconds = Math.round(totalRunTime / soldiers.length);
+              const mins = Math.floor(avgSeconds / 60);
+              const secs = avgSeconds % 60;
+              setAvgRunTime(`${mins}:${secs.toString().padStart(2, '0')}`);
+            }
+        };
+
+        fetchSoldierData();
+    }
+}, [teamMembers, firestore]);
+
   
   if (account && !account.teamId) {
     return (
@@ -89,8 +142,8 @@ export default function DashboardPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--</div>
-            <p className="text-xs text-muted-foreground">No data yet</p>
+            <div className="text-2xl font-bold">{avgAftScore}</div>
+            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
           </CardContent>
         </Card>
         <Card>
@@ -99,8 +152,8 @@ export default function DashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">--:--</div>
-            <p className="text-xs text-muted-foreground">No data yet</p>
+            <div className="text-2xl font-bold">{avgRunTime}</div>
+            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the team' : 'No data yet'}</p>
           </CardContent>
         </Card>
         <Card>
@@ -124,7 +177,7 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <PerformanceChart />
+            <PerformanceChart data={allSoldiers} />
           </CardContent>
         </Card>
         <Card className="lg:col-span-3">
@@ -135,7 +188,7 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentActivity />
+            <RecentActivity data={allSoldiers} />
           </CardContent>
         </Card>
       </div>

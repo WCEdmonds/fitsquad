@@ -1,3 +1,4 @@
+'use client'
 import {
   Card,
   CardContent,
@@ -6,19 +7,75 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { soldiers } from '@/lib/data';
 import { SoldierTable } from '@/components/soldier-table';
 import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { collection, doc, getDocs } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 
-const RUN_TIME_THRESHOLD = 900; // 15:00
-const STRENGTH_THRESHOLD = 50; // pushups
+const RUN_TIME_THRESHOLD = 15; // 15:00 in minutes
+const STRENGTH_THRESHOLD = 50; // pushups or situps
 
 export default function SoldiersPage() {
-  const allSoldiers: Soldier[] = soldiers;
-  const runningFocusGroup: Soldier[] = soldiers.filter(s => s.runTime > RUN_TIME_THRESHOLD);
-  const strengthFocusGroup: Soldier[] = soldiers.filter(s => s.pushups < STRENGTH_THRESHOLD || s.situps < STRENGTH_THRESHOLD);
+    const { user } = useUser();
+    const firestore = useFirestore();
+
+    const userAccountRef = useMemoFirebase(() => {
+        if (!user) return null;
+        return doc(firestore, 'accounts', user.uid);
+    }, [firestore, user]);
+    const { data: userAccount } = useDoc(userAccountRef);
+
+    const teamMembersRef = useMemoFirebase(() => {
+        if (!userAccount?.teamId) return null;
+        return collection(firestore, 'teams', userAccount.teamId, 'members');
+    }, [firestore, userAccount]);
+    const { data: teamMembers } = useCollection(teamMembersRef);
+    
+    const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
+    
+    useEffect(() => {
+        if (teamMembers) {
+            const fetchSoldierData = async () => {
+                const soldierPromises = teamMembers.map(async (member) => {
+                    const soldierDataColRef = collection(firestore, 'accounts', member.uid, 'soldierData');
+                    const soldierDataSnap = await getDocs(soldierDataColRef);
+                    // Assuming one soldierData doc per soldier for simplicity
+                    const sData = soldierDataSnap.docs[0]?.data();
+                    
+                    const accountSnap = await getDocs(query(collection(firestore, 'accounts'), where('id', '==', member.uid)))
+                    const accData = accountSnap.docs[0]?.data();
+
+
+                    if (sData && accData) {
+                        return {
+                            id: member.uid,
+                            name: accData.email, // Or a 'name' field if you add it
+                            rank: accData.accountType, // Or a more specific rank
+                            aftScore: sData.aftScore,
+                            runTime: sData.runTime * 60, // converting minutes to seconds
+                            pushups: 50, // Placeholder, add to your data model
+                            situps: 50, // Placeholder, add to your data model
+                            healthNotes: sData.healthInfo,
+                            avatar: `https://picsum.photos/seed/${member.uid}/100/100`,
+                        };
+                    }
+                    return null;
+                });
+
+                const soldiers = (await Promise.all(soldierPromises)).filter(s => s !== null) as Soldier[];
+                setAllSoldiers(soldiers);
+            };
+
+            fetchSoldierData();
+        }
+    }, [teamMembers, firestore]);
+
+    const runningFocusGroup: Soldier[] = allSoldiers.filter(s => (s.runTime/60) > RUN_TIME_THRESHOLD);
+    const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => s.pushups < STRENGTH_THRESHOLD || s.situps < STRENGTH_THRESHOLD);
+
 
   return (
     <Card>

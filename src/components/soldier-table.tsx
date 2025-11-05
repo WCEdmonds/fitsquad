@@ -30,6 +30,15 @@ function formatTime(seconds: number): string {
 }
 
 export function SoldierTable({ soldiers }: SoldierTableProps) {
+
+  if (soldiers.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-8">
+        No soldiers in this group yet.
+      </div>
+    )
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -61,7 +70,7 @@ export function SoldierTable({ soldiers }: SoldierTableProps) {
               </Avatar>
             </TableCell>
             <TableCell className="font-medium">
-              <div className="font-medium">{soldier.name}</div>
+              <div className="font-medium">{soldier.name.split('@')[0]}</div>
               <div className="hidden text-sm text-muted-foreground md:inline">
                 {soldier.rank}
               </div>

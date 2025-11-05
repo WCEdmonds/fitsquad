@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -11,21 +11,68 @@ import {
 import { PlannerForm, type PlannerFormValues } from '@/components/planner-form';
 import { useToast } from "@/hooks/use-toast";
 import { generateTailoredWorkoutPlan } from '@/ai/flows/generate-tailored-workout-plan';
-import { soldiers } from '@/lib/data';
-import { Bot } from 'lucide-react';
+import { Bot, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 
 export default function PlannerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  // 1. Get current user's account to find their teamId
+  const userAccountRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'accounts', user.uid);
+  }, [firestore, user]);
+  const { data: userAccount } = useDoc(userAccountRef);
+
+  // 2. Get all members of the team
+  const teamMembersRef = useMemoFirebase(() => {
+    if (!userAccount?.teamId) return null;
+    return collection(firestore, 'teams', userAccount.teamId, 'members');
+  }, [firestore, userAccount]);
+  const { data: teamMembers } = useCollection(teamMembersRef);
+
+  // 3. For each member, get their soldierData. This is a bit complex.
+  // We will fetch them individually for now. This could be optimized in the future.
+  const [allSoldierData, setAllSoldierData] = useState<any[]>([]);
+  useEffect(() => {
+    if (teamMembers) {
+      const fetchData = async () => {
+        const dataPromises = teamMembers.map(member => {
+            const soldierDataRef = collection(firestore, 'accounts', member.uid, 'soldierData');
+            // This is a simplified fetch, ideally we'd get the latest document
+            return getDocs(soldierDataRef).then(snap => 
+              snap.docs.map(d => ({...d.data(), memberEmail: member.email}))
+            );
+        });
+        const results = await Promise.all(dataPromises);
+        setAllSoldierData(results.flat());
+      };
+      fetchData();
+    }
+  }, [teamMembers, firestore]);
 
   async function handleFormSubmit(values: PlannerFormValues) {
+    if (!allSoldierData || allSoldierData.length === 0) {
+      toast({
+        title: "No Soldier Data",
+        description: "Cannot generate a plan without soldier fitness data.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setWorkoutPlan(null);
 
-    const fitnessData = soldiers.map(s => (
-      `Soldier ${s.id} (${s.rank}): AFT Score ${s.aftScore}, Run ${Math.floor(s.runTime / 60)}:${(s.runTime % 60).toString().padStart(2, '0')}, Pushups ${s.pushups}, Situps ${s.situps}. Notes: ${s.healthNotes}`
+    const fitnessData = allSoldierData.map(s => (
+      `Soldier (${s.memberEmail}): AFT Score ${s.aftScore}, Run Time ${s.runTime} mins. Notes: ${s.healthInfo}`
     )).join('\n');
 
     try {
@@ -53,7 +100,7 @@ export default function PlannerPage() {
           <CardHeader>
             <CardTitle>Workout Plan Generator</CardTitle>
             <CardDescription>
-              Use AI to create a tailored workout plan for your unit.
+              Use AI to create a tailored workout plan for your unit based on their latest data.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -64,10 +111,20 @@ export default function PlannerPage() {
       <div className="lg:col-span-2">
         <Card className="h-full">
           <CardHeader>
-            <CardTitle>Generated Plan</CardTitle>
-            <CardDescription>
-              Your AI-generated workout plan will appear here.
-            </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Generated Plan</CardTitle>
+                  <CardDescription>
+                    Your AI-generated workout plan will appear here.
+                  </CardDescription>
+                </div>
+                {workoutPlan && (
+                  <Button variant="outline" disabled>
+                    <FileText className="mr-2" />
+                    Download PDF
+                  </Button>
+                )}
+              </div>
           </CardHeader>
           <CardContent>
             {isLoading && (

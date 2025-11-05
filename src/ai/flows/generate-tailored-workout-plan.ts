@@ -12,15 +12,10 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateTailoredWorkoutPlanInputSchema = z.object({
-  unitType: z
-    .string()
-    .describe(
-      'The type of unit (section, squad, platoon, or company) the workout plan is for.'
-    ),
   fitnessData: z
     .string()
     .describe(
-      'Aggregated fitness data for the unit, including AFT scores, run times, and other relevant health information.'
+      'A collection of fitness data for all soldiers in the unit. Each entry includes AFT scores, run times, and other relevant health information.'
     ),
   trainingGoals: z
     .string()
@@ -42,7 +37,7 @@ const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   workoutPlan: z
     .string()
     .describe(
-      'A detailed workout plan tailored to the unit, including specific exercises, sets, reps, and goals for each group within the unit.'
+      'A detailed workout plan. It should identify common weaknesses, suggest focus groups (e.g., running, strength), and provide specific exercises, sets, and reps for each group.'
     ),
 });
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
@@ -61,14 +56,20 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
   prompt: `You are an expert fitness trainer specializing in designing workout plans for military units.
 
-You will use the provided fitness data, training goals, and unit type to generate a tailored workout plan. The workout plan should include specific exercises, sets, reps, and goals for each group within the unit.
+You will analyze the provided fitness data to identify common weaknesses and suggest logical focus groups (e.g., a "Running Focus Group" for slower runners, a "Strength Focus Group" for those needing to improve push-ups/sit-ups).
 
-Unit Type: {{{unitType}}}
-Fitness Data: {{{fitnessData}}}
-Training Goals: {{{trainingGoals}}}
-Additional Context: {{{additionalContext}}}
+Based on this analysis and the training goals, generate a tailored workout plan. The plan must be structured to cater to the different focus groups you've identified, providing specific exercises, sets, reps, and goals for each.
 
-Workout Plan:`,
+Fitness Data:
+{{{fitnessData}}}
+
+Training Goals:
+{{{trainingGoals}}}
+
+Additional Context:
+{{{additionalContext}}}
+
+Generated Workout Plan:`,
 });
 
 const generateTailoredWorkoutPlanFlow = ai.defineFlow(

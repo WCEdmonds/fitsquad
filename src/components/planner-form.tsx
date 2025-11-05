@@ -11,19 +11,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  unitType: z.string().min(1, 'Unit type is required.'),
   trainingGoals: z.string().min(10, 'Please provide detailed training goals.'),
   additionalContext: z.string().optional(),
 });
@@ -39,7 +31,6 @@ export function PlannerForm({ onSubmit, isLoading }: PlannerFormProps) {
   const form = useForm<PlannerFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      unitType: 'squad',
       trainingGoals: 'Improve average AFT score by 15 points and reduce average 2-mile run time by 30 seconds.',
       additionalContext: 'Preparing for a field training exercise in 2 months.',
     },
@@ -48,28 +39,6 @@ export function PlannerForm({ onSubmit, isLoading }: PlannerFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="unitType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Unit Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a unit type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="squad">Squad</SelectItem>
-                  <SelectItem value="platoon">Platoon</SelectItem>
-                  <SelectItem value="company">Company</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="trainingGoals"

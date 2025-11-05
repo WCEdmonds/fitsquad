@@ -14,12 +14,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { soldiers } from "@/lib/data"
-
-const chartData = soldiers.map(s => ({
-  name: `${s.rank} ${s.name.split(' ')[1]}`,
-  score: s.aftScore,
-}));
+import { Soldier } from "@/lib/types";
 
 const chartConfig = {
   score: {
@@ -28,7 +23,24 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function PerformanceChart() {
+interface PerformanceChartProps {
+  data: Soldier[];
+}
+
+export function PerformanceChart({ data }: PerformanceChartProps) {
+  const chartData = data.map(s => ({
+    name: `${s.rank} ${s.name.split('@')[0]}`,
+    score: s.aftScore,
+  }));
+  
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+        No performance data available.
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height={350}>
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -42,6 +54,7 @@ export function PerformanceChart() {
             textAnchor="end"
             height={80}
             stroke="hsl(var(--foreground))"
+            interval={0}
             />
             <YAxis dataKey="score" stroke="hsl(var(--foreground))" />
             <Tooltip
