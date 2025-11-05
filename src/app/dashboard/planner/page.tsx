@@ -11,15 +11,17 @@ import {
 import { PlannerForm, type PlannerFormValues } from '@/components/planner-form';
 import { useToast } from "@/hooks/use-toast";
 import { generateTailoredWorkoutPlan, type GenerateTailoredWorkoutPlanOutput } from '@/ai/flows/generate-tailored-workout-plan';
-import { Bot, FileText } from 'lucide-react';
+import { Bot, FileText, Loader2, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking } from '@/firebase';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking, addDocumentNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { WorkoutCalendarView } from '@/components/workout-calendar-view';
+import { getISOWeek, startOfWeek } from 'date-fns';
 
 export default function PlannerPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState<GenerateTailoredWorkoutPlanOutput | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
@@ -65,7 +67,7 @@ export default function PlannerPage() {
       return;
     }
 
-    setIsLoading(true);
+    setIsGenerating(true);
     setWorkoutPlan(null);
 
     const fitnessData = allSoldierData.map(s => (
@@ -86,13 +88,48 @@ export default function PlannerPage() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
     }
+  }
+
+  const handleSavePlan = async () => {
+    if (!workoutPlan || !userAccount?.teamId) {
+       toast({ title: "Error", description: "No plan to save or team not found.", variant: "destructive" });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const workoutPlansRef = collection(firestore, 'teams', userAccount.teamId, 'workoutPlans');
+      
+      const today = new Date();
+      const startDate = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+      const year = startDate.getFullYear();
+      const week = getISOWeek(startDate);
+
+      await addDocumentNonBlocking(workoutPlansRef, {
+        teamId: userAccount.teamId,
+        name: workoutPlan.title,
+        description: `Week ${week}, ${year} workout plan`,
+        startDate: startDate.toISOString(),
+        planData: JSON.stringify(workoutPlan),
+        createdAt: new Date().toISOString(),
+      });
+      toast({ title: "Success", description: "Workout plan saved!" });
+    } catch(err) {
+      console.error(err);
+      toast({ title: "Error", description: "Could not save the workout plan.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const handleDownloadPdf = () => {
+    window.print();
   }
 
   return (
     <div className="grid h-full gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 print:hidden">
         <Card className="h-full">
           <CardHeader>
             <CardTitle>Fitness Plan Generator</CardTitle>
@@ -101,13 +138,13 @@ export default function PlannerPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PlannerForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            <PlannerForm onSubmit={handleFormSubmit} isLoading={isGenerating} />
           </CardContent>
         </Card>
       </div>
       <div className="lg:col-span-2">
         <Card className="h-full min-h-[600px]">
-          <CardHeader>
+          <CardHeader className="print:hidden">
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle>{workoutPlan?.title ?? 'Generated Plan'}</CardTitle>
@@ -116,15 +153,21 @@ export default function PlannerPage() {
                   </CardDescription>
                 </div>
                 {workoutPlan && (
-                  <Button variant="outline" disabled>
-                    <FileText className="mr-2" />
-                    Download PDF
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleSavePlan} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}
+                      Save Plan
+                    </Button>
+                    <Button variant="outline" onClick={handleDownloadPdf}>
+                      <FileText className="mr-2" />
+                      Download PDF
+                    </Button>
+                  </div>
                 )}
               </div>
           </CardHeader>
           <CardContent>
-            {isLoading && (
+            {isGenerating && (
               <div className="space-y-4">
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-4 w-full" />
@@ -136,7 +179,7 @@ export default function PlannerPage() {
                 <Skeleton className="h-4 w-5/6" />
               </div>
             )}
-            {!isLoading && !workoutPlan && (
+            {!isGenerating && !workoutPlan && (
               <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
                 <Bot className="w-16 h-16 text-muted-foreground mb-4"/>
                 <h3 className="text-xl font-semibold">Ready to build your plan?</h3>
