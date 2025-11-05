@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive, Settings } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
   { href: '/dashboard/planner', label: 'Fitness Planner', icon: Bot },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
 
 export function DashboardNav() {

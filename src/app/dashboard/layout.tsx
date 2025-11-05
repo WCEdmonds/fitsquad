@@ -79,6 +79,9 @@ export default function DashboardLayout({
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
           {children}
         </main>
+        <footer className="py-4 px-6 text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} FitSquad by Quandary Development
+        </footer>
       </div>
   );
 }

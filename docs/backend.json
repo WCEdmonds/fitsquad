@@ -1,5 +1,41 @@
 {
   "entities": {
+    "Analytics": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Analytics",
+      "type": "object",
+      "description": "Represents aggregated analytics data for a team or soldier.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the analytics entry."
+        },
+        "entityId": {
+          "type": "string",
+          "description": "ID of the entity (team or soldier) this data pertains to."
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of analytics (e.g., 'team_performance', 'soldier_progress')."
+        },
+        "data": {
+          "type": "object",
+          "description": "The aggregated analytics data."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of when the analytics data was generated."
+        }
+      },
+      "required": [
+        "id",
+        "entityId",
+        "type",
+        "data",
+        "createdAt"
+      ]
+    },
     "Account": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Account",
@@ -400,9 +436,29 @@
             }
           ]
         }
+      },
+      {
+        "path": "/teams/{teamId}/analytics/{analyticsId}",
+        "definition": {
+          "entityName": "Analytics",
+          "schema": {
+            "$ref": "#/backend/entities/Analytics"
+          },
+          "description": "Stores aggregated analytics data for a team.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "The unique identifier for the team."
+            },
+            {
+              "name": "analyticsId",
+              "description": "The unique identifier for the analytics entry."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure for FitSquad is designed to prioritize authorization independence and facilitate efficient data retrieval. It incorporates denormalization to avoid complex security rules involving `get()` calls. Path-based ownership is used for private user data, while membership maps are employed for collaborative data access. Segregation of data into collections with homogeneous security needs ensures simplified rule management and supports QAPs (Queries are not filters).\n\nSpecifically:\n\n*   **Accounts:** Account data is stored under `/accounts/{accountId}` with path-based ownership.\n*   **Teams:** Team data is stored under `/teams/{teamId}`. Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection to grant roles.\n*   **SoldierData:** Soldier data is nested under `/accounts/{accountId}/soldierData/{soldierDataId}`. This structure ensures that soldier data is directly associated with the account, enabling path-based ownership security rules. This enforces privacy, ensures that each soldier can only update or view their data.\n*   **WorkoutPlans:** Workout plans are stored under `/teams/{teamId}/workoutPlans/{workoutPlanId}`. This allows efficient retrieval of workout plans for a specific team.\n*   **Exercises:** Exercises related to a workout plan are nested under `/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}`.\n*   **Progress:** The progress of each soldier on each exercise is recorded under `/accounts/{accountId}/exercisesProgress/{progressId}`. This structure, combined with appropriate security rules, ensures that a soldier can only update his own progress.\n\nThis structure enables simple and robust security rules because authorization context is denormalized into each document, avoiding complex `get()` calls. Collection segregation ensures homogeneous security postures, further simplifying rules and supporting QAPs."
+    "reasoning": "The Firestore structure for FitSquad is designed to prioritize authorization independence and facilitate efficient data retrieval. It incorporates denormalization to avoid complex security rules involving `get()` calls. Path-based ownership is used for private user data, while membership maps are employed for collaborative data access. Segregation of data into collections with homogeneous security needs ensures simplified rule management and supports QAPs (Queries are not filters).\n\nSpecifically:\n\n*   **Accounts:** Account data is stored under `/accounts/{accountId}` with path-based ownership.\n*   **Teams:** Team data is stored under `/teams/{teamId}`. Team membership is managed via the `/teams/{teamId}/members/{userId}` subcollection to grant roles.\n*   **SoldierData:** Soldier data is nested under `/accounts/{accountId}/soldierData/{soldierDataId}`. This structure ensures that soldier data is directly associated with the account, enabling path-based ownership security rules. This enforces privacy, ensures that each soldier can only update or view their data.\n*   **WorkoutPlans:** Workout plans are stored under `/teams/{teamId}/workoutPlans/{workoutPlanId}`. This allows efficient retrieval of workout plans for a specific team.\n*   **Exercises:** Exercises related to a workout plan are nested under `/teams/{teamId}/workoutPlans/{workoutPlanId}/exercises/{exerciseId}`.\n*   **Progress:** The progress of each soldier on each exercise is recorded under `/accounts/{accountId}/exercisesProgress/{progressId}`.\n\nThis structure enables simple and robust security rules because authorization context is denormalized into each document, avoiding complex `get()` calls. Collection segregation ensures homogeneous security postures, further simplifying rules and supporting QAPs."
   }
 }
     
