@@ -18,18 +18,67 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Skeleton } from './ui/skeleton';
 
 interface SoldierTableProps {
   soldiers: Soldier[];
+  isLoading?: boolean;
 }
 
 function formatTime(seconds: number): string {
+  if (typeof seconds !== 'number' || isNaN(seconds)) {
+    return '0:00';
+  }
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function SoldierTable({ soldiers }: SoldierTableProps) {
+export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps) {
+
+  if (isLoading) {
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="hidden w-[100px] sm:table-cell">
+              <span className="sr-only">Avatar</span>
+            </TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>AFT Score</TableHead>
+            <TableHead className="hidden md:table-cell">Run Time</TableHead>
+            <TableHead className="hidden md:table-cell">Push-ups</TableHead>
+            <TableHead className="hidden md:table-cell">Sit-ups</TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[...Array(5)].map((_, i) => (
+            <TableRow key={i}>
+              <TableCell className="hidden sm:table-cell">
+                <Skeleton className="h-10 w-10 rounded-full" />
+              </TableCell>
+              <TableCell>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[100px]" />
+                  <Skeleton className="h-3 w-[50px]" />
+                </div>
+              </TableCell>
+              <TableCell><Skeleton className="h-6 w-[50px] rounded-full" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell>
+                <Skeleton className="h-8 w-8" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  }
 
   if (soldiers.length === 0) {
     return (
@@ -76,8 +125,8 @@ export function SoldierTable({ soldiers }: SoldierTableProps) {
               </div>
             </TableCell>
             <TableCell>
-              <Badge variant={soldier.aftScore >= 270 ? 'default' : soldier.aftScore < 230 ? 'destructive' : 'secondary'}>
-                {soldier.aftScore}
+              <Badge variant={soldier.aftScore === 0 ? 'outline' : soldier.aftScore >= 270 ? 'default' : soldier.aftScore < 230 ? 'destructive' : 'secondary'}>
+                {soldier.aftScore === 0 ? 'N/A' : soldier.aftScore}
               </Badge>
             </TableCell>
             <TableCell className="hidden md:table-cell">{formatTime(soldier.runTime)}</TableCell>
