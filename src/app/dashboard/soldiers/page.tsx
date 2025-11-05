@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SoldierTable } from '@/components/soldier-table';
 import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { Mail, UserPlus } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getDocNonBlocking, getCollectionNonBlocking } from '@/firebase';
 import { collection, doc, getDocs, query, where, writeBatch, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { InviteDialog } from '@/components/invite-dialog';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -25,7 +26,8 @@ export default function SoldiersPage() {
     const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
 
     const userAccountRef = useMemoFirebase(() => {
@@ -45,6 +47,12 @@ export default function SoldiersPage() {
         if (userAccount?.accountType !== 'Admin') return null;
         return collection(firestore, 'accounts');
     }, [firestore, userAccount]);
+
+    const teamDocRef = useMemoFirebase(() => {
+        if (!userAccount?.teamId) return null;
+        return doc(firestore, 'teams', userAccount.teamId);
+    }, [userAccount, firestore]);
+    const { data: teamData } = useDoc(teamDocRef);
 
 
     const { data: teamMembers, isLoading: teamMembersLoading } = useCollection(teamMembersRef);
@@ -158,7 +166,7 @@ export default function SoldiersPage() {
                 
                 await batch.commit();
                 toast({ title: 'Success', description: `Soldier added to team ${teamDoc.data().name}.` });
-                setIsDialogOpen(false);
+                setIsAddDialogOpen(false);
             } catch (error: any) {
                  console.error('Error adding soldier (Admin): ', error);
                  toast({ title: 'Error', description: `Failed to add soldier: ${error.message}`, variant: 'destructive' });
@@ -206,7 +214,7 @@ export default function SoldiersPage() {
           await batch.commit();
 
           toast({ title: 'Success', description: 'Soldier has been added to the team.' });
-          setIsDialogOpen(false);
+          setIsAddDialogOpen(false);
         } catch (error: any) {
           console.error('Error adding soldier: ', error);
           toast({ title: 'Error', description: `Failed to add soldier: ${error.message}`, variant: 'destructive' });
@@ -240,6 +248,28 @@ export default function SoldiersPage() {
         }
     }
 
+    const handleSendInvite = (email: string) => {
+        if (!teamData) {
+            toast({ title: "Cannot send invite", description: "Team information is not available.", variant: "destructive" });
+            return;
+        }
+        const subject = `You're invited to join ${teamData.name} on FitSquad!`;
+        const body = `Hello,
+
+You have been invited to join the team "${teamData.name}" on FitSquad.
+
+Use the following code to join: ${teamData.teamCode}
+
+Or click this link: ${window.location.origin}/teams/join
+
+Thank you,
+The FitSquad Team`;
+
+        window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        toast({ title: "Email client opened", description: "Your invitation is ready to be sent."});
+        setIsInviteDialogOpen(false);
+    }
+
     const isLoading = userAccount?.accountType === 'Admin' ? allUsersLoading : teamMembersLoading;
     const runningFocusGroup: Soldier[] = allSoldiers.filter(s => hasBenchmark(s) && s.twoMileRun <= s.hrp);
     const strengthFocusGroup: Soldier[] = allSoldiers.filter(s => hasBenchmark(s) && s.hrp < s.twoMileRun);
@@ -248,11 +278,16 @@ export default function SoldiersPage() {
   return (
     <>
     <AddSoldierDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        isOpen={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
         onAddSoldier={handleAddSoldier}
         isAdmin={userAccount?.accountType === 'Admin'}
       />
+    <InviteDialog
+        isOpen={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+        onSendInvite={handleSendInvite}
+    />
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
@@ -261,9 +296,14 @@ export default function SoldiersPage() {
             {userAccount?.accountType === 'Admin' ? 'View all users in the system and manage team assignments.' : 'Manage and track individual soldier performance.'}
           </CardDescription>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" /> Add to Team
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)}>
+              <Mail className="mr-2 h-4 w-4" /> Invite Members
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" /> Add to Team
+            </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all">
