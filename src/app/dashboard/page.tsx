@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Soldier } from '@/lib/types';
+import { SoldierDataForm } from '@/components/soldier-data-form';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
   const [avgAftScore, setAvgAftScore] = useState<number | string>('--');
   const [avgRunTime, setAvgRunTime] = useState<string>('--:--');
+  const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
 
 
   const userDocRef = useMemoFirebase(() => {
@@ -47,21 +49,35 @@ export default function DashboardPage() {
   }, [firestore, teamId]);
 
   const { data: teamMembers } = useCollection(teamMembersRef);
+  
+  const userSoldierDataRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return collection(firestore, 'accounts', user.uid, 'soldierData');
+  }, [firestore, user]);
+
+  const { data: soldierData, isLoading: soldierDataLoading } = useCollection(userSoldierDataRef);
+
+   useEffect(() => {
+    if (!soldierDataLoading) {
+      setHasSoldierData(soldierData && soldierData.length > 0);
+    }
+  }, [soldierData, soldierDataLoading]);
+
 
   useEffect(() => {
     if (teamMembers && firestore) {
         const fetchSoldierData = async () => {
             const soldierPromises = teamMembers.map(async (member) => {
-                const soldierDataColRef = collection(firestore, 'accounts', member.uid, 'soldierData');
+                const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
                 const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
                 const sData = soldierDataList[0];
                 
-                const accountRef = doc(firestore, 'accounts', member.uid);
+                const accountRef = doc(firestore, 'accounts', member.id);
                 const accData = await getDocNonBlocking<any>(accountRef);
 
                 if (sData && accData) {
                     return {
-                        id: member.uid,
+                        id: member.id,
                         name: accData.email,
                         rank: accData.accountType,
                         aftScore: sData.aftScore,
@@ -69,7 +85,7 @@ export default function DashboardPage() {
                         pushups: 50, // Placeholder
                         situps: 50,  // Placeholder
                         healthNotes: sData.healthInfo,
-                        avatar: `https://picsum.photos/seed/${member.uid}/100/100`,
+                        avatar: `https://picsum.photos/seed/${member.id}/100/100`,
                     } as Soldier;
                 }
                 return null;
@@ -120,6 +136,27 @@ export default function DashboardPage() {
         </Card>
       </div>
     );
+  }
+  
+  if (hasSoldierData === false) {
+    return (
+       <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-lg">
+           <CardHeader>
+            <CardTitle>Log Your Benchmark</CardTitle>
+            <CardDescription>
+              To get started, please enter your initial fitness metrics. This will serve as your benchmark.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SoldierDataForm 
+              soldierId={user!.uid} 
+              onSave={() => setHasSoldierData(true)} 
+            />
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
