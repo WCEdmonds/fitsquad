@@ -76,6 +76,9 @@ const prompt = ai.definePrompt({
   name: 'generateTailoredWorkoutPlanPrompt',
   input: {schema: GenerateTailoredWorkoutPlanInputSchema},
   output: {schema: GenerateTailoredWorkoutPlanOutputSchema},
+  helpers: {
+    eq: (a: any, b: any) => a === b,
+  },
   prompt: `You are an expert fitness trainer specializing in designing workout plans for military personnel.
 
 Your task is to create a structured workout plan in JSON format based on the 'planType' provided.
@@ -130,17 +133,13 @@ const generateTailoredWorkoutPlanFlow = ai.defineFlow(
   },
   async input => {
     try {
-        const { output } = await prompt(input, {
-          helpers: {
-            eq: (a: any, b: any) => a === b,
-          }
-        });
+        const { output } = await prompt(input);
         return output!;
     } catch (error: any) {
         if (error.message.includes('503')) {
             console.warn('Default model unavailable, falling back to gemini-pro.');
             const { output } = await ai.generate({
-                prompt: prompt.compile(input, { helpers: { eq: (a:any, b:any) => a === b } })!,
+                prompt: prompt.compile(input)!,
                 model: 'googleai/gemini-pro',
                 output: { schema: GenerateTailoredWorkoutPlanOutputSchema },
             });
