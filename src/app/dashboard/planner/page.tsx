@@ -13,8 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { generateTailoredWorkoutPlan, type GenerateTailoredWorkoutPlanOutput } from '@/ai/flows/generate-tailored-workout-plan';
 import { Calendar, FileText, Loader2, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking } from '@/firebase';
+import { collection, doc, addDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { WorkoutCalendarView } from '@/components/workout-calendar-view';
 import { getISOWeek, startOfWeek } from 'date-fns';
@@ -106,7 +106,7 @@ export default function PlannerPage() {
       const year = startDate.getFullYear();
       const week = getISOWeek(startDate);
 
-      await addDocumentNonBlocking(workoutPlansRef, {
+      await addDoc(workoutPlansRef, {
         teamId: userAccount.teamId,
         name: workoutPlan.title,
         description: `Week ${week}, ${year} workout plan`,
@@ -114,10 +114,11 @@ export default function PlannerPage() {
         planData: JSON.stringify(workoutPlan),
         createdAt: new Date().toISOString(),
       });
+
       toast({ title: "Success", description: "Workout plan saved!" });
-    } catch(err) {
+    } catch(err: any) {
       console.error(err);
-      toast({ title: "Error", description: "Could not save the workout plan.", variant: "destructive" });
+      toast({ title: "Error", description: `Could not save the workout plan: ${err.message}`, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
