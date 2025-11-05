@@ -109,7 +109,21 @@ const generateTailoredWorkoutPlanFlow = ai.defineFlow(
     outputSchema: GenerateTailoredWorkoutPlanOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        const { output } = await prompt(input);
+        return output!;
+    } catch (error: any) {
+        if (error.message.includes('503')) {
+            console.warn('Default model unavailable, falling back to gemini-pro.');
+            const { output } = await ai.generate({
+                prompt: prompt.compile(input)!,
+                model: 'googleai/gemini-pro',
+                output: { schema: GenerateTailoredWorkoutPlanOutputSchema },
+            });
+            return output!;
+        }
+        // Re-throw other errors
+        throw error;
+    }
   }
 );
