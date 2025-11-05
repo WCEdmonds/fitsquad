@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck } from 'lucide-react';
+import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -12,8 +14,22 @@ const navItems = [
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
 
+const commanderNavItems = [
+    { href: '/dashboard/manage-teams', label: 'Manage Teams', icon: ShieldCheck },
+]
+
 export function DashboardNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userAccountRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'accounts', user.uid);
+  }, [firestore, user]);
+
+  const { data: userAccount } = useDoc(userAccountRef);
+
 
   return (
     <div className="flex h-full items-center w-full">
@@ -23,6 +39,15 @@ export function DashboardNav() {
         </Link>
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-8 md:text-base whitespace-nowrap">
         {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`transition-colors hover:text-foreground ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground'}`}
+            >
+              {item.label}
+            </Link>
+        ))}
+         {userAccount?.accountType === 'Commander' && commanderNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

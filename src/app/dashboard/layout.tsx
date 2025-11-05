@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -32,7 +32,7 @@ export default function DashboardLayout({
     return doc(firestore, 'accounts', user.uid);
   }, [firestore, user]);
 
-  const { data: userAccount } = useDoc<{firstName: string, lastName: string}>(userAccountRef);
+  const { data: userAccount } = useDoc<{firstName: string, lastName: string, accountType: string}>(userAccountRef);
 
   const handleLogout = () => {
     auth.signOut();
@@ -66,6 +66,14 @@ export default function DashboardLayout({
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                {userAccount?.accountType === 'Commander' && (
+                   <DropdownMenuItem asChild>
+                    <Link href="/dashboard/manage-teams">
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Manage Teams
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
