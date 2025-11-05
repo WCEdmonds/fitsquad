@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShieldCheck } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck, Swords } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,7 @@ export default function DashboardLayout({
       const firstInitial = userAccount?.firstName?.charAt(0) ?? '';
       const lastInitial = userAccount?.lastName?.charAt(0) ?? '';
       const emailInitial = user?.email?.charAt(0) ?? '';
-      setFallback(firstInitial + lastInitial || emailInitial);
+      setFallback((firstInitial + lastInitial).toUpperCase() || emailInitial.toUpperCase());
     }
   }, [user, userAccount, isUserLoading, isAccountLoading]);
 
@@ -76,6 +76,12 @@ export default function DashboardLayout({
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/teams/create">
+                      <Swords className="mr-2 h-4 w-4" />
+                      Create New Team
+                    </Link>
+                  </DropdownMenuItem>
                 {userAccount?.accountType === 'Commander' && (
                    <DropdownMenuItem asChild>
                     <Link href="/dashboard/manage-teams">

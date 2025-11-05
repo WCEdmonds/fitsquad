@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import {
   collection,
   doc,
@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Swords } from 'lucide-react';
-import { addDocumentNonBlocking } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 function generateTeamCode() {
   return Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -34,6 +34,14 @@ export default function CreateTeamPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const router = useRouter();
+  const { toast } = useToast();
+
+   const userAccountRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'accounts', user.uid);
+  }, [firestore, user]);
+  const { data: userAccount } = useDoc(userAccountRef);
+
 
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +49,7 @@ export default function CreateTeamPage() {
       setError('Team name is required.');
       return;
     }
-    if (!user) {
+    if (!user || !userAccount) {
       setError('You must be logged in to create a team.');
       return;
     }
@@ -50,6 +58,8 @@ export default function CreateTeamPage() {
     setIsLoading(true);
 
     try {
+      const batch = writeBatch(firestore);
+      
       // 1. Create the new team document
       const newTeamRef = doc(collection(firestore, 'teams'));
       const newTeamData = {
@@ -59,30 +69,48 @@ export default function CreateTeamPage() {
         createdBy: user.uid,
         teamCode: generateTeamCode(),
       };
+      batch.set(newTeamRef, newTeamData);
 
       // 2. Add the current user as the first member of the team
       const teamMemberRef = doc(firestore, 'teams', newTeamRef.id, 'members', user.uid);
       const memberData = {
-        role: 'Commander', // The creator is the default commander
+        role: userAccount.accountType,
         uid: user.uid,
         email: user.email,
       };
+      batch.set(teamMemberRef, memberData);
 
       // 3. Update the user's account to link to the new team
-      const userAccountRef = doc(firestore, 'accounts', user.uid);
-      
-      // Use a batch to perform all writes atomically
-      const batch = writeBatch(firestore);
-      batch.set(newTeamRef, newTeamData);
-      batch.set(teamMemberRef, memberData);
-      batch.update(userAccountRef, { teamId: newTeamRef.id });
+      const userAccountDocRef = doc(firestore, 'accounts', user.uid);
+      batch.update(userAccountDocRef, { teamId: newTeamRef.id });
 
+      // 4. If the user is a commander, add this team to their managed teams
+      if (userAccount.accountType === 'Commander') {
+          const managedTeamRef = doc(firestore, 'accounts', user.uid, 'managedTeams', newTeamRef.id);
+          batch.set(managedTeamRef, {
+              id: newTeamRef.id,
+              name: teamName,
+              teamCode: newTeamData.teamCode,
+              createdAt: new Date().toISOString(),
+          });
+      }
+      
       await batch.commit();
+
+       toast({
+        title: 'Team Created!',
+        description: `Your new team "${teamName}" has been successfully created.`,
+      });
 
       router.push('/dashboard');
     } catch (err: any) {
       console.error(err);
       setError(err.message);
+      toast({
+          title: 'Error Creating Team',
+          description: err.message,
+          variant: 'destructive',
+      })
     } finally {
       setIsLoading(false);
     }
@@ -133,5 +161,3 @@ export default function CreateTeamPage() {
     </div>
   );
 }
-
-    

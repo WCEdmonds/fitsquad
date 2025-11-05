@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Target, Users, Activity, BarChart3, Swords, Shield, PersonStanding, Armchair, MoreHorizontal, Copy, UserPlus, Dumbbell, Weight, Bot, Zap, ShieldCheck } from 'lucide-react';
+import { Activity, Bot, Copy, Dumbbell, MoreHorizontal, Shield, ShieldCheck, Swords, UserPlus, Weight, Zap } from 'lucide-react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -109,9 +109,8 @@ export default function DashboardPage() {
 
                  const defaultSoldier: Soldier = {
                     id: member.id,
-                    name: accData?.email || 'Unknown',
-                    firstName: accData?.firstName,
-                    lastName: accData?.lastName,
+                    firstName: accData?.firstName || 'Unknown',
+                    lastName: accData?.lastName || 'Soldier',
                     rank: accData?.accountType || 'Soldier',
                     mdl: 0,
                     hrp: 0,
@@ -197,7 +196,7 @@ export default function DashboardPage() {
   }
 
   
-  if (account && !account.teamId && account.accountType !== 'Commander') {
+  if (account && !account.teamId) {
     return (
       <div className="flex items-center justify-center h-full">
         <Card className="w-full max-w-md text-center">
@@ -231,13 +230,18 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Welcome, Commander!</CardTitle>
             <CardDescription>
-             You are not managing any teams yet. Go to the "Manage Teams" page to add subordinate units.
+             You are not managing any teams yet. Add a subordinate unit or create a new team to begin.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
              <Link href="/dashboard/manage-teams" passHref>
                 <Button className="w-full">
                     <ShieldCheck className="mr-2 h-4 w-4" /> Manage Teams
+                </Button>
+            </Link>
+             <Link href="/teams/create" passHref>
+                <Button variant="outline" className="w-full">
+                    <Swords className="mr-2 h-4 w-4" /> Create a New Team
                 </Button>
             </Link>
           </CardContent>
