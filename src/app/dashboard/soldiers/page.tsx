@@ -65,8 +65,8 @@ export default function SoldiersPage() {
                         plk: 0,
                         twoMileRun: 0,
                         gender: accData?.gender || 'Other',
-                        weight: accData?.weight || 0,
-                        height: accData?.height || 0,
+                        weight: 0,
+                        height: 0,
                         healthNotes: 'No data',
                     };
 
@@ -78,11 +78,18 @@ export default function SoldiersPage() {
                             hrp: sData.hrp,
                             sdc: sData.sdc,
                             plk: sData.plk,
-                            twoMileRun: sData.twoMileRun
+                            twoMileRun: sData.twoMileRun,
+                            weight: sData.weight,
+                            height: sData.height,
+                            restingHeartRate: sData.restingHeartRate,
+                            bodyFatPercentage: sData.bodyFatPercentage,
                         };
                     }
                     if(accData){
-                         return defaultSoldier;
+                         return {
+                            ...defaultSoldier,
+                            gender: accData.gender
+                         };
                     }
                     return null;
                 });

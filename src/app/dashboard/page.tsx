@@ -119,8 +119,8 @@ export default function DashboardPage() {
                     plk: 0,
                     twoMileRun: 0,
                     gender: accData?.gender || 'Other',
-                    weight: accData?.weight || 0,
-                    height: accData?.height || 0,
+                    weight: 0,
+                    height: 0,
                     healthNotes: 'No data',
                 };
 
@@ -132,11 +132,16 @@ export default function DashboardPage() {
                         hrp: sData.hrp,
                         sdc: sData.sdc,
                         plk: sData.plk,
-                        twoMileRun: sData.twoMileRun
+                        twoMileRun: sData.twoMileRun,
+                        weight: sData.weight,
+                        height: sData.height,
                     };
                 }
                 if(accData){
-                        return defaultSoldier;
+                        return {
+                            ...defaultSoldier,
+                            gender: accData.gender,
+                        };
                 }
                 return null;
             });
@@ -255,6 +260,9 @@ export default function DashboardPage() {
             <SoldierDataForm 
               soldierId={user!.uid} 
               onSave={() => setHasSoldierData(true)} 
+              defaultValues={{
+                  gender: account.gender
+              }}
             />
           </CardContent>
         </Card>

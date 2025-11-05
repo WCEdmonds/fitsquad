@@ -71,14 +71,6 @@
           "type": "string",
           "description": "Gender of the user.",
           "enum": ["Male", "Female", "Other"]
-        },
-        "weight": {
-            "type": "number",
-            "description": "Weight of the user in pounds."
-        },
-        "height": {
-            "type": "number",
-            "description": "Height of the user in inches."
         }
       },
       "required": [
@@ -132,6 +124,22 @@
         "accountId": {
           "type": "string",
           "description": "Reference to the Account this data belongs to. (Relationship: Account 1:N SoldierData)"
+        },
+        "weight": {
+            "type": "number",
+            "description": "Weight of the user in pounds."
+        },
+        "height": {
+            "type": "number",
+            "description": "Height of the user in inches."
+        },
+         "bodyFatPercentage": {
+          "type": "number",
+          "description": "Body fat percentage."
+        },
+        "restingHeartRate": {
+          "type": "number",
+          "description": "Resting heart rate in beats per minute."
         },
         "mdl": {
           "type": "number",

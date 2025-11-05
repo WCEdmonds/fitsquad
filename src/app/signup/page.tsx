@@ -38,8 +38,6 @@ export default function SignupPage() {
   const [lastName, setLastName] = useState('');
   const [accountType, setAccountType] = useState('');
   const [gender, setGender] = useState('');
-  const [weight, setWeight] = useState('');
-  const [height, setHeight] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
@@ -81,8 +79,6 @@ export default function SignupPage() {
           accountType: accountType,
           teamId: null, // User will create or join a team later
           gender,
-          weight: Number(weight),
-          height: Number(height),
         };
         
         const accountRef = doc(firestore, 'accounts', user.uid);
@@ -145,7 +141,7 @@ export default function SignupPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
                     <Select onValueChange={setGender} value={gender}>
@@ -160,27 +156,18 @@ export default function SignupPage() {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="weight">Weight (lbs)</Label>
-                    <Input id="weight" type="number" required value={weight} onChange={e => setWeight(e.target.value)} />
+                    <Label htmlFor="accountType">Account Type</Label>
+                    <Select onValueChange={setAccountType} value={accountType}>
+                        <SelectTrigger id="accountType">
+                            <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Soldier">Soldier</SelectItem>
+                            <SelectItem value="Supervisor">Supervisor</SelectItem>
+                            <SelectItem value="Commander">Commander</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
-                 <div className="space-y-2">
-                    <Label htmlFor="height">Height (in)</Label>
-                    <Input id="height" type="number" required value={height} onChange={e => setHeight(e.target.value)} />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="accountType">Account Type</Label>
-                <Select onValueChange={setAccountType} value={accountType}>
-                    <SelectTrigger id="accountType">
-                        <SelectValue placeholder="Select account type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Soldier">Soldier</SelectItem>
-                        <SelectItem value="Supervisor">Supervisor</SelectItem>
-                        <SelectItem value="Commander">Commander</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
             {error && (
               <p className="text-sm text-destructive">{error}</p>

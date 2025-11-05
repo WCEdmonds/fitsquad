@@ -16,6 +16,8 @@ export type Soldier = {
   gender: 'Male' | 'Female' | 'Other';
   weight: number; // in lbs
   height: number; // in inches
+  restingHeartRate?: number; // beats per minute
+  bodyFatPercentage?: number; // percentage
   
   healthNotes: string;
 };

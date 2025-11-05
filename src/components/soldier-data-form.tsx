@@ -33,6 +33,8 @@ const formSchema = z.object({
   gender: z.enum(['Male', 'Female', 'Other']),
   weight: z.coerce.number().min(0, 'Weight must be positive.'),
   height: z.coerce.number().min(0, 'Height must be positive.'),
+  bodyFatPercentage: z.coerce.number().min(0).max(100).optional(),
+  restingHeartRate: z.coerce.number().min(0).optional(),
   // ACFT Events
   mdl: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   hrp: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
@@ -66,6 +68,8 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
       plk: 0,
       twoMileRun: 0,
       healthInfo: '',
+      bodyFatPercentage: 0,
+      restingHeartRate: 0,
     },
   });
 
@@ -105,6 +109,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <h3 className="text-lg font-semibold border-b pb-2">Vitals</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
@@ -149,6 +154,32 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
                 <FormLabel>Height (inches)</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="e.g., 70" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="bodyFatPercentage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Body Fat %</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 18" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="restingHeartRate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Resting HR (bpm)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="e.g., 60" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

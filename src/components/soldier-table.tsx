@@ -16,7 +16,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
@@ -27,11 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { SoldierDataForm } from './soldier-data-form';
-import { suggestAlternativeExercises, SuggestAlternativeExercisesOutput } from '@/ai/flows/provide-workout-suggestions-based-on-performance';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 
 interface SoldierTableProps {
   soldiers: Soldier[];
@@ -40,38 +36,12 @@ interface SoldierTableProps {
 
 export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
-  const [isSuggestionOpen, setIsSuggestionOpen] = useState(false);
-  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
-  const [suggestion, setSuggestion] = useState<SuggestAlternativeExercisesOutput | null>(null);
 
   const openLogDataDialog = (soldier: Soldier) => {
     setSelectedSoldier(soldier);
     setIsLogDataOpen(true);
   };
-  
-  const handleSuggestAlternatives = async (soldier: Soldier) => {
-    setSelectedSoldier(soldier);
-    setIsSuggestionOpen(true);
-    setIsGeneratingSuggestion(true);
-    setSuggestion(null);
-
-    const performanceData = `MDL: ${soldier.mdl}, HRP: ${soldier.hrp}, SDC: ${soldier.sdc}, PLK: ${soldier.plk}, 2MR: ${soldier.twoMileRun}`;
-    
-    try {
-        const result = await suggestAlternativeExercises({
-            soldierPerformanceData: performanceData,
-            personalLimitations: soldier.healthNotes || "None provided.",
-            exerciseGoal: "Overall fitness improvement, focusing on weak areas."
-        });
-        setSuggestion(result);
-    } catch(e) {
-        console.error("Failed to get suggestions", e);
-        // You could set an error state here to show in the dialog
-    } finally {
-        setIsGeneratingSuggestion(false);
-    }
-  }
 
   const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -157,41 +127,16 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
             <SoldierDataForm 
               soldierId={selectedSoldier.id}
               onSave={() => setIsLogDataOpen(false)}
+              defaultValues={{
+                  gender: selectedSoldier.gender,
+                  weight: selectedSoldier.weight,
+                  height: selectedSoldier.height,
+              }}
             />
           )}
         </DialogContent>
       </Dialog>
       
-       <Dialog open={isSuggestionOpen} onOpenChange={setIsSuggestionOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Exercise Suggestions for {selectedSoldier?.firstName}</DialogTitle>
-            <DialogDescription>
-             Based on their latest performance and limitations, here are some suggested exercises.
-            </DialogDescription>
-          </DialogHeader>
-            {isGeneratingSuggestion && (
-                <div className="flex items-center justify-center p-8">
-                    <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-                    <span>Generating suggestions...</span>
-                </div>
-            )}
-            {suggestion && (
-                <Alert>
-                  <AlertTitle>Suggested Exercises</AlertTitle>
-                  <AlertDescription>
-                    <p className="mb-4 whitespace-pre-wrap">{suggestion.suggestedExercises}</p>
-                    <h4 className="font-semibold mt-4">Explanation</h4>
-                    <p className="whitespace-pre-wrap">{suggestion.explanation}</p>
-                  </AlertDescription>
-                </Alert>
-            )}
-           <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSuggestionOpen(false)}>Close</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Table>
         <TableHeader>
           <TableRow>
@@ -253,11 +198,7 @@ export function SoldierTable({ soldiers, isLoading = false }: SoldierTableProps)
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => openLogDataDialog(soldier)}>
-                      {hasBenchmark(soldier) ? 'Log Progress' : 'Log Benchmark'}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleSuggestAlternatives(soldier)}>
-                        Suggest Alternatives
+                      Log AFT
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

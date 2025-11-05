@@ -32,8 +32,6 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required.'),
   accountType: z.enum(['Soldier', 'Supervisor', 'Commander']),
   gender: z.enum(['Male', 'Female', 'Other']),
-  weight: z.coerce.number().min(0, 'Weight must be positive.'),
-  height: z.coerce.number().min(0, 'Height must be positive.'),
 });
 
 type ProfileFormValues = z.infer<typeof formSchema>;
@@ -111,7 +109,7 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="gender"
@@ -136,33 +134,6 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
           />
           <FormField
             control={form.control}
-            name="weight"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Weight (lbs)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="e.g., 180" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="height"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Height (inches)</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="e.g., 70" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <FormField
-            control={form.control}
             name="accountType"
             render={({ field }) => (
               <FormItem>
@@ -183,6 +154,7 @@ export function ProfileForm({ userId, onSave, defaultValues }: ProfileFormProps)
               </FormItem>
             )}
           />
+        </div>
 
         <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
            {isLoading ? (

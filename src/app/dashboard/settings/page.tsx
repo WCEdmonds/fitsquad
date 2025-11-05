@@ -52,8 +52,6 @@ export default function SettingsPage() {
                     lastName: userAccount.lastName,
                     accountType: userAccount.accountType,
                     gender: userAccount.gender,
-                    weight: userAccount.weight,
-                    height: userAccount.height,
                 }}
             />
         )}
