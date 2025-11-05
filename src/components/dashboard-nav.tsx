@@ -37,8 +37,8 @@ export function DashboardNav({ isMobile = false }: DashboardNavProps) {
   const { data: userAccount } = useDoc(userAccountRef);
 
   const navClasses = isMobile
-    ? 'flex flex-col items-start gap-4 text-lg font-medium'
-    : 'flex flex-row items-center gap-8 text-base';
+    ? 'grid gap-6 text-lg font-medium'
+    : 'flex items-center gap-6 text-sm font-medium';
 
   const allNavItems = [...navItems];
   if (userAccount?.accountType === 'Commander') {
@@ -46,7 +46,7 @@ export function DashboardNav({ isMobile = false }: DashboardNavProps) {
   }
 
   return (
-    <>
+    <nav className={cn(navClasses)}>
       {allNavItems.map((item) => (
           <Link
             key={item.href}
@@ -60,6 +60,6 @@ export function DashboardNav({ isMobile = false }: DashboardNavProps) {
             {item.label}
           </Link>
       ))}
-    </>
+    </nav>
   );
 }
