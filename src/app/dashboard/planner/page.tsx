@@ -36,13 +36,13 @@ export default function PlannerPage() {
     if (!user) return null;
     return doc(firestore, 'accounts', user.uid);
   }, [firestore, user]);
-  const { data: userAccount } = useDoc(userAccountRef);
+  const { data: userAccount, isLoading: isAccountLoading, error: accountError } = useDoc(userAccountRef);
 
   const teamMembersRef = useMemoFirebase(() => {
     if (!userAccount?.teamId) return null;
     return collection(firestore, 'teams', userAccount.teamId, 'members');
   }, [firestore, userAccount]);
-  const { data: teamMembers } = useCollection(teamMembersRef);
+  const { data: teamMembers, isLoading: isMembersLoading, error: membersError } = useCollection(teamMembersRef);
 
   const [allSoldierData, setAllSoldierData] = useState<any[]>([]);
   useEffect(() => {
@@ -163,6 +163,39 @@ export default function PlannerPage() {
     window.print();
   }
 
+  // Show loading state while user account or team data is loading
+  if (isAccountLoading || (userAccount?.teamId && isMembersLoading)) {
+    return (
+      <div className="grid h-full gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardHeader>
+              <Skeleton className="h-8 w-1/2" />
+              <Skeleton className="h-4 w-full mt-2" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader>
+              <Skeleton className="h-8 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-40 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="hidden print-only">
@@ -174,16 +207,16 @@ export default function PlannerPage() {
             <CardHeader>
               <CardTitle>Fitness Plan Generator</CardTitle>
               <CardDescription>
-                {userAccount?.accountType === 'Soldier' 
+                {userAccount?.accountType === 'Soldier'
                   ? "Create a workout plan tailored to your personal goals and data."
                   : "Create a tailored workout plan for your unit based on their latest data."
                 }
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlannerForm 
-                  onSubmit={handleFormSubmit} 
-                  isLoading={isGenerating} 
+              <PlannerForm
+                  onSubmit={handleFormSubmit}
+                  isLoading={isGenerating}
                   accountType={userAccount?.accountType}
               />
             </CardContent>
