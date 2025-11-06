@@ -18,6 +18,7 @@ import { doc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { DashboardErrorBoundary } from '@/components/DashboardErrorBoundary';
 
 export default function DashboardLayout({
   children,
@@ -142,7 +143,9 @@ export default function DashboardLayout({
           </div>
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
-          {children}
+          <DashboardErrorBoundary>
+            {children}
+          </DashboardErrorBoundary>
         </main>
         <footer className="py-4 px-6 text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} FitSquad by Quandary Development
