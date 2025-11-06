@@ -33,22 +33,22 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="w-full bg-background">
-      <header className="px-4 lg:px-6 h-20 flex items-center shadow-sm pt-[env(safe-area-inset-top)]">
-        <Link href="/" className="flex items-center justify-center">
+      <header className="px-4 lg:px-6 h-20 flex items-center shadow-sm pt-[env(safe-area-inset-top)] backdrop-blur-sm bg-background/95 sticky top-0 z-50">
+        <Link href="/" className="flex items-center justify-center hover:opacity-80 transition-opacity">
           <Dumbbell className="h-6 w-6 text-primary" />
           <span className="ml-2 font-bold text-xl">FitSquad</span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Button asChild variant="ghost">
+        <nav className="ml-auto flex gap-2 sm:gap-4">
+          <Button asChild variant="ghost" className="hover:bg-primary/10 transition-colors">
             <Link href="/login">Log In</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="hover:opacity-90 transition-opacity">
             <Link href="/signup">Get Started</Link>
           </Button>
         </nav>
       </header>
       <main className="flex-1">
-        <section className="relative w-full pt-12 md:pt-24 lg:pt-32">
+        <section className="relative w-full pt-16 pb-16 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40">
            <div className="absolute inset-0 z-0">
              <Image
                 src="https://images.unsplash.com/photo-1545915345-3c135498d3dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzb2xkaWVycyUyMHRyYWluaW5nfGVufDB8fHx8MTc2MjI1ODgzMnww&ixlib=rb-4.1.0&q=80&w=1080"
@@ -61,21 +61,21 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
            </div>
           <div className="container px-4 md:px-6 relative z-10">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
-                <div className="space-y-2">
-                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="flex flex-col justify-center space-y-6 max-w-4xl mx-auto">
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none animate-in fade-in slide-in-from-bottom-4 duration-1000">
                     Revolutionize Your Unit's Fitness
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
+                  <p className="max-w-[700px] text-muted-foreground text-lg md:text-xl lg:text-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
                     Stop guessing. Start planning. FitSquad generates tailored workout programs based on your soldiers' actual performance data.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
-                  <Button asChild size="lg">
+                <div className="flex flex-col gap-3 min-[400px]:flex-row justify-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+                  <Button asChild size="lg" className="text-base hover:opacity-90 transition-all hover:scale-105">
                     <Link href="/signup">Get Started for Free</Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg">
+                  <Button asChild variant="outline" size="lg" className="text-base hover:bg-primary/10 transition-all hover:scale-105">
                     <Link href="/login">Login</Link>
                   </Button>
                 </div>
@@ -83,26 +83,30 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        <section id="features" className="w-full py-12 md:py-24 lg:py-32">
+        <section id="features" className="w-full py-16 md:py-24 lg:py-32 bg-muted/30">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Key Features</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Built for Modern Military Fitness</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
+              <div className="space-y-4">
+                <div className="inline-block rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">Key Features</div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Built for Modern Military Fitness</h2>
+                <p className="max-w-[900px] text-muted-foreground text-base md:text-lg lg:text-xl mx-auto">
                   From individual soldier progress to company-wide performance, our tools provide the clarity and direction needed to build a stronger, more resilient force.
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-4 mt-12">
-              {features.map((feature) => (
-                <Card key={feature.title} className="h-full">
+            <div className="mx-auto grid max-w-6xl items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {features.map((feature, index) => (
+                <Card
+                  key={feature.title}
+                  className="h-full transition-all hover:shadow-lg hover:scale-105 duration-300 border-2 hover:border-primary/50"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
                   <CardHeader>
-                    {feature.icon}
-                    <CardTitle className="mt-4">{feature.title}</CardTitle>
+                    <div className="mb-2">{feature.icon}</div>
+                    <CardTitle className="text-lg">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -110,13 +114,13 @@ export default function LandingPage() {
           </div>
         </section>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <footer className="flex flex-col gap-3 sm:flex-row py-8 w-full shrink-0 items-center px-4 md:px-6 border-t bg-muted/20">
         <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} FitSquad. All rights reserved.</p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link href="#" className="text-xs hover:underline underline-offset-4">
+        <nav className="sm:ml-auto flex gap-6">
+          <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
             Terms of Service
           </Link>
-          <Link href="#" className="text-xs hover:underline underline-offset-4">
+          <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
             Privacy
           </Link>
         </nav>

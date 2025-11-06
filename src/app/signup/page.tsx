@@ -109,16 +109,24 @@ export default function SignupPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-lg mb-4">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
-            <Dumbbell className="size-8" />
-          </div>
-          <CardTitle className="text-2xl">Create your FitSquad Account</CardTitle>
-          <CardDescription>
-            Join the squad and start tracking your fitness journey.
-          </CardDescription>
-        </CardHeader>
+      <div className="w-full max-w-lg space-y-4">
+        <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+            <path d="m12 19-7-7 7-7"/>
+            <path d="M19 12H5"/>
+          </svg>
+          Back to home
+        </Link>
+        <Card className="w-full shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-2 w-fit">
+              <Dumbbell className="size-8" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
+            <CardDescription className="text-base">
+              Join the squad and start tracking your fitness journey
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
              <div className="grid grid-cols-2 gap-4">
@@ -196,22 +204,23 @@ export default function SignupPage() {
             )}
 
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-sm text-destructive font-medium">{error}</p>
             )}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full hover:opacity-90 transition-all" disabled={isLoading}>
               {isLoading ? 'Creating Account...' : 'Sign Up'}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm">
-          <p>
+        <CardFooter className="flex justify-center text-sm border-t pt-6">
+          <p className="text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline transition-colors">
               Sign In
             </Link>
           </p>
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }
