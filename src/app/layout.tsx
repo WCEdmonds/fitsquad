@@ -21,6 +21,15 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
+{/* --- ADD THIS BANNER --- */}
+        <div className="
+          w-full bg-yellow-400 p-2 
+          text-center text-sm font-bold text-yellow-900 
+          no-print
+        ">
+          BETA VERSION - DO NOT USE FOR LIVE OPERATIONS
+        </div>
+        {/* --- END BANNER --- */}
         <FirebaseClientProvider>
           {children}
         </FirebaseClientProvider>

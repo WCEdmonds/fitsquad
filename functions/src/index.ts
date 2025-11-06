@@ -104,7 +104,7 @@ const generatePlanFlow = ai.defineFlow(
     const context = input.additionalContext ?? "No additional context provided.";
     const equipment = input.equipmentAccess ?? "Not specified.";
 
-    const prompt = `
+const prompt = `
       You are an expert military fitness planner for the FitSquad app. Your task is to generate ${planType} based on the provided data.
 
       **Input Data:**
@@ -118,17 +118,18 @@ const generatePlanFlow = ai.defineFlow(
       1.  Analyze the fitness data to identify 1-3 common weaknesses.
       2.  If this is a **Unit Plan** (isUnitPlan: true):
           - Create *two* separate weekly plans: 'strength_focus_plan' and 'running_focus_plan'.
-          - Assign daily workouts *only* for the requested days: ${input.days.join(
-            ", ",
-          )}.
+          - Assign daily workouts *only* for the requested days: ${input.days.join(", ")}.
       3.  If this is an **Individual Plan** (isIndividualPlan: true):
           - Create a *single* weekly plan: 'individual_plan'.
-          - Assign daily workouts *only* for the requested days: ${input.days.join(
-            ", ",
-          )}.
-      4.  Ensure every exercise has a name, sets, reps, rest, and a 1-2 sentence description.
+          - Assign daily workouts *only* for the requested days: ${input.days.join(", ")}.
+      4.  For each exercise, provide:
+          - name: The exercise name (e.g., "Push-ups", "Squats")
+          - sets: Number of sets as a string (e.g., "3", "4")
+          - reps: Number of reps or duration as a string (e.g., "12", "10-15", "30 seconds", "2 minutes")
+          - rest: Rest period as a string (e.g., "60 seconds", "90 seconds", "2 minutes")
+          - description: A brief 1-2 sentence description of how to perform the exercise
       5.  Create a suitable title for the overall plan.
-      6.  You MUST return your response as a valid JSON object that strictly adheres to the provided output schema.
+      6.  You MUST return a valid JSON object that strictly adheres to the schema. All string fields must be non-empty strings.
     `;
 
     logger.info("Generating AI plan with prompt...");
