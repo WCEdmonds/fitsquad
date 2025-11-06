@@ -48,17 +48,21 @@ export default function LandingPage() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="relative w-full pt-16 pb-16 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40">
+        <section className="relative w-full pt-16 pb-16 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40 overflow-hidden">
            <div className="absolute inset-0 z-0">
+             <div
+               className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 blur-3xl"
+               style={{ transform: 'scale(1.1)' }}
+             />
              <Image
-                src="https://images.unsplash.com/photo-1545915345-3c135498d3dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzb2xkaWVycyUyMHRyYWluaW5nfGVufDB8fHx8MTc2MjI1ODgzMnww&ixlib=rb-4.1.0&q=80&w=1080"
-                alt="Soldiers training"
+                src="https://placehold.co/1920x1080/4B5320/FFFFFF?text=Hero+Image"
+                alt="Hero background"
                 layout="fill"
                 objectFit="cover"
-                className="opacity-30"
-                data-ai-hint="soldiers training"
+                className="opacity-20 blur-sm"
+                priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
            </div>
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center justify-center text-center">
