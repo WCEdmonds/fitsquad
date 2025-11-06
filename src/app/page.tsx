@@ -15,7 +15,7 @@ const features = [
   },
   {
     icon: <Bot className="h-10 w-10 text-primary" />,
-    title: 'AI-Powered Workout Plans',
+    title: 'Intelligent Workout Plans',
     description: 'Generate tailored workout plans for individuals, squads, or the entire company based on real data and specific goals.',
   },
   {
@@ -36,7 +36,7 @@ export default function LandingPage() {
       <header className="px-4 lg:px-6 h-20 flex items-center shadow-sm">
         <Link href="/" className="flex items-center justify-center">
           <Dumbbell className="h-6 w-6 text-primary" />
-          <span className="ml-2 font-bold text-xl">UnitFit Planner</span>
+          <span className="ml-2 font-bold text-xl">FitSquad</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Button asChild variant="ghost">
@@ -55,7 +55,7 @@ export default function LandingPage() {
                 alt="Soldiers training"
                 layout="fill"
                 objectFit="cover"
-                className="opacity-20"
+                className="opacity-30"
                 data-ai-hint="soldiers training"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
@@ -68,7 +68,7 @@ export default function LandingPage() {
                     Revolutionize Your Unit's Fitness
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
-                    Stop guessing. Start planning. UnitFit Planner uses AI to generate tailored workout programs based on your soldiers' actual performance data.
+                    Stop guessing. Start planning. FitSquad generates tailored workout programs based on your soldiers' actual performance data.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
@@ -111,7 +111,7 @@ export default function LandingPage() {
         </section>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} UnitFit Planner. All rights reserved.</p>
+        <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} FitSquad. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4">
             Terms of Service
