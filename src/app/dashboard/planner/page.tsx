@@ -106,11 +106,11 @@ export default function PlannerPage() {
         trainingGoals: values.trainingGoals,
         additionalContext: values.additionalContext,
         days: values.days,
-        equipmentAccess: values.equipmentAccess,
+        equipmentAccess: values.equipmentAccess ?? undefined,
         isUnitPlan,
         isIndividualPlan,
       });
-
+      
       setWorkoutPlan(result);
       setGeneratedPlanId(`temp-${Date.now()}`);
 
