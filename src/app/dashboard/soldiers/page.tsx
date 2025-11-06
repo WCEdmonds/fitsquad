@@ -323,18 +323,18 @@ export default function SoldiersPage() {
         onSendInvite={handleSendInvite}
     />
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <CardTitle>Soldier Roster</CardTitle>
           <CardDescription>
             {userAccount?.accountType === 'Admin' ? 'View all users in the system and manage team assignments.' : 'Manage and track individual soldier performance.'}
           </CardDescription>
         </div>
-        <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)}>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)} className="w-full">
               <Mail className="mr-2 h-4 w-4" /> Invite Members
             </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)} className="w-full">
               <UserPlus className="mr-2 h-4 w-4" /> Add to Team
             </Button>
         </div>
@@ -379,5 +379,3 @@ export default function SoldiersPage() {
     </>
   );
 }
-
-    

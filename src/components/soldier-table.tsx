@@ -83,12 +83,10 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
-            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead>Team</TableHead>}
+            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead className="hidden sm:table-cell">Team</TableHead>}
             <TableHead>MDL</TableHead>
             <TableHead className="hidden md:table-cell">HRP</TableHead>
-            <TableHead className="hidden md:table-cell">SDC</TableHead>
-            <TableHead className="hidden md:table-cell">PLK</TableHead>
-            <TableHead className="hidden md:table-cell">2MR</TableHead>
+            <TableHead>2MR</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -106,12 +104,10 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                   <Skeleton className="h-3 w-[50px]" />
                 </div>
               </TableCell>
-              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>}
+              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-[80px]" /></TableCell>}
               <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
-              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
-               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-[50px]" /></TableCell>
               <TableCell>
                 <Skeleton className="h-8 w-8" />
               </TableCell>
@@ -157,16 +153,14 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="hidden w-[100px] sm:table-cell">
+            <TableHead className="hidden sm:table-cell">
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
-            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead>Team</TableHead>}
+            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead className="hidden md:table-cell">Team</TableHead>}
             <TableHead>MDL</TableHead>
             <TableHead>HRP</TableHead>
-            <TableHead className="hidden lg:table-cell">SDC</TableHead>
-            <TableHead className="hidden lg:table-cell">PLK</TableHead>
-            <TableHead>2MR</TableHead>
+            <TableHead className="hidden sm:table-cell">2MR</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -182,30 +176,28 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                   <AvatarFallback>{soldier.firstName?.charAt(0)}{soldier.lastName?.charAt(0)}</AvatarFallback>
                 </Avatar>
               </TableCell>
-              <TableCell className="font-medium">
-                 <div className="flex items-center gap-2">
+              <TableCell>
+                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
                     <div className="font-medium">{soldier.firstName} {soldier.lastName}</div>
                     {focus.type === 'running' && (
-                      <Badge variant="outline" className="text-blue-600 border-blue-600">
+                      <Badge variant="outline" className="text-blue-600 border-blue-600 w-fit">
                         <Activity className="mr-1 h-3 w-3" /> {focus.text}
                       </Badge>
                     )}
                     {focus.type === 'strength' && (
-                       <Badge variant="outline" className="text-red-600 border-red-600">
+                       <Badge variant="outline" className="text-red-600 border-red-600 w-fit">
                         <Dumbbell className="mr-1 h-3 w-3" /> {focus.text}
                       </Badge>
                     )}
                  </div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div className="text-sm text-muted-foreground">
                   {soldier.rank}
                 </div>
               </TableCell>
-              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell>{soldier.teamName || 'N/A'}</TableCell>}
+              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell className="hidden md:table-cell">{soldier.teamName || 'N/A'}</TableCell>}
               <TableCell>{soldier.mdl || 'N/A'}</TableCell>
               <TableCell>{soldier.hrp || 'N/A'}</TableCell>
-              <TableCell className="hidden lg:table-cell">{soldier.sdc || 'N/A'}</TableCell>
-              <TableCell className="hidden lg:table-cell">{soldier.plk || 'N/A'}</TableCell>
-              <TableCell>{soldier.twoMileRun || 'N/A'}</TableCell>
+              <TableCell className="hidden sm:table-cell">{soldier.twoMileRun || 'N/A'}</TableCell>
               <TableCell>
                 {(accountType === 'Admin' || accountType === 'Supervisor' || accountType === 'Commander') && (
                   <DropdownMenu>
@@ -283,5 +275,3 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
     </>
   );
 }
-
-    
