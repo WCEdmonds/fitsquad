@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX, Weight, Zap, ShieldAlert, Ruler, HeartPulse, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -49,14 +49,29 @@ interface SoldierTableProps {
   onDeleteUser?: (soldierId: string, teamId: string | null | undefined) => void;
 }
 
+const StatDisplay = ({ icon: Icon, label, value, unit }: { icon: React.ElementType, label: string, value: string | number | undefined, unit?: string }) => (
+    <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/50">
+        <Icon className="w-5 h-5 text-muted-foreground" />
+        <span className="font-medium">{label}:</span>
+        <span className="text-muted-foreground">{value ?? 'N/A'}{unit && value ? ` ${unit}` : ''}</span>
+    </div>
+);
+
+
 export function SoldierTable({ soldiers, isLoading = false, accountType, onRemoveSoldier, onDeleteUser }: SoldierTableProps) {
   const [isLogDataOpen, setIsLogDataOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedSoldier, setSelectedSoldier] = useState<Soldier | null>(null);
 
   const openLogDataDialog = (soldier: Soldier) => {
     setSelectedSoldier(soldier);
     setIsLogDataOpen(true);
   };
+  
+  const openDetailDialog = (soldier: Soldier) => {
+    setSelectedSoldier(soldier);
+    setIsDetailOpen(true);
+  }
 
   const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -83,10 +98,12 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
               <span className="sr-only">Avatar</span>
             </TableHead>
             <TableHead>Name</TableHead>
-            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead className="hidden sm:table-cell">Team</TableHead>}
-            <TableHead>MDL</TableHead>
+            <TableHead className="hidden md:table-cell">Team</TableHead>
+            <TableHead className="hidden md:table-cell">MDL</TableHead>
             <TableHead className="hidden md:table-cell">HRP</TableHead>
-            <TableHead>2MR</TableHead>
+            <TableHead className="hidden md:table-cell">SDC</TableHead>
+            <TableHead className="hidden md:table-cell">PLK</TableHead>
+            <TableHead className="hidden md:table-cell">2MR</TableHead>
             <TableHead>
               <span className="sr-only">Actions</span>
             </TableHead>
@@ -104,10 +121,12 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                   <Skeleton className="h-3 w-[50px]" />
                 </div>
               </TableCell>
-              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-[80px]" /></TableCell>}
-              <TableCell><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[80px]" /></TableCell>
               <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
-              <TableCell><Skeleton className="h-4 w-[50px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[40px]" /></TableCell>
+              <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-[50px]" /></TableCell>
               <TableCell>
                 <Skeleton className="h-8 w-8" />
               </TableCell>
@@ -150,70 +169,116 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
         </DialogContent>
       </Dialog>
       
+       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+                 <Avatar className="h-10 w-10">
+                  <AvatarFallback>{selectedSoldier?.firstName?.charAt(0)}{selectedSoldier?.lastName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                 {selectedSoldier?.firstName} {selectedSoldier?.lastName}
+                 <p className="text-sm text-muted-foreground font-normal">{selectedSoldier?.rank} - {selectedSoldier?.teamName}</p>
+                </div>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedSoldier && (
+            <div className="py-4 space-y-4">
+                 <div>
+                    <h4 className="font-semibold mb-2 text-sm">Vitals</h4>
+                     <div className="grid grid-cols-2 gap-2">
+                        <StatDisplay icon={Weight} label="Weight" value={selectedSoldier.weight} unit="lbs" />
+                        <StatDisplay icon={Ruler} label="Height" value={selectedSoldier.height} unit="in" />
+                        <StatDisplay icon={Percent} label="Body Fat" value={selectedSoldier.bodyFatPercentage} unit="%" />
+                        <StatDisplay icon={HeartPulse} label="Resting HR" value={selectedSoldier.restingHeartRate} unit="bpm" />
+                    </div>
+                </div>
+                 <div>
+                    <h4 className="font-semibold mb-2 text-sm">AFT Scores</h4>
+                     <div className="grid grid-cols-2 gap-2">
+                        <StatDisplay icon={Weight} label="MDL" value={selectedSoldier.mdl} />
+                        <StatDisplay icon={Dumbbell} label="HRP" value={selectedSoldier.hrp} />
+                        <StatDisplay icon={Zap} label="SDC" value={selectedSoldier.sdc} />
+                        <StatDisplay icon={Activity} label="PLK" value={selectedSoldier.plk} />
+                        <StatDisplay icon={Zap} label="2MR" value={selectedSoldier.twoMileRun} />
+                    </div>
+                </div>
+                 {selectedSoldier.healthNotes && (
+                    <div>
+                        <h4 className="font-semibold mb-2 text-sm">Health Notes</h4>
+                        <p className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">{selectedSoldier.healthNotes}</p>
+                    </div>
+                 )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="hidden sm:table-cell">
-              <span className="sr-only">Avatar</span>
-            </TableHead>
             <TableHead>Name</TableHead>
-            {(accountType === 'Admin' || accountType === 'Commander') && <TableHead className="hidden md:table-cell">Team</TableHead>}
-            <TableHead>MDL</TableHead>
-            <TableHead>HRP</TableHead>
-            <TableHead className="hidden sm:table-cell">2MR</TableHead>
-            <TableHead>
-              <span className="sr-only">Actions</span>
-            </TableHead>
+            <TableHead className="hidden md:table-cell">Team</TableHead>
+            <TableHead className="hidden md:table-cell">MDL</TableHead>
+            <TableHead className="hidden md:table-cell">HRP</TableHead>
+            <TableHead className="hidden md:table-cell">SDC</TableHead>
+            <TableHead className="hidden md:table-cell">PLK</TableHead>
+            <TableHead className="hidden md:table-cell">2MR</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {soldiers.map((soldier) => {
             const focus = getFocusGroup(soldier);
             return (
-            <TableRow key={soldier.id}>
-              <TableCell className="hidden sm:table-cell">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{soldier.firstName?.charAt(0)}{soldier.lastName?.charAt(0)}</AvatarFallback>
-                </Avatar>
-              </TableCell>
+            <TableRow key={soldier.id} onClick={() => openDetailDialog(soldier)} className="cursor-pointer">
               <TableCell>
-                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                    <div className="font-medium">{soldier.firstName} {soldier.lastName}</div>
-                    {focus.type === 'running' && (
-                      <Badge variant="outline" className="text-blue-600 border-blue-600 w-fit">
-                        <Activity className="mr-1 h-3 w-3" /> {focus.text}
-                      </Badge>
-                    )}
-                    {focus.type === 'strength' && (
-                       <Badge variant="outline" className="text-red-600 border-red-600 w-fit">
-                        <Dumbbell className="mr-1 h-3 w-3" /> {focus.text}
-                      </Badge>
-                    )}
+                 <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 hidden sm:flex">
+                        <AvatarFallback>{soldier.firstName?.charAt(0)}{soldier.lastName?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <div className="font-medium">{soldier.firstName} {soldier.lastName}</div>
+                         <div className="text-sm text-muted-foreground md:hidden">
+                            {soldier.teamName || 'N/A'}
+                        </div>
+                        <div className="flex md:hidden mt-1">
+                            {focus.type === 'running' && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-600">
+                                <Activity className="mr-1 h-3 w-3" /> {focus.text}
+                            </Badge>
+                            )}
+                            {focus.type === 'strength' && (
+                            <Badge variant="outline" className="text-red-600 border-red-600">
+                                <Dumbbell className="mr-1 h-3 w-3" /> {focus.text}
+                            </Badge>
+                            )}
+                        </div>
+                    </div>
                  </div>
-                <div className="text-sm text-muted-foreground">
-                  {soldier.rank}
-                </div>
               </TableCell>
-              {(accountType === 'Admin' || accountType === 'Commander') && <TableCell className="hidden md:table-cell">{soldier.teamName || 'N/A'}</TableCell>}
-              <TableCell>{soldier.mdl || 'N/A'}</TableCell>
-              <TableCell>{soldier.hrp || 'N/A'}</TableCell>
-              <TableCell className="hidden sm:table-cell">{soldier.twoMileRun || 'N/A'}</TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.teamName || 'N/A'}</TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.mdl || 'N/A'}</TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.hrp || 'N/A'}</TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.sdc || 'N/A'}</TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.plk || 'N/A'}</TableCell>
+              <TableCell className="hidden md:table-cell">{soldier.twoMileRun || 'N/A'}</TableCell>
+              <TableCell className="text-right">
                 {(accountType === 'Admin' || accountType === 'Supervisor' || accountType === 'Commander') && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                      <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => openLogDataDialog(soldier)}>
                         <BookOpenCheck className="mr-2 h-4 w-4" />
                         Log AFT
                       </DropdownMenuItem>
-                       {(accountType === 'Admin' || accountType === 'Supervisor') && onRemoveSoldier && (
+                       {(accountType === 'Admin' || accountType === 'Supervisor' || accountType === 'Commander') && onRemoveSoldier && (
                         <>
                           <DropdownMenuSeparator />
                           <AlertDialog>
