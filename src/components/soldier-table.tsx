@@ -9,7 +9,8 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX, Weight, Zap, ShieldAlert, Ruler, HeartPulse, Percent, Timer, Run } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX } from 'lucide-react';
+import { Barbell, Boot, PersonSimpleRun, Timer, Heart, Ruler, Percent } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -51,7 +52,7 @@ interface SoldierTableProps {
 
 const StatDisplay = ({ icon: Icon, label, value, unit }: { icon: React.ElementType, label: string, value: string | number | undefined, unit?: string }) => (
     <div className="flex items-center gap-2 text-sm p-2 rounded-md bg-muted/50">
-        <Icon className="w-5 h-5 text-muted-foreground" />
+        <Icon weight="bold" className="w-5 h-5 text-muted-foreground" />
         <span className="font-medium">{label}:</span>
         <span className="text-muted-foreground">{value ?? 'N/A'}{unit && value ? ` ${unit}` : ''}</span>
     </div>
@@ -187,20 +188,20 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                  <div>
                     <h4 className="font-semibold mb-2 text-sm">Vitals</h4>
                      <div className="grid grid-cols-2 gap-2">
-                        <StatDisplay icon={Weight} label="Weight" value={selectedSoldier.weight} unit="lbs" />
+                        <StatDisplay icon={Barbell} label="Weight" value={selectedSoldier.weight} unit="lbs" />
                         <StatDisplay icon={Ruler} label="Height" value={selectedSoldier.height} unit="in" />
                         <StatDisplay icon={Percent} label="Body Fat" value={selectedSoldier.bodyFatPercentage} unit="%" />
-                        <StatDisplay icon={HeartPulse} label="Resting HR" value={selectedSoldier.restingHeartRate} unit="bpm" />
+                        <StatDisplay icon={Heart} label="Resting HR" value={selectedSoldier.restingHeartRate} unit="bpm" />
                     </div>
                 </div>
                  <div>
                     <h4 className="font-semibold mb-2 text-sm">AFT Scores</h4>
                      <div className="grid grid-cols-2 gap-2">
-                        <StatDisplay icon={Weight} label="MDL" value={selectedSoldier.mdl} />
+                        <StatDisplay icon={Barbell} label="MDL" value={selectedSoldier.mdl} />
                         <StatDisplay icon={Dumbbell} label="HRP" value={selectedSoldier.hrp} />
-                        <StatDisplay icon={Zap} label="SDC" value={selectedSoldier.sdc} />
+                        <StatDisplay icon={Boot} label="SDC" value={selectedSoldier.sdc} />
                         <StatDisplay icon={Timer} label="PLK" value={selectedSoldier.plk} />
-                        <StatDisplay icon={Run} label="2MR" value={selectedSoldier.twoMileRun} />
+                        <StatDisplay icon={PersonSimpleRun} label="2MR" value={selectedSoldier.twoMileRun} />
                     </div>
                 </div>
                  {selectedSoldier.healthNotes && (
@@ -340,5 +341,3 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
     </>
   );
 }
-
-    

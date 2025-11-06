@@ -6,7 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Activity, Bot, Copy, Dumbbell, MoreHorizontal, Run, Shield, ShieldCheck, Swords, Timer, UserPlus, Users, Weight, Zap } from 'lucide-react';
+import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users } from 'lucide-react';
+import { Barbell, Boot, PersonSimpleRun, Shield, ShieldCheck, Swords, Timer } from '@phosphor-icons/react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -348,7 +349,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. MDL Score</CardTitle>
-            <Weight className="h-4 w-4 text-muted-foreground" />
+            <Barbell weight="bold" className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgMdl}</div>
@@ -368,7 +369,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. SDC Score</CardTitle>
-            <Bot className="h-4 w-4 text-muted-foreground" />
+            <Boot weight="bold" className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgSdc}</div>
@@ -378,7 +379,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. PLK Score</CardTitle>
-            <Timer className="h-4 w-4 text-muted-foreground" />
+            <Timer weight="bold" className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgPlk}</div>
@@ -388,7 +389,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. 2MR Score</CardTitle>
-            <Run className="h-4 w-4 text-muted-foreground" />
+            <PersonSimpleRun weight="bold" className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{avgRunTime}</div>
