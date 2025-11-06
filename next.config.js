@@ -2,6 +2,7 @@
 const nextConfig = {
   /* config options here */
   output: 'export',
+  reactStrictMode: true,
 
   typescript: {
     ignoreBuildErrors: true,
@@ -10,10 +11,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'd2cto119c3bgok.cloudfront.net',
         port: '',
         pathname: '/**',
       },
