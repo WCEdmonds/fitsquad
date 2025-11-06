@@ -20,12 +20,12 @@ const features = [
   },
   {
     icon: <LineChart className="h-10 w-10 text-primary" />,
-    title: 'Track Progress',
+    title: 'Comprehensive Progress Tracking',
     description: 'Soldiers can log their progress, and commanders can monitor performance improvements across the unit over time.',
   },
   {
     icon: <ShieldCheck className="h-10 w-10 text-primary" />,
-    title: 'Tiered Grouping',
+    title: 'Automatic Tiered Grouping',
     description: 'Dynamically split soldiers into focus groups to address specific deficiencies and optimize training effectiveness.',
   },
 ];
