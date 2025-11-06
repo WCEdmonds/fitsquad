@@ -127,8 +127,8 @@ export default function SignupPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-lg mb-4">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
             <Dumbbell className="size-8" />
@@ -200,37 +200,7 @@ export default function SignupPage() {
                     </Select>
                 </div>
             </div>
-             {accountType && (
-                 <div className="pt-2">
-                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Feature</TableHead>
-                            <TableHead className="text-center"><UserCheck className="mx-auto h-5 w-5"/></TableHead>
-                            <TableHead className="text-center"><Shield className="mx-auto h-5 w-5"/></TableHead>
-                            <TableHead className="text-center"><Award className="mx-auto h-5 w-5"/></TableHead>
-                        </TableRow>
-                         <TableRow>
-                            <TableHead></TableHead>
-                            <TableHead className="text-center text-xs text-muted-foreground">Soldier</TableHead>
-                            <TableHead className="text-center text-xs text-muted-foreground">Supervisor</TableHead>
-                            <TableHead className="text-center text-xs text-muted-foreground">Commander</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {roleFeatures.map(({ feature, soldier, supervisor, commander }) => (
-                            <TableRow key={feature}>
-                                <TableCell className="font-medium text-sm">{feature}</TableCell>
-                                <TableCell className="text-center">{soldier ? '✅' : '❌'}</TableCell>
-                                <TableCell className="text-center">{supervisor ? '✅' : '❌'}</TableCell>
-                                <TableCell className="text-center">{commander ? '✅' : '❌'}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                 </Table>
-                 </div>
-            )}
-
+            
             {accountType === 'Commander' && (
                 <div className="space-y-2">
                     <Label htmlFor="passcode">Commander Passcode</Label>
@@ -261,6 +231,46 @@ export default function SignupPage() {
           </p>
         </CardFooter>
       </Card>
+      
+      {accountType && (
+         <Card className="w-full max-w-lg mt-4">
+            <CardHeader>
+                <CardTitle>Role Permissions</CardTitle>
+                <CardDescription>
+                    Here's what each role can do within FitSquad.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Feature</TableHead>
+                            <TableHead className="text-center"><UserCheck className="mx-auto h-5 w-5"/></TableHead>
+                            <TableHead className="text-center"><Shield className="mx-auto h-5 w-5"/></TableHead>
+                            <TableHead className="text-center"><Award className="mx-auto h-5 w-5"/></TableHead>
+                        </TableRow>
+                         <TableRow>
+                            <TableHead></TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Soldier</TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Supervisor</TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Commander</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {roleFeatures.map(({ feature, soldier, supervisor, commander }) => (
+                            <TableRow key={feature}>
+                                <TableCell className="font-medium text-sm">{feature}</TableCell>
+                                <TableCell className="text-center">{soldier ? '✅' : '❌'}</TableCell>
+                                <TableCell className="text-center">{supervisor ? '✅' : '❌'}</TableCell>
+                                <TableCell className="text-center">{commander ? '✅' : '❌'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                 </Table>
+            </CardContent>
+         </Card>
+      )}
+
     </div>
   );
 }
