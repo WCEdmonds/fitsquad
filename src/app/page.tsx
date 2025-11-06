@@ -60,7 +60,7 @@ export default function LandingPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
            </div>
-          <div className="container px-4 md:px-6 relative z-10">
+          <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center justify-center text-center">
               <div className="flex flex-col justify-center space-y-6 max-w-4xl mx-auto">
                 <div className="space-y-4">
@@ -84,7 +84,7 @@ export default function LandingPage() {
           </div>
         </section>
         <section id="features" className="w-full py-16 md:py-24 lg:py-32 bg-muted/30">
-          <div className="container px-4 md:px-6">
+          <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
               <div className="space-y-4">
                 <div className="inline-block rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">Key Features</div>
