@@ -340,3 +340,5 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
     </>
   );
 }
+
+    
