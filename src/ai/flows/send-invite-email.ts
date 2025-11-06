@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview A server-side action to send email invitations using Mailgun via fetch.
  *

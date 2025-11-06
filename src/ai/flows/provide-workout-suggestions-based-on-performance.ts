@@ -1,4 +1,3 @@
-'use server';
 /**
  * @fileOverview Provides workout suggestions based on the soldier's performance and limitations.
  * This file is currently not using Genkit and the AI functionality is disabled.

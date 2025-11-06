@@ -1,15 +1,10 @@
+// src/app/api/generate-plan/route.ts
+// This file does NOT use 'use server'
 
-/**
- * @fileOverview Generates tailored workout plans for units or individuals based on fitness data, goals, and equipment.
- * This file is currently not using Genkit and the AI functionality is disabled.
- *
- * - generateTailoredWorkoutPlan - A function that generates tailored workout plans.
- * - GenerateTailoredWorkoutPlanInput - The input type for the generateTailoredWorkoutPlan function.
- * - GenerateTailoredWorkoutPlanOutput - The return type for the generateTailoredWorkoutPlan function.
- */
-
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
+// --- All Zod schemas copied from your original file ---
 const GenerateTailoredWorkoutPlanInputSchema = z.object({
   fitnessData: z
     .string()
@@ -52,7 +47,6 @@ const DailyWorkoutSchema = z.object({
   cooldown: z.string().describe('A brief description of the cool-down routine.'),
 });
 
-
 const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   title: z.string().describe("A title for the workout plan, e.g., 'Weekly Fitness Plan: Focus on Endurance'."),
   common_weaknesses: z.array(z.string()).describe('A list of common weaknesses identified from the data.'),
@@ -60,16 +54,53 @@ const GenerateTailoredWorkoutPlanOutputSchema = z.object({
   running_focus_plan: z.array(DailyWorkoutSchema).optional().describe('A complete weekly workout plan for the Running Focus Group. (For unit plans)'),
   individual_plan: z.array(DailyWorkoutSchema).optional().describe('A complete weekly workout plan for an individual soldier. (For individual plans)'),
 });
-
 export type GenerateTailoredWorkoutPlanOutput = z.infer<
   typeof GenerateTailoredWorkoutPlanOutputSchema
 >;
 
-export async function generateTailoredWorkoutPlan(
+// --- Your AI Logic (copied from your file) ---
+async function generatePlanLogic(
   input: GenerateTailoredWorkoutPlanInput
 ): Promise<GenerateTailoredWorkoutPlanOutput> {
-   // AI functionality is disabled due to dependency removal.
-  // Returning a default response.
+  
+  // This is the logic from your original file:
   console.warn("AI functionality for generateTailoredWorkoutPlan is disabled.");
   throw new Error("Workout plan generation is currently disabled due to a build issue. The Genkit dependencies were removed. To re-enable this, please reinstall Genkit and its dependencies.");
+  
+  // ---------------------------------------------------
+  // WHEN YOU ARE READY TO FIX THE AI:
+  // 1. Remove the two lines above.
+  // 2. Re-import your AI flow (e.g., import { yourGenkitFlow } from '@/ai/your-flow-file';)
+  // 3. Call your flow here:
+  // const result = await yourGenkitFlow(input);
+  // return result;
+  // ---------------------------------------------------
+}
+
+
+// --- The New API Route Handler ---
+export async function POST(request: Request) {
+  try {
+    // 1. Get the JSON body from the request
+    const inputBody = await request.json();
+    
+    // 2. (Optional but recommended) Validate the input
+    const validatedInput = GenerateTailoredWorkoutPlanInputSchema.parse(inputBody);
+
+    // 3. Run your logic
+    const result = await generatePlanLogic(validatedInput);
+    
+    // 4. Return a successful JSON response
+    return NextResponse.json(result);
+
+  } catch (error: any) {
+    // 5. Handle any errors (including Zod validation or your intentional error)
+    console.error('Workout plan generation failed:', error);
+    
+    // Return a JSON error response
+    return NextResponse.json(
+      { error: error.message || "Failed to generate workout plan. Please try again." }, 
+      { status: 500 }
+    );
+  }
 }
