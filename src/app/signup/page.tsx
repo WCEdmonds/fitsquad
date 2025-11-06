@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, UserCheck, Shield, Award } from 'lucide-react';
 import Link from 'next/link';
 import {
   Select,
@@ -29,7 +29,25 @@ import {
 } from '@/components/ui/select';
 import { useFirestore } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
+
+const roleFeatures = [
+    { feature: "View Own Data", soldier: true, supervisor: true, commander: true },
+    { feature: "Log Own Progress", soldier: true, supervisor: true, commander: true },
+    { feature: "Generate Personal Plan", soldier: true, supervisor: true, commander: true },
+    { feature: "View Team Roster & Data", soldier: false, supervisor: true, commander: true },
+    { feature: "Generate Unit Plan", soldier: false, supervisor: true, commander: true },
+    { feature: "Manage Team Members", soldier: false, supervisor: true, commander: true },
+    { feature: "Manage Subordinate Units", soldier: false, supervisor: false, commander: true },
+];
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -178,15 +196,44 @@ export default function SignupPage() {
                             <SelectItem value="Soldier">Soldier</SelectItem>
                             <SelectItem value="Supervisor">Supervisor</SelectItem>
                             <SelectItem value="Commander">Commander</SelectItem>
-                            <SelectItem value="Admin">Admin</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
+             {accountType && (
+                 <div className="pt-2">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Feature</TableHead>
+                            <TableHead className="text-center"><UserCheck className="mx-auto h-5 w-5"/></TableHead>
+                            <TableHead className="text-center"><Shield className="mx-auto h-5 w-5"/></TableHead>
+                            <TableHead className="text-center"><Award className="mx-auto h-5 w-5"/></TableHead>
+                        </TableRow>
+                         <TableRow>
+                            <TableHead></TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Soldier</TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Supervisor</TableHead>
+                            <TableHead className="text-center text-xs text-muted-foreground">Commander</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {roleFeatures.map(({ feature, soldier, supervisor, commander }) => (
+                            <TableRow key={feature}>
+                                <TableCell className="font-medium text-sm">{feature}</TableCell>
+                                <TableCell className="text-center">{soldier ? '✅' : '❌'}</TableCell>
+                                <TableCell className="text-center">{supervisor ? '✅' : '❌'}</TableCell>
+                                <TableCell className="text-center">{commander ? '✅' : '❌'}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                 </Table>
+                 </div>
+            )}
 
-            {(accountType === 'Commander' || accountType === 'Admin') && (
+            {accountType === 'Commander' && (
                 <div className="space-y-2">
-                    <Label htmlFor="passcode">Passcode</Label>
+                    <Label htmlFor="passcode">Commander Passcode</Label>
                     <Input
                         id="passcode"
                         type="password"
