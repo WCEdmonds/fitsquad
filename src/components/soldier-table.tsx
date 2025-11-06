@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
-import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX, Weight, Zap, ShieldAlert, Ruler, HeartPulse, Percent } from 'lucide-react';
+import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX, Weight, Zap, ShieldAlert, Ruler, HeartPulse, Percent, Timer, Run } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -199,8 +199,8 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                         <StatDisplay icon={Weight} label="MDL" value={selectedSoldier.mdl} />
                         <StatDisplay icon={Dumbbell} label="HRP" value={selectedSoldier.hrp} />
                         <StatDisplay icon={Zap} label="SDC" value={selectedSoldier.sdc} />
-                        <StatDisplay icon={Activity} label="PLK" value={selectedSoldier.plk} />
-                        <StatDisplay icon={Zap} label="2MR" value={selectedSoldier.twoMileRun} />
+                        <StatDisplay icon={Timer} label="PLK" value={selectedSoldier.plk} />
+                        <StatDisplay icon={Run} label="2MR" value={selectedSoldier.twoMileRun} />
                     </div>
                 </div>
                  {selectedSoldier.healthNotes && (
