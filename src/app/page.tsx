@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dumbbell, Target, Bot, LineChart, ShieldCheck } from 'lucide-react';
+import { Dumbbell, Target, Brain, LineChart, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 
 const features = [
@@ -14,9 +14,9 @@ const features = [
     description: 'Collect soldier AFT scores, run times, and health data to get a clear picture of your unit\'s fitness.',
   },
   {
-    icon: <Bot className="h-10 w-10 text-primary" />,
+    icon: <Brain className="h-10 w-10 text-primary" />,
     title: 'Intelligent Workout Plans',
-    description: 'Generate tailored workout plans for individuals, squads, or the entire company based on real data and specific goals.',
+    description: 'Generates tailored workout programs for individuals, squads, or the entire company based on your soldiers\' actual performance data.',
   },
   {
     icon: <LineChart className="h-10 w-10 text-primary" />,
