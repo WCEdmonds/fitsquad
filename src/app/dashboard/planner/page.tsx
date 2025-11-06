@@ -18,10 +18,10 @@ import { Button } from '@/components/ui/button';
 import { WorkoutCalendarView } from '@/components/workout-calendar-view';
 import { getISOWeek, startOfWeek } from 'date-fns';
 import { WorkoutPrintView } from '@/components/workout-print-view';
-//
-// --- FIX 1: Removed .ts from the import path ---
-//
-import { type GenerateTailoredWorkoutPlanOutput } from '@/app/api/generate-plan/route';
+import {
+  callGeneratePlan,
+  type GenerateTailoredWorkoutPlanOutput,
+} from '@/lib/cloudFunctions';
 
 export default function PlannerPage() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -100,37 +100,19 @@ export default function PlannerPage() {
     setWorkoutPlan(null);
     setGeneratedPlanId(null);
 
-    //
-    // --- FIX 2: Added 'try' block ---
-    //
     try {
-      const response = await fetch('/api/generate-plan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fitnessData,
-            trainingGoals: values.trainingGoals,
-            additionalContext: values.additionalContext,
-            days: values.days,
-            equipmentAccess: values.equipmentAccess,
-            isUnitPlan,
-            isIndividualPlan,
-          }),
-        });
+      const result = await callGeneratePlan({
+        fitnessData,
+        trainingGoals: values.trainingGoals,
+        additionalContext: values.additionalContext,
+        days: values.days,
+        equipmentAccess: values.equipmentAccess,
+        isUnitPlan,
+        isIndividualPlan,
+      });
 
-        if (!response.ok) {
-          // Handle HTTP errors
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'API request failed');
-        }
-
-        const result: GenerateTailoredWorkoutPlanOutput = await response.json();
-        // (END OF CHANGED PART)
-
-        setWorkoutPlan(result);
-        setGeneratedPlanId(`temp-${Date.now()}`); 
+      setWorkoutPlan(result);
+      setGeneratedPlanId(`temp-${Date.now()}`);
 
     } catch (error: any) {
       console.error('Workout plan generation failed:', error);
@@ -259,6 +241,3 @@ export default function PlannerPage() {
     </>
   );
 }
-//
-// --- FIX 3: Removed extra '}' ---
-//
