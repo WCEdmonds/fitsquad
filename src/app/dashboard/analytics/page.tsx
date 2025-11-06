@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
         if (account?.accountType === 'Commander' && managedTeams) {
             const fetchAllSoldiers = async () => {
                 setIsLoadingAllSoldiers(true);
-                let soldierList: SoldierSelectItem[] = [];
+                const soldierList: SoldierSelectItem[] = [];
                 for (const team of managedTeams) {
                     const membersRef = collection(firestore, 'teams', team.id, 'members');
                     const membersSnap = await getCollectionNonBlocking(membersRef);

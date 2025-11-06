@@ -26,7 +26,7 @@ const formSchema = z.object({
   days: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one day.",
   }),
-  equipmentAccess: z.enum(["gym", "bodyweight"]).optional(),
+  equipmentAccess: z.enum(["gym", "bodyweight"]).optional().nullable(),
 });
 
 export type PlannerFormValues = z.infer<typeof formSchema>;
@@ -61,7 +61,7 @@ export function PlannerForm({ onSubmit, isLoading, accountType }: PlannerFormPro
                     <FormControl>
                         <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value ?? undefined} 
                         className="flex flex-col space-y-1"
                         >
                         <FormItem className="flex items-center space-x-3 space-y-0">
