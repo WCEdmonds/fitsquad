@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InviteDialog } from '@/components/invite-dialog';
+import { callSendInvite } from '@/lib/cloudFunctions';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -294,21 +295,8 @@ export default function SoldiersPage() {
 <p>Thank you,<br>The FitSquad Team</p>`;
 
 try {
-          const response = await fetch('/api/send-invite', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ to: email, subject, body }),
-          });
-
-          const result = await response.json();
-          if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Failed to send invite');
-          }
-          
+          await callSendInvite({ to: email, subject, body });
           toast({ title: "Invite Sent!", description: `An invitation email has been sent to ${email}.` });
-        
         } catch (error: any) {
           toast({ title: "Error", description: `Failed to send invite: ${error.message}`, variant: "destructive" });
         }
