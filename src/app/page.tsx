@@ -55,7 +55,7 @@ export default function LandingPage() {
                style={{ transform: 'scale(1.1)' }}
              />
              <Image
-                src="https://placehold.co/1920x1080/4B5320/FFFFFF?text=Hero+Image"
+                src="https://d2cto119c3bgok.cloudfront.net/thumbs/photos/2506/9112463/1000w_q95.jpg"
                 alt="Hero background"
                 layout="fill"
                 objectFit="cover"
