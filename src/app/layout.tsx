@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'UnitFit Planner',
-  description: 'AI-powered workout planner for military units.',
+  title: 'FitSquad',
+  description: 'Intelligent workout planner for military units.',
 };
 
 export default function RootLayout({

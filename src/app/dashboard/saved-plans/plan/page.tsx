@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -16,15 +18,12 @@ import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { WorkoutPrintView } from '@/components/workout-print-view';
 
-interface SavedPlanDetailClientPageProps {
-  planId: string;
-}
-
-export default function SavedPlanDetailClientPage({ planId }: SavedPlanDetailClientPageProps) {
+function SavedPlanDetail() {
+  const searchParams = useSearchParams();
+  const planId = searchParams.get('id');
   const { user } = useUser();
   const firestore = useFirestore();
 
-  // This is a bit of a workaround to get the teamId. Ideally, this would be part of the route or a more direct lookup.
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, 'accounts', user.uid);
@@ -33,7 +32,7 @@ export default function SavedPlanDetailClientPage({ planId }: SavedPlanDetailCli
   
   const planDocRef = useMemoFirebase(() => {
     if (!userAccount?.teamId || !planId) return null;
-    return doc(firestore, 'teams', userAccount.teamId, 'workoutPlans', planId as string);
+    return doc(firestore, 'teams', userAccount.teamId, 'workoutPlans', planId);
   }, [firestore, userAccount, planId]);
 
   const { data: plan, isLoading } = useDoc(planDocRef);
@@ -88,7 +87,7 @@ export default function SavedPlanDetailClientPage({ planId }: SavedPlanDetailCli
                         <Skeleton className="h-4 w-5/6" />
                     </div>
                     )}
-                    {parsedPlan && <WorkoutCalendarView plan={parsedPlan} planId={planId as string} />}
+                    {planId && parsedPlan && <WorkoutCalendarView plan={parsedPlan} planId={planId} />}
                     {!isLoading && !parsedPlan && (
                         <div className="text-center py-12">
                             <p>Plan not found or data is corrupted.</p>
@@ -99,4 +98,12 @@ export default function SavedPlanDetailClientPage({ planId }: SavedPlanDetailCli
         </div>
     </>
   );
+}
+
+export default function SavedPlanPage() {
+    return (
+        <Suspense fallback={<div>Loading plan...</div>}>
+            <SavedPlanDetail />
+        </Suspense>
+    )
 }

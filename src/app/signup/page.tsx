@@ -30,7 +30,6 @@ import {
 import { useFirestore } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,8 +108,8 @@ export default function SignupPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+      <Card className="w-full max-w-lg mb-4">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
             <Dumbbell className="size-8" />
@@ -178,15 +177,14 @@ export default function SignupPage() {
                             <SelectItem value="Soldier">Soldier</SelectItem>
                             <SelectItem value="Supervisor">Supervisor</SelectItem>
                             <SelectItem value="Commander">Commander</SelectItem>
-                            <SelectItem value="Admin">Admin</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
-
-            {(accountType === 'Commander' || accountType === 'Admin') && (
+            
+            {accountType === 'Commander' && (
                 <div className="space-y-2">
-                    <Label htmlFor="passcode">Passcode</Label>
+                    <Label htmlFor="passcode">Commander Passcode</Label>
                     <Input
                         id="passcode"
                         type="password"

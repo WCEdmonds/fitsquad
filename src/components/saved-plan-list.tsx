@@ -37,7 +37,7 @@ export function SavedPlanList({ plans, teamId }: SavedPlanListProps) {
             <TableCell>{plan.description}</TableCell>
             <TableCell>{new Date(plan.createdAt).toLocaleDateString()}</TableCell>
             <TableCell className="text-right">
-                <Link href={`/dashboard/saved-plans/${plan.id}`} passHref>
+                <Link href={`/dashboard/saved-plans/plan?id=${plan.id}`} passHref>
                     <Button variant="outline" size="sm">
                         <Eye className="mr-2 h-4 w-4" />
                         View Plan
