@@ -32,7 +32,7 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="w-full bg-background">
       <header className="px-4 lg:px-6 h-20 flex items-center shadow-sm pt-[env(safe-area-inset-top)]">
         <Link href="/" className="flex items-center justify-center">
           <Dumbbell className="h-6 w-6 text-primary" />

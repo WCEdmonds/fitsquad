@@ -20,8 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
-{/* --- ADD THIS BANNER --- */}
+      <body className="font-body antialiased min-h-screen flex flex-col">
         <div className="
           w-full bg-yellow-400 p-2 
           text-center text-sm font-bold text-yellow-900 
@@ -29,10 +28,11 @@ export default function RootLayout({
         ">
           BETA VERSION - DO NOT USE FOR LIVE OPERATIONS
         </div>
-        {/* --- END BANNER --- */}
-        <FirebaseClientProvider>
-          {children}
-        </FirebaseClientProvider>
+        <main className="flex-grow">
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
+        </main>
         <Toaster />
       </body>
     </html>
