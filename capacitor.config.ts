@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'FitSquad',
   webDir: 'out',
   server: {
-    url: 'https://your-live-app-url.com',
+    url: 'mysquad.fit',
     cleartext: true
   }
 };
