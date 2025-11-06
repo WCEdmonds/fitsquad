@@ -1,6 +1,6 @@
 export type Soldier = {
   id: string; // Changed to string to match Firestore UID
-  name: string; // email for now
+  email: string;
   firstName?: string;
   lastName?: string;
   rank: string;

@@ -28,9 +28,9 @@ const GenerateTailoredWorkoutPlanInputSchema = z.object({
       'Additional context or specific needs, such as upcoming deployments or specific mission requirements.'
     ),
   days: z.array(z.string()).describe('The days of the week to generate the plan for.'),
-  equipmentAccess: z.enum(['gym', 'bodyweight']).optional().describe("The user's access to equipment. Either 'gym' or 'bodyweight' only."),
-  isUnitPlan: z.boolean().optional().describe("Set to true if generating a plan for a unit."),
-  isIndividualPlan: z.boolean().optional().describe("Set to true if generating a plan for an individual soldier.")
+equipmentAccess: z.enum(['gym', 'bodyweight']).optional().nullable().describe("The user's access to equipment. Either 'gym' or 'bodyweight' only."),
+isUnitPlan: z.boolean().optional().describe("Set to true if generating a plan for a unit."),
+isIndividualPlan: z.boolean().optional().describe("Set to true if generating a plan for an individual soldier.")
 });
 export type GenerateTailoredWorkoutPlanInput = z.infer<
   typeof GenerateTailoredWorkoutPlanInputSchema
