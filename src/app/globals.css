@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  padding-top: env(safe-area-inset-top);
 }
 
 @layer base {
@@ -90,6 +91,7 @@ body {
 @media print {
   body {
     background: white;
+    padding-top: 0;
   }
   .print-only {
     display: block !important;

@@ -33,15 +33,15 @@ const formSchema = z.object({
   gender: z.enum(['Male', 'Female', 'Other']),
   weight: z.coerce.number().min(0, 'Weight must be positive.'),
   height: z.coerce.number().min(0, 'Height must be positive.'),
-  bodyFatPercentage: z.coerce.number().min(0).max(100).optional(),
-  restingHeartRate: z.coerce.number().min(0).optional(),
+  bodyFatPercentage: z.coerce.number().min(0).max(100).optional().nullable(),
+  restingHeartRate: z.coerce.number().min(0).optional().nullable(),
   // ACFT Events
   mdl: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   hrp: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   sdc: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   plk: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
   twoMileRun: z.coerce.number().min(0).max(100, 'Score must be 100 or less.'),
-  healthInfo: z.string().optional(),
+  healthInfo: z.string().optional().nullable(),
 });
 
 type SoldierDataFormValues = z.infer<typeof formSchema>;
@@ -60,16 +60,16 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
   const form = useForm<SoldierDataFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
-      weight: 0,
-      height: 0,
-      mdl: 0,
-      hrp: 0,
-      sdc: 0,
-      plk: 0,
-      twoMileRun: 0,
+      weight: undefined,
+      height: undefined,
+      mdl: undefined,
+      hrp: undefined,
+      sdc: undefined,
+      plk: undefined,
+      twoMileRun: undefined,
       healthInfo: '',
-      bodyFatPercentage: 0,
-      restingHeartRate: 0,
+      bodyFatPercentage: undefined,
+      restingHeartRate: undefined,
     },
   });
 
@@ -167,9 +167,9 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
             name="bodyFatPercentage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Body Fat %</FormLabel>
+                <FormLabel>Body Fat % (Optional)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 18" {...field} />
+                  <Input type="number" placeholder="e.g., 18" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -180,9 +180,9 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
             name="restingHeartRate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Resting HR (bpm)</FormLabel>
+                <FormLabel>Resting HR (bpm, Optional)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="e.g., 60" {...field} />
+                  <Input type="number" placeholder="e.g., 60" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -267,6 +267,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
                 <Textarea
                   placeholder="Any injuries, limitations, or health notes to consider."
                   {...field}
+                  value={field.value ?? ''}
                 />
               </FormControl>
               <FormMessage />
