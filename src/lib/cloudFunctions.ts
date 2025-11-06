@@ -68,8 +68,28 @@ export async function callGeneratePlan(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `Cloud Function request failed: ${response.status}`);
+    let errorMessage = `Cloud Function request failed: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      console.error('Cloud Function error details:', errorData);
+
+      // Try to extract meaningful error message
+      if (errorData.error) {
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error;
+        } else if (errorData.error.message) {
+          errorMessage = errorData.error.message;
+        } else if (errorData.error.details) {
+          errorMessage = JSON.stringify(errorData.error.details);
+        }
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch (e) {
+      console.error('Failed to parse error response:', e);
+    }
+
+    throw new Error(errorMessage);
   }
 
   const result = await response.json();
