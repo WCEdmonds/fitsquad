@@ -29,6 +29,7 @@ export default function DashboardLayout({
   const firestore = useFirestore();
   const router = useRouter();
   const [fallback, setFallback] = React.useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -51,6 +52,10 @@ export default function DashboardLayout({
     auth.signOut();
     router.push('/login');
   };
+
+  const handleLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  }
   
   return (
       <div className="flex min-h-screen w-full flex-col">
@@ -65,7 +70,7 @@ export default function DashboardLayout({
           <div className="hidden md:flex ml-8">
             <DashboardNav />
           </div>
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -80,12 +85,13 @@ export default function DashboardLayout({
                <nav className="grid gap-6 text-lg font-medium">
                  <Link
                     href="/dashboard"
+                    onClick={handleLinkClick}
                     className="flex items-center gap-2 font-semibold text-lg mb-4"
                   >
                     <Dumbbell className="h-7 w-7" />
                     <span className="">FitSquad</span>
                 </Link>
-                <DashboardNav isMobile={true} />
+                <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
                </nav>
             </SheetContent>
           </Sheet>
@@ -98,6 +104,7 @@ export default function DashboardLayout({
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarFallback>{fallback}</AvatarFallback>
+
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>

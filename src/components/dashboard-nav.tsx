@@ -22,9 +22,10 @@ const commanderNavItems = [
 
 interface DashboardNavProps {
   isMobile?: boolean;
+  onLinkClick?: () => void;
 }
 
-export function DashboardNav({ isMobile = false }: DashboardNavProps) {
+export function DashboardNav({ isMobile = false, onLinkClick }: DashboardNavProps) {
   const pathname = usePathname();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -51,6 +52,7 @@ export function DashboardNav({ isMobile = false }: DashboardNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onLinkClick}
             className={cn(
               'transition-colors hover:text-foreground',
                pathname === item.href ? 'text-foreground' : 'text-muted-foreground',
