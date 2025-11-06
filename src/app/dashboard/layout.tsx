@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShieldCheck, Swords, Menu, Dumbbell } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck, Sword, Menu, Dumbbell } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
@@ -59,7 +59,7 @@ export default function DashboardLayout({
   
   return (
       <div className="flex min-h-screen w-full flex-col">
-        <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
+        <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50 pt-[env(safe-area-inset-top)]">
            <Link
               href="/dashboard"
               className="flex items-center gap-2 font-semibold text-lg"
@@ -120,7 +120,7 @@ export default function DashboardLayout({
                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/teams/create">
-                      <Swords className="mr-2 h-4 w-4" />
+                      <Sword className="mr-2 h-4 w-4" />
                       Create New Team
                     </Link>
                   </DropdownMenuItem>

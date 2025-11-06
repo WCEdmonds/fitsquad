@@ -90,7 +90,7 @@ export default function SoldiersPage() {
 
                     const soldier: Soldier = {
                         id: memberId,
-                        name: accData.email || 'Unknown',
+                        email: accData.email || 'Unknown',
                         firstName: accData.firstName || '',
                         lastName: accData.lastName || '',
                         rank: accData.accountType || 'Soldier',

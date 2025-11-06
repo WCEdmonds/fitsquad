@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users } from 'lucide-react';
-import { Barbell, SneakerMove, PersonSimpleRun, Shield, ShieldCheck, Swords, Timer } from '@phosphor-icons/react';
+import { Barbell, SneakerMove, PersonSimpleRun, Shield, ShieldCheck, Sword, Timer } from '@phosphor-icons/react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
@@ -111,6 +111,7 @@ export default function DashboardPage() {
 
                  const defaultSoldier: Soldier = {
                     id: member.id,
+                    email: accData?.email || 'Unknown',
                     firstName: accData?.firstName || 'Unknown',
                     lastName: accData?.lastName || 'Soldier',
                     rank: accData?.accountType || 'Soldier',
@@ -215,7 +216,7 @@ export default function DashboardPage() {
           <CardContent className="flex flex-col gap-4">
              <Link href="/teams/create" passHref>
                 <Button className="w-full">
-                    <Swords className="mr-2 h-4 w-4" /> Create a New Team
+                    <Sword className="mr-2 h-4 w-4" /> Create a New Team
                 </Button>
             </Link>
             <Link href="/teams/join" passHref>
@@ -247,7 +248,7 @@ export default function DashboardPage() {
             </Link>
              <Link href="/teams/create" passHref>
                 <Button variant="outline" className="w-full">
-                    <Swords className="mr-2 h-4 w-4" /> Create a New Team
+                    <Sword className="mr-2 h-4 w-4" /> Create a New Team
                 </Button>
             </Link>
           </CardContent>

@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Swords } from 'lucide-react';
+import { Sword } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 function generateTeamCode() {
@@ -121,7 +121,7 @@ export default function CreateTeamPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-4">
-            <Swords className="size-8" />
+            <Sword className="size-8" />
           </div>
           <CardTitle className="text-2xl">Create a New Team</CardTitle>
           <CardDescription>
