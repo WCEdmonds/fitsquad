@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { Soldier } from '@/lib/types';
 import { MoreHorizontal, Activity, Dumbbell, BookOpenCheck, Trash2, UserX } from 'lucide-react';
-import { Barbell, Boot, PersonSimpleRun, Timer, Heart, Ruler, Percent } from '@phosphor-icons/react';
+import { Barbell, SneakerMove, PersonSimpleRun, Timer, Heart, Ruler, Percent } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -199,9 +199,9 @@ export function SoldierTable({ soldiers, isLoading = false, accountType, onRemov
                      <div className="grid grid-cols-2 gap-2">
                         <StatDisplay icon={Barbell} label="MDL" value={selectedSoldier.mdl} />
                         <StatDisplay icon={Dumbbell} label="HRP" value={selectedSoldier.hrp} />
-                        <StatDisplay icon={Boot} label="SDC" value={selectedSoldier.sdc} />
+                        <StatDisplay icon={PersonSimpleRun} label="SDC" value={selectedSoldier.sdc} />
                         <StatDisplay icon={Timer} label="PLK" value={selectedSoldier.plk} />
-                        <StatDisplay icon={PersonSimpleRun} label="2MR" value={selectedSoldier.twoMileRun} />
+                        <StatDisplay icon={SneakerMove} label="2MR" value={selectedSoldier.twoMileRun} />
                     </div>
                 </div>
                  {selectedSoldier.healthNotes && (
