@@ -35,7 +35,15 @@ export default function LoginPage() {
       // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message);
+      if (
+        err.code === 'auth/wrong-password' ||
+        err.code === 'auth/user-not-found' ||
+        err.code === 'auth/invalid-credential'
+      ) {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
