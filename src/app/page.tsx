@@ -48,7 +48,7 @@ export default function LandingPage() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="relative w-full pt-16 pb-16 md:pt-32 md:pb-32 lg:pt-40 lg:pb-40 overflow-hidden">
+        <section className="relative w-full pt-16 pb-8 md:pt-24 md:pb-12 lg:pt-32 lg:pb-16 overflow-hidden">
            <div className="absolute inset-0 z-0">
              <div
                className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/20 blur-3xl"
@@ -88,9 +88,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
-        <section id="features" className="w-full py-16 md:py-24 lg:py-32 bg-muted/30">
+        <section id="features" className="w-full py-12 md:py-16 lg:py-20 bg-muted/30">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-10">
               <div className="space-y-4">
                 <div className="inline-block rounded-lg bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">Key Features</div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Built for Modern Military Fitness</h2>
