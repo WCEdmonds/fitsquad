@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
 import { useRouter, usePathname } from 'next/navigation';
+import { useUser } from '@/firebase';
 
 const AUTH_SEEN_KEY = 'fitsquad-auth-screen-seen';
 const ONBOARDING_KEY = 'fitsquad-onboarding-completed';
@@ -17,23 +18,42 @@ export function AuthScreen() {
   const [isNative, setIsNative] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     const native = Capacitor.isNativePlatform();
     setIsNative(native);
 
+    // Don't show if loading user state
+    if (isUserLoading) return;
+
+    // Don't show if user is already logged in
+    if (user) {
+      // If logged in and on home page, redirect to dashboard
+      if (native && pathname === '/') {
+        router.push('/dashboard');
+      }
+      return;
+    }
+
     // Only show on native platforms, after onboarding, and not already seen
-    // Also don't show if already on auth pages
-    if (native && !pathname.includes('/login') && !pathname.includes('/signup')) {
+    // Also don't show if already on auth pages or dashboard
+    if (native && !pathname.includes('/login') && !pathname.includes('/signup') && !pathname.includes('/dashboard')) {
       const onboardingComplete = localStorage.getItem(ONBOARDING_KEY);
       const authSeen = localStorage.getItem(AUTH_SEEN_KEY);
 
       if (onboardingComplete && !authSeen) {
         setIsVisible(true);
         setTimeout(() => setFadeIn(true), 100);
+      } else if (pathname === '/' && !onboardingComplete) {
+        // If on home page and haven't completed onboarding, wait for onboarding
+        return;
+      } else if (pathname === '/' && onboardingComplete && authSeen) {
+        // If on home page, onboarding complete, and auth seen, redirect to login
+        router.push('/login');
       }
     }
-  }, [pathname]);
+  }, [pathname, user, isUserLoading, router]);
 
   const handleCreateAccount = () => {
     haptics.medium();
