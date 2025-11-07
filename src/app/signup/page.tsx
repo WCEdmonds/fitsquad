@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, initiateEmailSignUp } from '@/firebase';
+import { useFirebase, initiateEmailSignUp } from '@/firebase';
 import {
   collection,
   doc,
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import {
   Select,
@@ -27,8 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useFirestore } from '@/firebase';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -40,8 +38,24 @@ export default function SignupPage() {
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const auth = useAuth();
-  const firestore = useFirestore();
+
+  // Use useFirebase instead of useAuth/useFirestore to handle initialization state
+  let firebaseContext;
+  try {
+    firebaseContext = useFirebase();
+  } catch (e) {
+    // Firebase not initialized yet
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { auth, firestore } = firebaseContext;
   const router = useRouter();
 
   const handleSignUp = async (e: React.FormEvent) => {
