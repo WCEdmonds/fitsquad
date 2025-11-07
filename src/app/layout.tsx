@@ -34,9 +34,9 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         <CapacitorInit />
         <Onboarding />
-        <AuthScreen />
         <main className="flex-grow">
           <FirebaseClientProvider>
+            <AuthScreen />
             {children}
           </FirebaseClientProvider>
         </main>
