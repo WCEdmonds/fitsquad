@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, Settings, ShieldCheck, Sword, Menu, Dumbbell } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
+import { BottomNav } from '@/components/bottom-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,6 +20,7 @@ import Link from 'next/link';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { DashboardErrorBoundary } from '@/components/DashboardErrorBoundary';
+import { Capacitor } from '@capacitor/core';
 
 export default function DashboardLayout({
   children,
@@ -31,6 +33,11 @@ export default function DashboardLayout({
   const router = useRouter();
   const [fallback, setFallback] = React.useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [isNative, setIsNative] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -60,43 +67,48 @@ export default function DashboardLayout({
   
   return (
       <div className="flex min-h-screen w-full flex-col">
-        <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50 pt-[env(safe-area-inset-top)]">
+        <header className={cn(
+          "sticky top-0 flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50 pt-[env(safe-area-inset-top)]",
+          isNative ? "h-14" : "h-20"
+        )}>
            <Link
               href="/dashboard"
-              className="flex items-center gap-2 font-semibold text-lg"
+              className={cn("flex items-center gap-2 font-semibold", isNative ? "text-base" : "text-lg")}
             >
-              <Dumbbell className="h-7 w-7" />
+              <Dumbbell className={cn(isNative ? "h-6 w-6" : "h-7 w-7")} />
               <span className="">FitSquad</span>
           </Link>
           <div className="hidden md:flex ml-8">
             <DashboardNav />
           </div>
-          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 md:hidden ml-auto"
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left">
-               <nav className="grid gap-6 text-lg font-medium">
-                 <Link
-                    href="/dashboard"
-                    onClick={handleLinkClick}
-                    className="flex items-center gap-2 font-semibold text-lg mb-4"
-                  >
-                    <Dumbbell className="h-7 w-7" />
-                    <span className="">FitSquad</span>
-                </Link>
-                <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
-               </nav>
-            </SheetContent>
-          </Sheet>
-          <div className="flex items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          {!isNative && (
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 md:hidden ml-auto"
+                >
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                 <nav className="grid gap-6 text-lg font-medium">
+                   <Link
+                      href="/dashboard"
+                      onClick={handleLinkClick}
+                      className="flex items-center gap-2 font-semibold text-lg mb-4"
+                    >
+                      <Dumbbell className="h-7 w-7" />
+                      <span className="">FitSquad</span>
+                  </Link>
+                  <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
+                 </nav>
+              </SheetContent>
+            </Sheet>
+          )}
+          <div className={cn("flex items-center gap-4 md:gap-2 lg:gap-4", isNative ? "ml-auto" : "md:ml-auto")}>
             <div className="flex-1 sm:flex-initial">
               {/* Optional Search Bar */}
             </div>
@@ -142,14 +154,20 @@ export default function DashboardLayout({
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <main className={cn(
+          "flex flex-1 flex-col md:gap-8 md:p-8",
+          isNative ? "gap-3 p-3 pb-20" : "gap-4 p-4"
+        )}>
           <DashboardErrorBoundary>
             {children}
           </DashboardErrorBoundary>
         </main>
-        <footer className="py-4 px-6 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} FitSquad by Quandary Development
-        </footer>
+        {!isNative && (
+          <footer className="py-4 px-6 text-center text-xs text-muted-foreground">
+              © {new Date().getFullYear()} FitSquad by Quandary Development
+          </footer>
+        )}
+        <BottomNav />
       </div>
   );
 }
