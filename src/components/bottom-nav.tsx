@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Calendar, Archive } from 'lucide-react';
+import { Home, Users, Calendar, Archive, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -13,6 +13,7 @@ const bottomNavItems = [
   { href: '/dashboard/soldiers', label: 'Team', icon: Users },
   { href: '/dashboard/planner', label: 'Plan', icon: Calendar },
   { href: '/dashboard/saved-plans', label: 'Saved', icon: Archive },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
 
 export function BottomNav() {

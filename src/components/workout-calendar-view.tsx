@@ -12,9 +12,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogProgressDialog } from './log-progress-dialog';
 import { Button } from './ui/button';
+import { Capacitor } from '@capacitor/core';
 
 
 interface DailyWorkoutDisplayProps {
@@ -26,10 +27,22 @@ interface DailyWorkoutDisplayProps {
 const DailyWorkoutDisplay = ({ dailyWorkouts, workoutPlanId }: DailyWorkoutDisplayProps) => {
   const [isLogDialogOpen, setIsLogDialogOpen] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string } | null>(null);
+  const [isNative, setIsNative] = useState(false);
+  const [openTooltip, setOpenTooltip] = useState<number | null>(null);
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
 
   const handleOpenLogDialog = (exercise: { id: string, name: string }) => {
     setSelectedExercise(exercise);
     setIsLogDialogOpen(true);
+  };
+
+  const handleTooltipToggle = (index: number) => {
+    if (isNative) {
+      setOpenTooltip(openTooltip === index ? null : index);
+    }
   };
   
   if (!dailyWorkouts || dailyWorkouts.length === 0) {
@@ -63,44 +76,51 @@ const DailyWorkoutDisplay = ({ dailyWorkouts, workoutPlanId }: DailyWorkoutDispl
             
             <div>
               <h4 className="font-semibold text-sm mb-2">Main Workout</h4>
-              <TooltipProvider>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Exercise</TableHead>
-                    <TableHead>Sets</TableHead>
-                    <TableHead>Reps / Duration</TableHead>
-                    <TableHead>Rest</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dailyWorkout.main_workout.map((exercise, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">
-                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help underline decoration-dotted">{exercise.name}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-xs">{exercise.description}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>{exercise.sets}</TableCell>
-                      <TableCell>{exercise.reps}</TableCell>
-                      <TableCell>{exercise.rest}</TableCell>
-                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenLogDialog({id: `ex-${index}`, name: exercise.name})}>
-                          <BookPlus className="mr-2 h-4 w-4" />
-                          Log
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              </TooltipProvider>
+              <div className="overflow-x-auto -mx-3 px-3">
+                <TooltipProvider>
+                  <Table className="min-w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[140px]">Exercise</TableHead>
+                        <TableHead className="w-16">Sets</TableHead>
+                        <TableHead className="min-w-[100px]">Reps</TableHead>
+                        <TableHead className="w-20">Rest</TableHead>
+                        <TableHead className="text-right w-24">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dailyWorkout.main_workout.map((exercise, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium min-w-[140px]">
+                            <Tooltip open={isNative ? openTooltip === index : undefined}>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="cursor-help underline decoration-dotted"
+                                  onClick={() => handleTooltipToggle(index)}
+                                >
+                                  {exercise.name}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">{exercise.description}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className="w-16">{exercise.sets}</TableCell>
+                          <TableCell className="min-w-[100px]">{exercise.reps}</TableCell>
+                          <TableCell className="w-20">{exercise.rest}</TableCell>
+                          <TableCell className="text-right w-24">
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenLogDialog({id: `ex-${index}`, name: exercise.name})}>
+                              <BookPlus className="mr-2 h-4 w-4" />
+                              Log
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TooltipProvider>
+              </div>
             </div>
 
             <div>

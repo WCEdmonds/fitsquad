@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users } from 'lucide-react';
+import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users, Calendar } from 'lucide-react';
 import { Barbell, SneakerMove, PersonSimpleRun, Shield, ShieldCheck, Sword, Timer } from '@phosphor-icons/react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
@@ -336,65 +336,74 @@ export default function DashboardPage() {
 
      {teamId && (
      <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Soldiers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+      <div className="flex justify-center mb-4">
+        <Button asChild size="lg" className="w-full md:w-auto">
+          <Link href="/dashboard/planner">
+            <Calendar className="mr-2 h-5 w-5" />
+            Generate Workout Plan
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">Total</CardTitle>
+            <Users className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{teamMembers?.length ?? 0}</div>
-            <p className="text-xs text-muted-foreground">in this unit</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{teamMembers?.length ?? 0}</div>
+            <p className="text-[10px] text-muted-foreground">soldiers</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. MDL Score</CardTitle>
-            <Barbell weight="bold" className="h-4 w-4 text-muted-foreground" />
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">MDL</CardTitle>
+            <Barbell weight="bold" className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgMdl}</div>
-            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the unit' : 'No data yet'}</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{avgMdl}</div>
+            <p className="text-[10px] text-muted-foreground">avg score</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. HRP Score</CardTitle>
-            <Dumbbell className="h-4 w-4 text-muted-foreground" />
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">HRP</CardTitle>
+            <Dumbbell className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgHrp}</div>
-            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the unit' : 'No data yet'}</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{avgHrp}</div>
+            <p className="text-[10px] text-muted-foreground">avg score</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. SDC Score</CardTitle>
-            <PersonSimpleRun weight="bold" className="h-4 w-4 text-muted-foreground" />
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">SDC</CardTitle>
+            <PersonSimpleRun weight="bold" className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgSdc}</div>
-            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the unit' : 'No data yet'}</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{avgSdc}</div>
+            <p className="text-[10px] text-muted-foreground">avg score</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. PLK Score</CardTitle>
-            <Timer weight="bold" className="h-4 w-4 text-muted-foreground" />
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">PLK</CardTitle>
+            <Timer weight="bold" className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgPlk}</div>
-            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the unit' : 'No data yet'}</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{avgPlk}</div>
+            <p className="text-[10px] text-muted-foreground">avg score</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. 2MR Score</CardTitle>
-            <SneakerMove weight="bold" className="h-4 w-4 text-muted-foreground" />
+        <Card className="aspect-square flex flex-col">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
+            <CardTitle className="text-xs font-medium">2MR</CardTitle>
+            <SneakerMove weight="bold" className="h-3 w-3 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgRunTime}</div>
-            <p className="text-xs text-muted-foreground">{allSoldiers.length > 0 ? 'Across the unit' : 'No data yet'}</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
+            <div className="text-xl font-bold">{avgRunTime}</div>
+            <p className="text-[10px] text-muted-foreground">avg score</p>
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Card,
@@ -17,12 +17,18 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { WorkoutPrintView } from '@/components/workout-print-view';
+import { Capacitor } from '@capacitor/core';
 
 function SavedPlanDetail() {
   const searchParams = useSearchParams();
   const planId = searchParams.get('id');
   const { user } = useUser();
   const firestore = useFirestore();
+  const [isNative, setIsNative] = useState(false);
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -66,7 +72,7 @@ function SavedPlanDetail() {
                         {plan?.description ?? '...'}
                     </CardDescription>
                     </div>
-                    {plan && (
+                    {plan && !isNative && (
                         <Button variant="outline" onClick={handleDownloadPdf}>
                         <FileText className="mr-2" />
                         Download PDF
