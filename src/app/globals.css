@@ -8,6 +8,38 @@ html {
 
 body {
   font-family: 'PT Sans', Arial, Helvetica, sans-serif;
+
+  /* Native app feel - disable text selection and touch callouts */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior-y: none;
+
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Re-enable selection for input fields and text areas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Native-like scrolling for scrollable containers */
+.scrollable {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 @layer base {

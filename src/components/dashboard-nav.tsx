@@ -6,6 +6,7 @@ import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCh
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { haptics } from '@/lib/haptics';
 
 
 const navItems = [
@@ -47,13 +48,20 @@ export function DashboardNav({ isMobile = false, onLinkClick }: DashboardNavProp
     allNavItems.push(...commanderNavItems);
   }
 
+  const handleNavClick = () => {
+    haptics.light();
+    if (onLinkClick) {
+      onLinkClick();
+    }
+  };
+
   return (
     <nav className={cn(navClasses)}>
       {allNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            onClick={onLinkClick}
+            onClick={handleNavClick}
             className={cn(
               'transition-colors hover:text-foreground',
                pathname === item.href ? 'text-foreground' : 'text-muted-foreground',
