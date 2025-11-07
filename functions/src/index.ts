@@ -135,7 +135,7 @@ const prompt = `
     logger.info("Generating AI plan with prompt...");
 
     const result = await ai.generate({
-      model: "gemini-1.5-pro-latest",
+      model: "googleai/gemini-2.5-flash",
       prompt: prompt,
       output: {
         format: "json",
