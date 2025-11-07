@@ -82,10 +82,19 @@ export default function LoginPage() {
       await sendPasswordReset(auth, email);
       toast({
         title: "Password Reset Email Sent",
-        description: "Check your inbox for a link to reset your password.",
+        description: "Check your inbox (and spam folder) for a link to reset your password.",
       });
     } catch (err: any) {
-      setError(err.message);
+      console.error('Password reset error:', err);
+      if (err.code === 'auth/user-not-found') {
+        setError('No account found with this email address.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address.');
+      } else if (err.code === 'auth/missing-email') {
+        setError('Please enter your email address.');
+      } else {
+        setError(`Failed to send reset email: ${err.message}`);
+      }
     } finally {
       setIsLoading(false);
     }

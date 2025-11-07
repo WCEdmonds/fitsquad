@@ -66,9 +66,12 @@ export default function DashboardLayout({
   }
   
   return (
-      <div className="flex min-h-screen w-full flex-col">
+      <div className={cn(
+        "w-full",
+        isNative ? "h-screen flex flex-col fixed inset-0" : "flex min-h-screen flex-col"
+      )}>
         <header className={cn(
-          "flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50",
+          "flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50 shrink-0",
           isNative ? "h-14 pt-[env(safe-area-inset-top)]" : "sticky top-0 h-20"
         )}>
            {!isNative && (
@@ -159,15 +162,15 @@ export default function DashboardLayout({
           )}
         </header>
         <main className={cn(
-          "flex flex-1 flex-col md:gap-8 md:p-8",
-          isNative ? "gap-3 p-3 pb-20" : "gap-4 p-4"
+          "md:gap-8 md:p-8",
+          isNative ? "flex-1 overflow-y-auto gap-3 p-3" : "flex flex-1 flex-col gap-4 p-4"
         )}>
           <DashboardErrorBoundary>
             {children}
           </DashboardErrorBoundary>
         </main>
         {!isNative && (
-          <footer className="py-4 px-6 text-center text-xs text-muted-foreground">
+          <footer className="py-4 px-6 text-center text-xs text-muted-foreground shrink-0">
               © {new Date().getFullYear()} FitSquad by Quandary Development
           </footer>
         )}
