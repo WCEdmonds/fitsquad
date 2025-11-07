@@ -70,23 +70,18 @@ export default function DashboardLayout({
         "w-full",
         isNative ? "h-screen flex flex-col fixed inset-0" : "flex min-h-screen flex-col"
       )}>
-        <header className={cn(
-          "flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50 shrink-0",
-          isNative ? "h-14 pt-[env(safe-area-inset-top)]" : "sticky top-0 h-20"
-        )}>
-           {!isNative && (
+        {!isNative && (
+          <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50 shrink-0">
              <Link
                 href="/dashboard"
-                className={cn("flex items-center gap-2 font-semibold", isNative ? "text-base" : "text-lg")}
+                className="flex items-center gap-2 font-semibold text-lg"
               >
-                <Dumbbell className={cn(isNative ? "h-6 w-6" : "h-7 w-7")} />
+                <Dumbbell className="h-7 w-7" />
                 <span className="">FitSquad</span>
             </Link>
-           )}
-          <div className="hidden md:flex ml-8">
-            <DashboardNav />
-          </div>
-          {!isNative && (
+            <div className="hidden md:flex ml-8">
+              <DashboardNav />
+            </div>
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -112,9 +107,7 @@ export default function DashboardLayout({
                  </nav>
               </SheetContent>
             </Sheet>
-          )}
-          {!isNative && (
-            <div className={cn("flex items-center gap-4 md:gap-2 lg:gap-4", "md:ml-auto")}>
+            <div className="flex items-center gap-4 md:gap-2 lg:gap-4 md:ml-auto">
               <div className="flex-1 sm:flex-initial">
                 {/* Optional Search Bar */}
               </div>
@@ -159,11 +152,11 @@ export default function DashboardLayout({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-          )}
-        </header>
+          </header>
+        )}
         <main className={cn(
           "md:gap-8 md:p-8",
-          isNative ? "flex-1 overflow-y-auto gap-3 p-3" : "flex flex-1 flex-col gap-4 p-4"
+          isNative ? "flex-1 overflow-y-auto gap-3 p-3 pt-[calc(0.75rem+env(safe-area-inset-top))]" : "flex flex-1 flex-col gap-4 p-4"
         )}>
           <DashboardErrorBoundary>
             {children}
