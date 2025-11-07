@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { CapacitorInit } from '@/components/capacitor-init';
+import { Onboarding } from '@/components/onboarding';
 
 export const metadata: Metadata = {
   title: 'FitSquad',
@@ -31,14 +32,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
         <CapacitorInit />
-        <div className="
-          w-full bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 py-2 px-3
-          pt-[calc(0.5rem+env(safe-area-inset-top))]
-          text-center text-xs font-bold text-yellow-900
-          no-print shadow-sm border-b border-yellow-500
-        ">
-          ⚠️ BETA - DO NOT USE FOR LIVE OPERATIONS
-        </div>
+        <Onboarding />
         <main className="flex-grow">
           <FirebaseClientProvider>
             {children}
