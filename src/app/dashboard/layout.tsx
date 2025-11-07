@@ -68,16 +68,18 @@ export default function DashboardLayout({
   return (
       <div className="flex min-h-screen w-full flex-col">
         <header className={cn(
-          "sticky top-0 flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50 pt-[env(safe-area-inset-top)]",
-          isNative ? "h-14" : "h-20"
+          "flex items-center gap-4 border-b bg-background px-4 md:px-6 z-50",
+          isNative ? "h-14 pt-[env(safe-area-inset-top)]" : "sticky top-0 h-20"
         )}>
-           <Link
-              href="/dashboard"
-              className={cn("flex items-center gap-2 font-semibold", isNative ? "text-base" : "text-lg")}
-            >
-              <Dumbbell className={cn(isNative ? "h-6 w-6" : "h-7 w-7")} />
-              <span className="">FitSquad</span>
-          </Link>
+           {!isNative && (
+             <Link
+                href="/dashboard"
+                className={cn("flex items-center gap-2 font-semibold", isNative ? "text-base" : "text-lg")}
+              >
+                <Dumbbell className={cn(isNative ? "h-6 w-6" : "h-7 w-7")} />
+                <span className="">FitSquad</span>
+            </Link>
+           )}
           <div className="hidden md:flex ml-8">
             <DashboardNav />
           </div>
@@ -108,51 +110,53 @@ export default function DashboardLayout({
               </SheetContent>
             </Sheet>
           )}
-          <div className={cn("flex items-center gap-4 md:gap-2 lg:gap-4", isNative ? "ml-auto" : "md:ml-auto")}>
-            <div className="flex-1 sm:flex-initial">
-              {/* Optional Search Bar */}
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
-                  <Avatar>
-                    <AvatarFallback>{fallback}</AvatarFallback>
+          {!isNative && (
+            <div className={cn("flex items-center gap-4 md:gap-2 lg:gap-4", "md:ml-auto")}>
+              <div className="flex-1 sm:flex-initial">
+                {/* Optional Search Bar */}
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="secondary" size="icon" className="rounded-full">
+                    <Avatar>
+                      <AvatarFallback>{fallback}</AvatarFallback>
 
-                  </Avatar>
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/teams/create">
-                      <Sword className="mr-2 h-4 w-4" />
-                      Create New Team
+                    </Avatar>
+                    <span className="sr-only">Toggle user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
                     </Link>
                   </DropdownMenuItem>
-                {userAccount?.accountType === 'Commander' && (
                    <DropdownMenuItem asChild>
-                    <Link href="/dashboard/manage-teams">
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      Manage Teams
-                    </Link>
+                      <Link href="/teams/create">
+                        <Sword className="mr-2 h-4 w-4" />
+                        Create New Team
+                      </Link>
+                    </DropdownMenuItem>
+                  {userAccount?.accountType === 'Commander' && (
+                     <DropdownMenuItem asChild>
+                      <Link href="/dashboard/manage-teams">
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Manage Teams
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </header>
         <main className={cn(
           "flex flex-1 flex-col md:gap-8 md:p-8",
