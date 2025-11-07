@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFirebase, initiateEmailSignUp } from '@/firebase';
 import {
   collection,
@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export default function SignupPage() {
+function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -57,6 +57,8 @@ export default function SignupPage() {
 
   const { auth, firestore } = firebaseContext;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,8 +119,8 @@ export default function SignupPage() {
       // Wait for the Firestore document to be created before navigating
       await setDoc(accountRef, accountData, { merge: true });
 
-      // Navigate to dashboard
-      router.push('/dashboard');
+      // Navigate to redirect URL if provided, otherwise go to dashboard
+      router.push(redirectUrl || '/dashboard');
       // Keep isLoading true during navigation to prevent double-submission
 
     } catch (err: any) {
@@ -236,7 +238,10 @@ export default function SignupPage() {
         <CardFooter className="flex justify-center text-sm border-t pt-6">
           <p className="text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-primary hover:underline transition-colors">
+            <Link
+              href={redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
+              className="font-semibold text-primary hover:underline transition-colors"
+            >
               Sign In
             </Link>
           </p>
@@ -244,5 +249,20 @@ export default function SignupPage() {
       </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }
