@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFirebase, initiateEmailSignIn, sendPasswordReset } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import { Dumbbell, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +42,8 @@ export default function LoginPage() {
   const { auth } = firebaseContext;
   const router = useRouter();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +53,8 @@ export default function LoginPage() {
       // Wait for the sign-in to complete
       await initiateEmailSignIn(auth, email, password);
 
-      // Sign-in successful - navigate to dashboard
-      router.push('/dashboard');
+      // Sign-in successful - navigate to redirect URL if provided, otherwise go to dashboard
+      router.push(redirectUrl || '/dashboard');
       // Keep isLoading true during navigation to prevent double-submission
     } catch (err: any) {
       console.error('Login error:', err);
@@ -166,7 +168,10 @@ export default function LoginPage() {
         <CardFooter className="flex justify-center text-sm border-t pt-6">
           <p className="text-muted-foreground">
             Don't have an account?{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline transition-colors">
+            <Link
+              href={redirectUrl ? `/signup?redirect=${encodeURIComponent(redirectUrl)}` : '/signup'}
+              className="font-semibold text-primary hover:underline transition-colors"
+            >
               Sign Up
             </Link>
           </p>
@@ -174,5 +179,20 @@ export default function LoginPage() {
       </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
