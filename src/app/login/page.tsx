@@ -31,20 +31,25 @@ export default function LoginPage() {
     setError(null);
     setIsLoading(true);
     try {
+      // Wait for the sign-in to complete
       await initiateEmailSignIn(auth, email, password);
-      // The onAuthStateChanged listener in FirebaseProvider will handle the redirect
+
+      // Sign-in successful - navigate to dashboard
       router.push('/dashboard');
+      // Keep isLoading true during navigation to prevent double-submission
     } catch (err: any) {
+      console.error('Login error:', err);
       if (
         err.code === 'auth/wrong-password' ||
         err.code === 'auth/user-not-found' ||
         err.code === 'auth/invalid-credential'
       ) {
         setError('Invalid email or password. Please try again.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many failed login attempts. Please try again later.');
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError(err.message || 'An unexpected error occurred. Please try again.');
       }
-    } finally {
       setIsLoading(false);
     }
   };

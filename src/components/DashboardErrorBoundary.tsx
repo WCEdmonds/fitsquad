@@ -28,8 +28,13 @@ export class DashboardErrorBoundary extends Component<Props, State> {
     console.error('Dashboard error caught:', error, errorInfo);
   }
 
-  handleReset = () => {
+  handleRetry = () => {
+    // Reset error state to allow the component to re-render
     this.setState({ hasError: false, error: null });
+  };
+
+  handleReload = () => {
+    // Full page reload as last resort
     window.location.reload();
   };
 
@@ -44,13 +49,16 @@ export class DashboardErrorBoundary extends Component<Props, State> {
               <p className="mb-4">
                 {this.state.error?.message || 'An unexpected error occurred while loading this page.'}
               </p>
-              <div className="flex gap-2">
-                <Button onClick={this.handleReset} variant="outline" size="sm">
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={this.handleRetry} variant="outline" size="sm">
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Reload Page
+                  Try Again
                 </Button>
                 <Button onClick={() => window.location.href = '/dashboard'} variant="outline" size="sm">
                   Go to Dashboard
+                </Button>
+                <Button onClick={this.handleReload} variant="outline" size="sm">
+                  Reload Page
                 </Button>
               </div>
             </AlertDescription>
