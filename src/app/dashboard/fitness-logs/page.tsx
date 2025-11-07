@@ -206,7 +206,7 @@ export default function FitnessLogsPage() {
           ) : logs.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No fitness logs yet. Log your first benchmark test!</</p>
+              <p>No fitness logs yet. Log your first benchmark test!</p>
             </div>
           ) : (
             <div className="rounded-md border">

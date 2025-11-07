@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth, initiateEmailSignIn, sendPasswordReset } from '@/firebase';
+import { useFirebase, initiateEmailSignIn, sendPasswordReset } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,7 +22,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const auth = useAuth();
+
+  // Use useFirebase instead of useAuth to handle initialization state
+  let firebaseContext;
+  try {
+    firebaseContext = useFirebase();
+  } catch (e) {
+    // Firebase not initialized yet
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { auth } = firebaseContext;
   const router = useRouter();
   const { toast } = useToast();
 
