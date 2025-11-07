@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { CapacitorInit } from '@/components/capacitor-init';
 import { Onboarding } from '@/components/onboarding';
+import { AuthScreen } from '@/components/auth-screen';
 
 export const metadata: Metadata = {
   title: 'FitSquad',
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         <CapacitorInit />
         <Onboarding />
+        <AuthScreen />
         <main className="flex-grow">
           <FirebaseClientProvider>
             {children}
