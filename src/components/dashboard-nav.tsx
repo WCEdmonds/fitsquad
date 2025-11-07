@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck, Activity } from 'lucide-react';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/dashboard/planner', label: 'Fitness Planner', icon: Bot },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/dashboard/fitness-logs', label: 'My Fitness Logs', icon: Activity },
 ];
 
 const commanderNavItems = [

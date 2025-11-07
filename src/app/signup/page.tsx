@@ -78,30 +78,38 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
+      // Wait for user creation to complete
       const userCredential = await initiateEmailSignUp(auth, email, password);
-      
-      const user = auth.currentUser;
 
-      if (user) {
-        const accountData = {
-          id: user.uid,
-          email: user.email,
-          firstName,
-          lastName,
-          accountType: accountType,
-          teamId: null, // User will create or join a team later
-          gender,
-        };
-        
-        const accountRef = doc(firestore, 'accounts', user.uid);
-        setDocumentNonBlocking(accountRef, accountData, { merge: true });
+      // userCredential should contain the new user
+      const user = userCredential.user;
 
-        router.push('/dashboard');
+      if (!user) {
+        throw new Error('Failed to create user account');
       }
 
+      // Create the account document in Firestore
+      const accountData = {
+        id: user.uid,
+        email: user.email,
+        firstName,
+        lastName,
+        accountType: accountType,
+        teamId: null, // User will create or join a team later
+        gender,
+      };
+
+      const accountRef = doc(firestore, 'accounts', user.uid);
+      // Wait for the Firestore document to be created before navigating
+      await setDoc(accountRef, accountData, { merge: true });
+
+      // Navigate to dashboard
+      router.push('/dashboard');
+      // Keep isLoading true during navigation to prevent double-submission
+
     } catch (err: any) {
-      setError(err.message);
-    } finally {
+      console.error('Signup error:', err);
+      setError(err.message || 'An error occurred during sign up. Please try again.');
       setIsLoading(false);
     }
   };
