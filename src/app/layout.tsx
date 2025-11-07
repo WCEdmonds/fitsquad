@@ -32,12 +32,12 @@ export default function RootLayout({
       <body className="font-body antialiased min-h-screen flex flex-col">
         <CapacitorInit />
         <div className="
-          w-full bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 p-3
-          pt-[calc(0.75rem+env(safe-area-inset-top))]
-          text-center text-sm font-bold text-yellow-900
-          no-print shadow-md border-b-2 border-yellow-500
+          w-full bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 py-2 px-3
+          pt-[calc(0.5rem+env(safe-area-inset-top))]
+          text-center text-xs font-bold text-yellow-900
+          no-print shadow-sm border-b border-yellow-500
         ">
-          ⚠️ BETA VERSION - DO NOT USE FOR LIVE OPERATIONS
+          ⚠️ BETA - DO NOT USE FOR LIVE OPERATIONS
         </div>
         <main className="flex-grow">
           <FirebaseClientProvider>
