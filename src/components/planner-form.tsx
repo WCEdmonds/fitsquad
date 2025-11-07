@@ -41,8 +41,8 @@ export function PlannerForm({ onSubmit, isLoading, accountType }: PlannerFormPro
   const form = useForm<PlannerFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      trainingGoals: 'Improve average AFT score by 15 points and reduce average 2-mile run time by 30 seconds.',
-      additionalContext: 'Preparing for a field training exercise in 2 months.',
+      trainingGoals: '',
+      additionalContext: '',
       days: ["Monday", "Tuesday", "Thursday", "Friday"],
       equipmentAccess: "gym",
     },

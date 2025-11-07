@@ -59,7 +59,7 @@ export default function LandingPage() {
                 alt="Hero background"
                 layout="fill"
                 objectFit="cover"
-                className="opacity-30 blur-sm"
+                className="opacity-40 blur-sm"
                 priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
