@@ -19,13 +19,11 @@ import {
 } from '@/components/ui/select';
 import {
   getAllExercises,
-  searchExercises,
-  getExercisesByBodyPart,
-  getExercisesByEquipment,
-  BODY_PARTS,
-  EQUIPMENT_TYPES,
   type Exercise,
 } from '@/lib/exercisedb';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
 interface ExerciseBrowserProps {
   onSelectExercise: (exercise: Exercise) => void;
@@ -39,9 +37,19 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState<string>('all');
-  const [selectedEquipment, setSelectedEquipment] = useState<string>('all');
+  const [selectedEquipments, setSelectedEquipments] = useState<string[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [availableBodyParts, setAvailableBodyParts] = useState<string[]>([]);
+  const [availableEquipments, setAvailableEquipments] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Helper function to capitalize exercise names
+  const capitalizeWords = (str: string): string => {
+    return str
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
 
   // Load initial exercises
   useEffect(() => {
@@ -51,7 +59,7 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
   // Filter exercises based on search and filters
   useEffect(() => {
     filterExercises();
-  }, [exercises, searchQuery, selectedBodyPart, selectedEquipment]);
+  }, [exercises, searchQuery, selectedBodyPart, selectedEquipments]);
 
   async function loadExercises() {
     setIsLoading(true);
@@ -84,6 +92,18 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
         console.warn('⚠️', warningMsg);
         setError(warningMsg);
       }
+
+      // Extract unique body parts and equipment from loaded exercises
+      const bodyPartsSet = new Set<string>();
+      const equipmentsSet = new Set<string>();
+
+      allExercises.forEach(exercise => {
+        exercise.bodyParts.forEach(bp => bodyPartsSet.add(bp));
+        exercise.equipments.forEach(eq => equipmentsSet.add(eq));
+      });
+
+      setAvailableBodyParts(Array.from(bodyPartsSet).sort());
+      setAvailableEquipments(Array.from(equipmentsSet).sort());
 
       setExercises(allExercises);
       setFilteredExercises(allExercises);
@@ -143,14 +163,28 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
       );
     }
 
-    // Apply equipment filter
-    if (selectedEquipment !== 'all') {
+    // Apply equipment filter (multi-select)
+    if (selectedEquipments.length > 0) {
       filtered = filtered.filter((ex) =>
-        ex.equipments.some(eq => eq.toLowerCase() === selectedEquipment.toLowerCase())
+        ex.equipments.some(eq =>
+          selectedEquipments.some(selected => selected.toLowerCase() === eq.toLowerCase())
+        )
       );
     }
 
     setFilteredExercises(filtered);
+  }
+
+  function toggleEquipment(equipment: string) {
+    setSelectedEquipments(prev =>
+      prev.includes(equipment)
+        ? prev.filter(e => e !== equipment)
+        : [...prev, equipment]
+    );
+  }
+
+  function clearEquipmentFilters() {
+    setSelectedEquipments([]);
   }
 
   function handleSelectExercise(exercise: Exercise) {
@@ -197,31 +231,77 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All body parts</SelectItem>
-                  {BODY_PARTS.map((part) => (
+                  {availableBodyParts.map((part) => (
                     <SelectItem key={part} value={part}>
-                      {part.charAt(0).toUpperCase() + part.slice(1)}
+                      {capitalizeWords(part)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Equipment Filter */}
+            {/* Equipment Filter (Multi-select) */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Equipment</label>
-              <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All equipment" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All equipment</SelectItem>
-                  {EQUIPMENT_TYPES.map((equipment) => (
-                    <SelectItem key={equipment} value={equipment}>
-                      {equipment.charAt(0).toUpperCase() + equipment.slice(1)}
-                    </SelectItem>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Equipment</label>
+                {selectedEquipments.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearEquipmentFilters}
+                    className="h-auto p-0 text-xs"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                  >
+                    {selectedEquipments.length > 0
+                      ? `${selectedEquipments.length} selected`
+                      : "All equipment"}
+                    <Filter className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search equipment..." />
+                    <CommandEmpty>No equipment found.</CommandEmpty>
+                    <CommandGroup>
+                      <ScrollArea className="h-[200px]">
+                        {availableEquipments.map((equipment) => (
+                          <CommandItem
+                            key={equipment}
+                            onSelect={() => toggleEquipment(equipment)}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <Checkbox
+                                checked={selectedEquipments.includes(equipment)}
+                                onCheckedChange={() => toggleEquipment(equipment)}
+                              />
+                              <span className="text-sm">{capitalizeWords(equipment)}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </ScrollArea>
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {selectedEquipments.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {selectedEquipments.map((eq) => (
+                    <Badge key={eq} variant="secondary" className="text-xs">
+                      {capitalizeWords(eq)}
+                    </Badge>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
 
             <div className="text-sm text-muted-foreground">
@@ -287,13 +367,13 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm truncate">{exercise.name}</h4>
+                            <h4 className="font-semibold text-sm truncate">{capitalizeWords(exercise.name)}</h4>
                             <div className="flex gap-1 mt-1 flex-wrap">
                               <Badge variant="secondary" className="text-xs">
-                                {exercise.bodyParts[0]}
+                                {capitalizeWords(exercise.bodyParts[0])}
                               </Badge>
                               <Badge variant="outline" className="text-xs">
-                                {exercise.targetMuscles[0]}
+                                {capitalizeWords(exercise.targetMuscles[0])}
                               </Badge>
                             </div>
                           </div>
@@ -344,16 +424,16 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
 
                   {/* Exercise Info */}
                   <div>
-                    <h3 className="font-bold text-lg">{selectedExercise.name}</h3>
+                    <h3 className="font-bold text-lg">{capitalizeWords(selectedExercise.name)}</h3>
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {selectedExercise.bodyParts.map((bp, idx) => (
-                        <Badge key={idx}>{bp}</Badge>
+                        <Badge key={idx}>{capitalizeWords(bp)}</Badge>
                       ))}
                       {selectedExercise.targetMuscles.map((tm, idx) => (
-                        <Badge key={idx} variant="secondary">{tm}</Badge>
+                        <Badge key={idx} variant="secondary">{capitalizeWords(tm)}</Badge>
                       ))}
                       {selectedExercise.equipments.map((eq, idx) => (
-                        <Badge key={idx} variant="outline">{eq}</Badge>
+                        <Badge key={idx} variant="outline">{capitalizeWords(eq)}</Badge>
                       ))}
                     </div>
                   </div>
@@ -377,7 +457,7 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                       <div className="flex gap-1 flex-wrap">
                         {selectedExercise.secondaryMuscles.map((muscle, index) => (
                           <Badge key={index} variant="outline">
-                            {muscle}
+                            {capitalizeWords(muscle)}
                           </Badge>
                         ))}
                       </div>
