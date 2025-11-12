@@ -3,6 +3,7 @@ const nextConfig = {
   /* config options here */
   output: 'export',
   reactStrictMode: true,
+  transpilePackages: ['cmdk'],
 
   typescript: {
     ignoreBuildErrors: true,
