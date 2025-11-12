@@ -17,6 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ExerciseBrowser } from '@/components/exercise-browser';
+import type { Exercise as ExerciseDBExercise } from '@/lib/exercisedb';
 
 // Workout template library
 const WORKOUT_TEMPLATES = [
@@ -146,7 +148,7 @@ export function WorkoutEditorDialog({
   dayName,
   canEdit,
 }: WorkoutEditorDialogProps) {
-  const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'custom' | 'exercise-db'>('library');
   const [customWorkout, setCustomWorkout] = useState<Workout>({
     name: '',
     focus: '',
@@ -209,24 +211,45 @@ export function WorkoutEditorDialog({
     onSave(null);
   }
 
+  function handleSelectExerciseFromDB(exercise: ExerciseDBExercise) {
+    // Convert ExerciseDB exercise to our exercise format
+    const newExercise: Exercise = {
+      name: exercise.name,
+      sets: '3', // Default values - user can modify
+      reps: '10',
+      rest: '60s',
+      description: exercise.instructions?.join(' ') || exercise.target,
+    };
+
+    // Add to custom workout
+    setCustomWorkout({
+      ...customWorkout,
+      exercises: [...customWorkout.exercises, newExercise],
+    });
+
+    // Switch to custom tab to show the added exercise
+    setActiveTab('custom');
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-7xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>
             {canEdit ? 'Edit' : 'View'} Workout - {dayName}
           </DialogTitle>
           <DialogDescription>
             {canEdit
-              ? 'Choose from the workout library or create a custom workout'
+              ? 'Choose from templates, browse the exercise database, or create a custom workout'
               : 'View the workout details for this day'}
           </DialogDescription>
         </DialogHeader>
 
         {canEdit ? (
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="library">Workout Library</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom' | 'exercise-db')}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="library">Templates</TabsTrigger>
+              <TabsTrigger value="exercise-db">Exercise Database</TabsTrigger>
               <TabsTrigger value="custom">Custom Workout</TabsTrigger>
             </TabsList>
 
@@ -252,6 +275,21 @@ export function WorkoutEditorDialog({
                   ))}
                 </div>
               </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="exercise-db" className="mt-4">
+              <ExerciseBrowser
+                onSelectExercise={handleSelectExerciseFromDB}
+                selectedExercises={customWorkout.exercises.map((ex, idx) => ({
+                  id: `custom-${idx}`,
+                  name: ex.name,
+                  bodyPart: '',
+                  target: '',
+                  equipment: '',
+                  gifUrl: '',
+                  instructions: [ex.description],
+                }))}
+              />
             </TabsContent>
 
             <TabsContent value="custom" className="mt-4">
