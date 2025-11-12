@@ -28,11 +28,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'Strength',
     description: 'Build upper body strength and muscle',
     exercises: [
-      { name: 'Push-ups', sets: '4', reps: '12-15', rest: '60s', description: 'Standard push-ups with proper form' },
-      { name: 'Pull-ups', sets: '4', reps: '8-10', rest: '90s', description: 'Wide grip pull-ups' },
-      { name: 'Dumbbell Bench Press', sets: '4', reps: '10-12', rest: '60s', description: 'Flat bench press' },
-      { name: 'Bent-over Rows', sets: '4', reps: '10-12', rest: '60s', description: 'Barbell or dumbbell rows' },
-      { name: 'Overhead Press', sets: '3', reps: '10-12', rest: '60s', description: 'Standing or seated' },
+      { name: 'Push-ups', sets: '4', reps: '12-15', rest: '60s', perceivedExertion: '7', description: 'Standard push-ups with proper form' },
+      { name: 'Pull-ups', sets: '4', reps: '8-10', rest: '90s', perceivedExertion: '8', description: 'Wide grip pull-ups' },
+      { name: 'Dumbbell Bench Press', sets: '4', reps: '10-12', rest: '60s', perceivedExertion: '8', description: 'Flat bench press' },
+      { name: 'Bent-over Rows', sets: '4', reps: '10-12', rest: '60s', perceivedExertion: '7', description: 'Barbell or dumbbell rows' },
+      { name: 'Overhead Press', sets: '3', reps: '10-12', rest: '60s', perceivedExertion: '7', description: 'Standing or seated' },
     ],
   },
   {
@@ -41,11 +41,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'Strength',
     description: 'Strengthen legs and core',
     exercises: [
-      { name: 'Squats', sets: '4', reps: '12-15', rest: '90s', description: 'Back squats with proper depth' },
-      { name: 'Deadlifts', sets: '4', reps: '8-10', rest: '120s', description: 'Conventional or sumo deadlifts' },
-      { name: 'Lunges', sets: '3', reps: '12 each leg', rest: '60s', description: 'Walking or stationary lunges' },
-      { name: 'Leg Press', sets: '4', reps: '12-15', rest: '60s', description: 'Machine leg press' },
-      { name: 'Calf Raises', sets: '3', reps: '15-20', rest: '45s', description: 'Standing calf raises' },
+      { name: 'Squats', sets: '4', reps: '12-15', rest: '90s', perceivedExertion: '8', description: 'Back squats with proper depth' },
+      { name: 'Deadlifts', sets: '4', reps: '8-10', rest: '120s', perceivedExertion: '9', description: 'Conventional or sumo deadlifts' },
+      { name: 'Lunges', sets: '3', reps: '12 each leg', rest: '60s', perceivedExertion: '7', description: 'Walking or stationary lunges' },
+      { name: 'Leg Press', sets: '4', reps: '12-15', rest: '60s', perceivedExertion: '7', description: 'Machine leg press' },
+      { name: 'Calf Raises', sets: '3', reps: '15-20', rest: '45s', perceivedExertion: '6', description: 'Standing calf raises' },
     ],
   },
   {
@@ -54,11 +54,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'Endurance',
     description: 'Improve cardiovascular fitness',
     exercises: [
-      { name: 'Running', sets: '1', reps: '30 min', rest: 'N/A', description: 'Steady-state run at moderate pace' },
-      { name: 'Burpees', sets: '5', reps: '10', rest: '60s', description: 'Full burpees with jump' },
-      { name: 'Mountain Climbers', sets: '4', reps: '30s', rest: '30s', description: 'Fast-paced mountain climbers' },
-      { name: 'Jump Rope', sets: '4', reps: '2 min', rest: '60s', description: 'Continuous jump rope' },
-      { name: 'High Knees', sets: '4', reps: '45s', rest: '45s', description: 'Running in place with high knees' },
+      { name: 'Running', sets: '1', reps: '30 min', rest: 'N/A', perceivedExertion: '6', description: 'Steady-state run at moderate pace' },
+      { name: 'Burpees', sets: '5', reps: '10', rest: '60s', perceivedExertion: '8', description: 'Full burpees with jump' },
+      { name: 'Mountain Climbers', sets: '4', reps: '30s', rest: '30s', perceivedExertion: '7', description: 'Fast-paced mountain climbers' },
+      { name: 'Jump Rope', sets: '4', reps: '2 min', rest: '60s', perceivedExertion: '7', description: 'Continuous jump rope' },
+      { name: 'High Knees', sets: '4', reps: '45s', rest: '45s', perceivedExertion: '7', description: 'Running in place with high knees' },
     ],
   },
   {
@@ -67,11 +67,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'HIIT',
     description: 'High-intensity interval training',
     exercises: [
-      { name: 'Sprint Intervals', sets: '8', reps: '30s sprint / 30s rest', rest: 'As noted', description: 'Max effort sprints' },
-      { name: 'Box Jumps', sets: '4', reps: '10', rest: '60s', description: 'Jump onto sturdy box or platform' },
-      { name: 'Kettlebell Swings', sets: '4', reps: '15', rest: '45s', description: 'Hip-hinge kettlebell swings' },
-      { name: 'Battle Ropes', sets: '4', reps: '30s', rest: '45s', description: 'Alternating wave pattern' },
-      { name: 'Sled Push', sets: '4', reps: '30m', rest: '90s', description: 'Heavy sled push' },
+      { name: 'Sprint Intervals', sets: '8', reps: '30s sprint / 30s rest', rest: 'As noted', perceivedExertion: '9', description: 'Max effort sprints' },
+      { name: 'Box Jumps', sets: '4', reps: '10', rest: '60s', perceivedExertion: '8', description: 'Jump onto sturdy box or platform' },
+      { name: 'Kettlebell Swings', sets: '4', reps: '15', rest: '45s', perceivedExertion: '8', description: 'Hip-hinge kettlebell swings' },
+      { name: 'Battle Ropes', sets: '4', reps: '30s', rest: '45s', perceivedExertion: '8', description: 'Alternating wave pattern' },
+      { name: 'Sled Push', sets: '4', reps: '30m', rest: '90s', perceivedExertion: '9', description: 'Heavy sled push' },
     ],
   },
   {
@@ -80,11 +80,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'Core',
     description: 'Build core strength and stability',
     exercises: [
-      { name: 'Plank', sets: '3', reps: '60s', rest: '45s', description: 'Forearm plank with straight body' },
-      { name: 'Russian Twists', sets: '3', reps: '20 each side', rest: '45s', description: 'Seated twists with weight' },
-      { name: 'Bicycle Crunches', sets: '3', reps: '20 each side', rest: '30s', description: 'Alternating knee to elbow' },
-      { name: 'Dead Bug', sets: '3', reps: '12 each side', rest: '45s', description: 'Controlled opposite limb movements' },
-      { name: 'Hanging Leg Raises', sets: '3', reps: '10-12', rest: '60s', description: 'Hang from bar, raise legs' },
+      { name: 'Plank', sets: '3', reps: '60s', rest: '45s', perceivedExertion: '6', description: 'Forearm plank with straight body' },
+      { name: 'Russian Twists', sets: '3', reps: '20 each side', rest: '45s', perceivedExertion: '6', description: 'Seated twists with weight' },
+      { name: 'Bicycle Crunches', sets: '3', reps: '20 each side', rest: '30s', perceivedExertion: '6', description: 'Alternating knee to elbow' },
+      { name: 'Dead Bug', sets: '3', reps: '12 each side', rest: '45s', perceivedExertion: '5', description: 'Controlled opposite limb movements' },
+      { name: 'Hanging Leg Raises', sets: '3', reps: '10-12', rest: '60s', perceivedExertion: '7', description: 'Hang from bar, raise legs' },
     ],
   },
   {
@@ -93,11 +93,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'Recovery',
     description: 'Active recovery and flexibility work',
     exercises: [
-      { name: 'Yoga Flow', sets: '1', reps: '20 min', rest: 'N/A', description: 'Light yoga sequence' },
-      { name: 'Foam Rolling', sets: '1', reps: '10 min', rest: 'N/A', description: 'Full body foam rolling' },
-      { name: 'Dynamic Stretching', sets: '1', reps: '10 min', rest: 'N/A', description: 'Active stretches' },
-      { name: 'Walking', sets: '1', reps: '30 min', rest: 'N/A', description: 'Easy-paced walk' },
-      { name: 'Static Stretching', sets: '1', reps: '15 min', rest: 'N/A', description: 'Hold stretches 30-60s' },
+      { name: 'Yoga Flow', sets: '1', reps: '20 min', rest: 'N/A', perceivedExertion: '3', description: 'Light yoga sequence' },
+      { name: 'Foam Rolling', sets: '1', reps: '10 min', rest: 'N/A', perceivedExertion: '4', description: 'Full body foam rolling' },
+      { name: 'Dynamic Stretching', sets: '1', reps: '10 min', rest: 'N/A', perceivedExertion: '3', description: 'Active stretches' },
+      { name: 'Walking', sets: '1', reps: '30 min', rest: 'N/A', perceivedExertion: '2', description: 'Easy-paced walk' },
+      { name: 'Static Stretching', sets: '1', reps: '15 min', rest: 'N/A', perceivedExertion: '2', description: 'Hold stretches 30-60s' },
     ],
   },
   {
@@ -106,11 +106,11 @@ const WORKOUT_TEMPLATES = [
     focus: 'ACFT',
     description: 'Army Combat Fitness Test specific training',
     exercises: [
-      { name: 'Trap Bar Deadlift', sets: '4', reps: '5', rest: '120s', description: 'MDL event preparation' },
-      { name: 'Hand-Release Push-ups', sets: '4', reps: '15-20', rest: '60s', description: 'HRP event practice' },
-      { name: 'Sprint-Drag-Carry Simulation', sets: '3', reps: '1 full round', rest: '180s', description: 'Practice SDC components' },
-      { name: 'Plank Hold', sets: '3', reps: 'Max time', rest: '90s', description: 'PLK event training' },
-      { name: '2-Mile Run', sets: '1', reps: '1 run', rest: 'N/A', description: '2MR at race pace' },
+      { name: 'Trap Bar Deadlift', sets: '4', reps: '5', rest: '120s', perceivedExertion: '9', description: 'MDL event preparation' },
+      { name: 'Hand-Release Push-ups', sets: '4', reps: '15-20', rest: '60s', perceivedExertion: '7', description: 'HRP event practice' },
+      { name: 'Sprint-Drag-Carry Simulation', sets: '3', reps: '1 full round', rest: '180s', perceivedExertion: '9', description: 'Practice SDC components' },
+      { name: 'Plank Hold', sets: '3', reps: 'Max time', rest: '90s', perceivedExertion: '7', description: 'PLK event training' },
+      { name: '2-Mile Run', sets: '1', reps: '1 run', rest: 'N/A', perceivedExertion: '8', description: '2MR at race pace' },
     ],
   },
 ];
@@ -120,7 +120,8 @@ interface Exercise {
   sets: string;
   reps: string;
   rest: string;
-  description: string;
+  perceivedExertion?: string; // RPE (Rate of Perceived Exertion) scale 1-10
+  description?: string; // Optional, mainly for templates
 }
 
 interface Workout {
@@ -182,7 +183,7 @@ export function WorkoutEditorDialog({
       ...customWorkout,
       exercises: [
         ...customWorkout.exercises,
-        { name: '', sets: '', reps: '', rest: '', description: '' },
+        { name: '', sets: '', reps: '', rest: '', perceivedExertion: '' },
       ],
     });
   }
@@ -201,10 +202,16 @@ export function WorkoutEditorDialog({
   }
 
   function handleSaveCustom() {
-    if (!customWorkout.name || customWorkout.exercises.length === 0) {
+    if (customWorkout.exercises.length === 0) {
       return;
     }
-    onSave(customWorkout);
+    // Auto-generate name if not provided
+    const workoutToSave = {
+      ...customWorkout,
+      name: customWorkout.name || `${dayName} Workout`,
+      focus: customWorkout.focus || 'Custom',
+    };
+    onSave(workoutToSave);
   }
 
   function handleSetRestDay() {
@@ -218,6 +225,7 @@ export function WorkoutEditorDialog({
       sets: '3', // Default values - user can modify
       reps: '10',
       rest: '60s',
+      perceivedExertion: '7', // Moderate intensity default
       description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
     };
 
@@ -296,26 +304,6 @@ export function WorkoutEditorDialog({
             <TabsContent value="custom" className="mt-4">
               <ScrollArea className="h-[400px] pr-4">
                 <div className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="workout-name">Workout Name</Label>
-                    <Input
-                      id="workout-name"
-                      placeholder="e.g., Upper Body Strength"
-                      value={customWorkout.name}
-                      onChange={(e) => setCustomWorkout({ ...customWorkout, name: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="workout-focus">Focus Area</Label>
-                    <Input
-                      id="workout-focus"
-                      placeholder="e.g., Strength, Endurance, HIIT"
-                      value={customWorkout.focus}
-                      onChange={(e) => setCustomWorkout({ ...customWorkout, focus: e.target.value })}
-                    />
-                  </div>
-
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label>Exercises</Label>
@@ -340,7 +328,7 @@ export function WorkoutEditorDialog({
                                 value={exercise.name}
                                 onChange={(e) => handleUpdateExercise(index, 'name', e.target.value)}
                               />
-                              <div className="grid grid-cols-3 gap-2">
+                              <div className="grid grid-cols-4 gap-2">
                                 <Input
                                   placeholder="Sets"
                                   value={exercise.sets}
@@ -356,13 +344,15 @@ export function WorkoutEditorDialog({
                                   value={exercise.rest}
                                   onChange={(e) => handleUpdateExercise(index, 'rest', e.target.value)}
                                 />
+                                <Input
+                                  placeholder="RPE (1-10)"
+                                  value={exercise.perceivedExertion || ''}
+                                  onChange={(e) => handleUpdateExercise(index, 'perceivedExertion', e.target.value)}
+                                  type="number"
+                                  min="1"
+                                  max="10"
+                                />
                               </div>
-                              <Textarea
-                                placeholder="Description (optional)"
-                                value={exercise.description}
-                                onChange={(e) => handleUpdateExercise(index, 'description', e.target.value)}
-                                rows={2}
-                              />
                             </div>
                             <Button
                               type="button"
@@ -402,7 +392,7 @@ export function WorkoutEditorDialog({
                     <Card key={index}>
                       <CardContent className="pt-4">
                         <h4 className="font-semibold">{exercise.name}</h4>
-                        <div className="grid grid-cols-3 gap-2 mt-2 text-sm">
+                        <div className="grid grid-cols-4 gap-2 mt-2 text-sm">
                           <div>
                             <span className="text-muted-foreground">Sets:</span> {exercise.sets}
                           </div>
@@ -412,6 +402,11 @@ export function WorkoutEditorDialog({
                           <div>
                             <span className="text-muted-foreground">Rest:</span> {exercise.rest}
                           </div>
+                          {exercise.perceivedExertion && (
+                            <div>
+                              <span className="text-muted-foreground">RPE:</span> {exercise.perceivedExertion}/10
+                            </div>
+                          )}
                         </div>
                         {exercise.description && (
                           <p className="text-sm text-muted-foreground mt-2">{exercise.description}</p>

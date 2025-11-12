@@ -51,6 +51,12 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
       .join(' ');
   };
 
+  // Helper function to clean up instruction text
+  const cleanInstruction = (instruction: string): string => {
+    // Remove "Step:1 ", "Step:2 ", etc. prefixes
+    return instruction.replace(/^Step:\d+\s*/i, '').trim();
+  };
+
   // Load initial exercises
   useEffect(() => {
     loadExercises();
@@ -444,7 +450,7 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                       <h4 className="font-semibold mb-2">Instructions:</h4>
                       <ol className="list-decimal list-inside space-y-1 text-sm">
                         {selectedExercise.instructions.map((instruction, index) => (
-                          <li key={index}>{instruction}</li>
+                          <li key={index}>{cleanInstruction(instruction)}</li>
                         ))}
                       </ol>
                     </div>

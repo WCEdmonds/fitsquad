@@ -12,6 +12,7 @@ const ExerciseSchema = z.object({
   sets: z.string().describe('Number of sets.'),
   reps: z.string().describe('Number of repetitions or duration.'),
   rest: z.string().describe('Rest period between sets.'),
+  perceivedExertion: z.string().optional().describe('Rate of Perceived Exertion (RPE) on a scale of 1-10, where 1 is very easy and 10 is maximum effort.'),
   description: z.string().describe('A brief (1-2 sentence) description of how to perform the exercise.')
 });
 
