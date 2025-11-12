@@ -29,28 +29,19 @@ export function AuthScreen() {
 
     // Don't show if user is already logged in
     if (user) {
-      // If logged in and on home page, redirect to dashboard
-      if (native && pathname === '/') {
-        router.push('/dashboard');
-      }
       return;
     }
 
     // Only show on native platforms, after onboarding, and not already seen
     // Also don't show if already on auth pages or dashboard
+    // Note: Homepage now handles its own mobile redirects, so this is a fallback
     if (native && !pathname.includes('/login') && !pathname.includes('/signup') && !pathname.includes('/dashboard')) {
       const onboardingComplete = localStorage.getItem(ONBOARDING_KEY);
       const authSeen = localStorage.getItem(AUTH_SEEN_KEY);
 
-      if (onboardingComplete && !authSeen) {
+      if (onboardingComplete && !authSeen && pathname !== '/') {
         setIsVisible(true);
         setTimeout(() => setFadeIn(true), 100);
-      } else if (pathname === '/' && !onboardingComplete) {
-        // If on home page and haven't completed onboarding, wait for onboarding
-        return;
-      } else if (pathname === '/' && onboardingComplete && authSeen) {
-        // If on home page, onboarding complete, and auth seen, redirect to login
-        router.push('/login');
       }
     }
   }, [pathname, user, isUserLoading, router]);

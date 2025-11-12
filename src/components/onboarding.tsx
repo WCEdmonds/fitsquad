@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
+import { useRouter } from 'next/navigation';
 
 const ONBOARDING_KEY = 'fitsquad-onboarding-completed';
 
@@ -43,6 +44,7 @@ export function Onboarding() {
   const [isVisible, setIsVisible] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [isNative, setIsNative] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const native = Capacitor.isNativePlatform();
@@ -82,6 +84,9 @@ export function Onboarding() {
     setTimeout(() => {
       localStorage.setItem(ONBOARDING_KEY, 'true');
       setIsVisible(false);
+      // Navigate to login after onboarding completes
+      // The AuthScreen will show or user will be directed to login page
+      router.push('/login');
     }, 300);
   };
 
