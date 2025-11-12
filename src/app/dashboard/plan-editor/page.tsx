@@ -9,18 +9,21 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Lock, Pencil, Eye, Save } from 'lucide-react';
+import { Calendar, Lock, Pencil, Eye, Save, Download } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PlanCalendarView } from '@/components/plan-calendar-view';
+import { SmartPlannerImportDialog } from '@/components/smart-planner-import-dialog';
 
 export default function PlanEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [teamPlan, setTeamPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importTarget, setImportTarget] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -117,6 +120,37 @@ export default function PlanEditorPage() {
     });
   }
 
+  function handleImportWorkout(workout: any) {
+    if (!teamPlan || !canEdit) return;
+
+    // Find the first available rest day to place the workout
+    let placed = false;
+    const updated = { ...teamPlan };
+
+    for (let weekIdx = 0; weekIdx < updated.weeks.length && !placed; weekIdx++) {
+      for (let dayIdx = 0; dayIdx < updated.weeks[weekIdx].days.length && !placed; dayIdx++) {
+        if (!updated.weeks[weekIdx].days[dayIdx].workout) {
+          updated.weeks[weekIdx].days[dayIdx].workout = workout;
+          placed = true;
+
+          setTeamPlan(updated);
+          toast({
+            title: "Workout Imported",
+            description: `${workout.name} added to Week ${weekIdx + 1}, ${updated.weeks[weekIdx].days[dayIdx].dayOfWeek}.`,
+          });
+        }
+      }
+    }
+
+    if (!placed) {
+      toast({
+        title: "Plan Full",
+        description: "All days have workouts. Please remove a workout first or use copy/paste to replace one.",
+        variant: "destructive",
+      });
+    }
+  }
+
   if (isAccountLoading || isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -155,14 +189,24 @@ export default function PlanEditorPage() {
         </div>
 
         {canEdit && (
-          <Button
-            onClick={handleSavePlan}
-            disabled={isSaving || !teamPlan}
-            size="lg"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Plan"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsImportDialogOpen(true)}
+              variant="outline"
+              size="lg"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Import from Smart Planner
+            </Button>
+            <Button
+              onClick={handleSavePlan}
+              disabled={isSaving || !teamPlan}
+              size="lg"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? "Saving..." : "Save Plan"}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -209,6 +253,14 @@ export default function PlanEditorPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Smart Planner Import Dialog */}
+      <SmartPlannerImportDialog
+        isOpen={isImportDialogOpen}
+        onClose={() => setIsImportDialogOpen(false)}
+        onImport={handleImportWorkout}
+        teamId={userAccount?.teamId || null}
+      />
     </div>
   );
 }
