@@ -1,29 +1,41 @@
 /**
  * ExerciseDB API Types
- * Based on the ExerciseDB API structure
+ * Based on the actual ExerciseDB API structure
  */
 
 export interface Exercise {
-  id: string;
+  exerciseId: string;
   name: string;
-  bodyPart: string;
-  target: string; // target muscle
-  equipment: string;
   gifUrl: string;
+  targetMuscles: string[];
+  bodyParts: string[];
+  equipments: string[];
+  secondaryMuscles: string[];
   instructions: string[];
-  secondaryMuscles?: string[];
+}
+
+export interface ExerciseAPIResponse {
+  success: boolean;
+  metadata: {
+    totalPages: number;
+    totalExercises: number;
+    currentPage: number;
+    previousPage: string | null;
+    nextPage: string | null;
+  };
+  data: Exercise[];
 }
 
 export interface ExerciseFilters {
   bodyPart?: string;
   equipment?: string;
-  target?: string;
+  muscle?: string;
   limit?: number;
   offset?: number;
 }
 
 export interface ExerciseSearchParams {
-  name?: string;
+  q?: string; // query parameter for search
   limit?: number;
   offset?: number;
 }

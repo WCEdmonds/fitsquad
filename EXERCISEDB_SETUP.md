@@ -89,9 +89,9 @@ npm run dev
 
 The ExerciseDB integration supports the following endpoints:
 
-- `GET /api/v1/exercises` - Get all exercises (with pagination)
+- `GET /api/v1/exercises?limit=X&offset=Y` - Get all exercises (with pagination)
 - `GET /api/v1/exercises/{id}` - Get specific exercise by ID
-- `GET /api/v1/exercises/search` - Search exercises by name
+- `GET /api/v1/exercises/search?q=query` - Search exercises by name (requires `q` parameter)
 - `GET /api/v1/exercises/filter` - Filter exercises by criteria
 - `GET /api/v1/bodyparts/{bodyPart}/exercises` - Get exercises by body part
 - `GET /api/v1/equipments/{equipment}/exercises` - Get exercises by equipment
@@ -108,15 +108,32 @@ The ExerciseDB integration supports the following endpoints:
 
 ### Data Structure
 
-Each exercise from ExerciseDB includes:
-- `id`: Unique identifier
+The API returns paginated responses with metadata and exercise data.
+
+**Response Structure:**
+```json
+{
+  "success": true,
+  "metadata": {
+    "totalPages": 300,
+    "totalExercises": 1500,
+    "currentPage": 1,
+    "previousPage": null,
+    "nextPage": "URL"
+  },
+  "data": [/* array of exercises */]
+}
+```
+
+**Each exercise includes:**
+- `exerciseId`: Unique identifier
 - `name`: Exercise name
-- `bodyPart`: Primary body part targeted
-- `target`: Specific target muscle
-- `equipment`: Required equipment
-- `gifUrl`: Animated demonstration
-- `instructions`: Step-by-step instructions array
-- `secondaryMuscles`: Additional muscles worked (optional)
+- `bodyParts`: Array of primary body parts targeted
+- `targetMuscles`: Array of specific target muscles
+- `equipments`: Array of required equipment
+- `gifUrl`: Animated demonstration URL
+- `instructions`: Array of step-by-step instructions
+- `secondaryMuscles`: Array of additional muscles worked
 
 ## Usage in Plan Editor
 

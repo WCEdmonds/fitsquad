@@ -218,7 +218,7 @@ export function WorkoutEditorDialog({
       sets: '3', // Default values - user can modify
       reps: '10',
       rest: '60s',
-      description: exercise.instructions?.join(' ') || exercise.target,
+      description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
     };
 
     // Add to custom workout
@@ -281,11 +281,12 @@ export function WorkoutEditorDialog({
               <ExerciseBrowser
                 onSelectExercise={handleSelectExerciseFromDB}
                 selectedExercises={customWorkout.exercises.map((ex, idx) => ({
-                  id: `custom-${idx}`,
+                  exerciseId: `custom-${idx}`,
                   name: ex.name,
-                  bodyPart: '',
-                  target: '',
-                  equipment: '',
+                  bodyParts: [],
+                  targetMuscles: [],
+                  equipments: [],
+                  secondaryMuscles: [],
                   gifUrl: '',
                   instructions: [ex.description],
                 }))}

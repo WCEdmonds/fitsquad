@@ -74,19 +74,23 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
       filtered = filtered.filter(
         (ex) =>
           ex.name.toLowerCase().includes(query) ||
-          ex.target.toLowerCase().includes(query) ||
-          ex.bodyPart.toLowerCase().includes(query)
+          ex.targetMuscles.some(m => m.toLowerCase().includes(query)) ||
+          ex.bodyParts.some(bp => bp.toLowerCase().includes(query))
       );
     }
 
     // Apply body part filter
     if (selectedBodyPart !== 'all') {
-      filtered = filtered.filter((ex) => ex.bodyPart === selectedBodyPart);
+      filtered = filtered.filter((ex) =>
+        ex.bodyParts.some(bp => bp.toLowerCase() === selectedBodyPart.toLowerCase())
+      );
     }
 
     // Apply equipment filter
     if (selectedEquipment !== 'all') {
-      filtered = filtered.filter((ex) => ex.equipment === selectedEquipment);
+      filtered = filtered.filter((ex) =>
+        ex.equipments.some(eq => eq.toLowerCase() === selectedEquipment.toLowerCase())
+      );
     }
 
     setFilteredExercises(filtered);
@@ -104,7 +108,7 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
   }
 
   const isExerciseSelected = (exerciseId: string) => {
-    return selectedExercises.some((ex) => ex.id === exerciseId);
+    return selectedExercises.some((ex) => ex.exerciseId === exerciseId);
   };
 
   return (
@@ -187,10 +191,10 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                 <div className="space-y-2 p-4">
                   {filteredExercises.map((exercise) => (
                     <Card
-                      key={exercise.id}
+                      key={exercise.exerciseId}
                       className={`cursor-pointer transition-all hover:border-primary ${
-                        selectedExercise?.id === exercise.id ? 'border-primary bg-accent' : ''
-                      } ${isExerciseSelected(exercise.id) ? 'opacity-50' : ''}`}
+                        selectedExercise?.exerciseId === exercise.exerciseId ? 'border-primary bg-accent' : ''
+                      } ${isExerciseSelected(exercise.exerciseId) ? 'opacity-50' : ''}`}
                       onClick={() => handleSelectExercise(exercise)}
                     >
                       <CardContent className="p-3">
@@ -211,15 +215,15 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                             <h4 className="font-semibold text-sm truncate">{exercise.name}</h4>
                             <div className="flex gap-1 mt-1 flex-wrap">
                               <Badge variant="secondary" className="text-xs">
-                                {exercise.bodyPart}
+                                {exercise.bodyParts[0]}
                               </Badge>
                               <Badge variant="outline" className="text-xs">
-                                {exercise.target}
+                                {exercise.targetMuscles[0]}
                               </Badge>
                             </div>
                           </div>
                         </div>
-                        {isExerciseSelected(exercise.id) && (
+                        {isExerciseSelected(exercise.exerciseId) && (
                           <Badge className="mt-2" variant="default">
                             Already added
                           </Badge>
@@ -267,9 +271,15 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                   <div>
                     <h3 className="font-bold text-lg">{selectedExercise.name}</h3>
                     <div className="flex gap-2 mt-2 flex-wrap">
-                      <Badge>{selectedExercise.bodyPart}</Badge>
-                      <Badge variant="secondary">{selectedExercise.target}</Badge>
-                      <Badge variant="outline">{selectedExercise.equipment}</Badge>
+                      {selectedExercise.bodyParts.map((bp, idx) => (
+                        <Badge key={idx}>{bp}</Badge>
+                      ))}
+                      {selectedExercise.targetMuscles.map((tm, idx) => (
+                        <Badge key={idx} variant="secondary">{tm}</Badge>
+                      ))}
+                      {selectedExercise.equipments.map((eq, idx) => (
+                        <Badge key={idx} variant="outline">{eq}</Badge>
+                      ))}
                     </div>
                   </div>
 
@@ -303,9 +313,9 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
                   <Button
                     onClick={handleAddExercise}
                     className="w-full"
-                    disabled={isExerciseSelected(selectedExercise.id)}
+                    disabled={isExerciseSelected(selectedExercise.exerciseId)}
                   >
-                    {isExerciseSelected(selectedExercise.id) ? 'Already Added' : 'Add to Workout'}
+                    {isExerciseSelected(selectedExercise.exerciseId) ? 'Already Added' : 'Add to Workout'}
                   </Button>
                 </div>
               </ScrollArea>
