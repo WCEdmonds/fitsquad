@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Search, Filter, Loader2, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -34,10 +36,12 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [filteredExercises, setFilteredExercises] = useState<Exercise[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBodyPart, setSelectedBodyPart] = useState<string>('all');
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all');
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const { toast } = useToast();
 
   // Load initial exercises
   useEffect(() => {
@@ -51,12 +55,46 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
 
   async function loadExercises() {
     setIsLoading(true);
+    setError(null);
+    console.log('🔍 Exercise Browser: Loading exercises...');
+
     try {
       const data = await getAllExercises(500); // Load first 500 exercises
+      console.log('✅ Exercise Browser: Exercises loaded:', data.length);
+
+      if (!data || data.length === 0) {
+        const warningMsg = 'API returned empty data array';
+        console.warn('⚠️', warningMsg);
+        setError(warningMsg);
+      }
+
       setExercises(data);
       setFilteredExercises(data);
-    } catch (error) {
-      console.error('Failed to load exercises:', error);
+    } catch (error: any) {
+      console.error('❌ Exercise Browser: Failed to load exercises:', error);
+
+      let errorMessage = 'Could not load exercise database. ';
+
+      if (error.message?.includes('Failed to fetch')) {
+        errorMessage += 'Network error - check your connection.';
+      } else if (error.message?.includes('401')) {
+        errorMessage += 'Authentication failed - check API key.';
+      } else if (error.message?.includes('404')) {
+        errorMessage += 'API endpoint not found.';
+      } else if (error.message?.includes('500')) {
+        errorMessage += 'Server error - please try again later.';
+      } else {
+        errorMessage += error.message || 'Unknown error occurred.';
+      }
+
+      setError(errorMessage);
+
+      toast({
+        title: "Error Loading Exercises",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
       // Fallback to empty array if API fails
       setExercises([]);
       setFilteredExercises([]);
@@ -182,6 +220,24 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
             <CardDescription>Click an exercise to view details</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
+            {error && (
+              <div className="p-4">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="flex flex-col gap-2">
+                    <span>{error}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadExercises}
+                      className="w-fit"
+                    >
+                      Retry
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
             {isLoading ? (
               <div className="flex items-center justify-center h-96">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

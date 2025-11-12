@@ -30,20 +30,42 @@ function getHeaders(): HeadersInit {
  * Fetch wrapper with error handling
  */
 async function fetchAPI(endpoint: string): Promise<ExerciseAPIResponse> {
+  const fullUrl = `${API_BASE_URL}${endpoint}`;
+  console.log('🔄 Fetching from ExerciseDB:', fullUrl);
+  console.log('📡 API Base URL:', API_BASE_URL);
+  console.log('🔑 API Key configured:', !!API_KEY);
+
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(fullUrl, {
       headers: getHeaders(),
       cache: 'force-cache', // Cache exercise data since it doesn't change often
     });
 
+    console.log('📡 API Response status:', response.status, response.statusText);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`ExerciseDB API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('❌ API Error Response Body:', errorText);
+      throw new Error(`ExerciseDB API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('✅ API Data received:', {
+      success: data.success,
+      hasMetadata: !!data.metadata,
+      totalExercises: data.metadata?.totalExercises,
+      exercisesReturned: data.data?.length,
+      firstExercise: data.data?.[0]?.name
+    });
+
     return data;
   } catch (error) {
-    console.error('ExerciseDB API error:', error);
+    console.error('❌ ExerciseDB API error:', error);
+    if (error instanceof Error) {
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+    }
     throw error;
   }
 }
