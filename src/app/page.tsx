@@ -1,9 +1,17 @@
 
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Dumbbell, Target, Brain, LineChart, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 
@@ -31,6 +39,9 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const [showTos, setShowTos] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+
   return (
     <div className="w-full bg-background">
       <header className="px-4 lg:px-6 h-20 flex items-center shadow-sm pt-[env(safe-area-inset-top)] backdrop-blur-sm bg-background/95 sticky top-0 z-50">
@@ -122,14 +133,133 @@ export default function LandingPage() {
       <footer className="flex flex-col gap-3 sm:flex-row py-8 w-full shrink-0 items-center px-4 md:px-6 border-t bg-muted/20">
         <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} FitSquad. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-6">
-          <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
+          <button
+            onClick={() => setShowTos(true)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4 cursor-pointer bg-transparent border-0 p-0"
+          >
             Terms of Service
-          </Link>
-          <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4">
+          </button>
+          <button
+            onClick={() => setShowPrivacy(true)}
+            className="text-xs text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4 cursor-pointer bg-transparent border-0 p-0"
+          >
             Privacy
-          </Link>
+          </button>
         </nav>
       </footer>
+
+      {/* Terms of Service Dialog */}
+      <Dialog open={showTos} onOpenChange={setShowTos}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Terms of Service</DialogTitle>
+            <DialogDescription>Last updated: {new Date().getFullYear()}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold text-base mb-2">1. Acceptance of Terms</h3>
+              <p className="text-muted-foreground">
+                By accessing and using FitSquad, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">2. Use of Service</h3>
+              <p className="text-muted-foreground">
+                FitSquad is a fitness tracking and workout planning platform designed for military units. You agree to use the service only for lawful purposes and in accordance with these terms.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">3. User Accounts</h3>
+              <p className="text-muted-foreground">
+                You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">4. Data Accuracy</h3>
+              <p className="text-muted-foreground">
+                Users are responsible for ensuring the accuracy of fitness data entered into the system. FitSquad provides workout recommendations based on the data provided but does not guarantee specific fitness outcomes.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">5. Limitation of Liability</h3>
+              <p className="text-muted-foreground">
+                FitSquad is provided "as is" without warranties of any kind. We shall not be liable for any indirect, incidental, or consequential damages arising from the use of our service.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">6. Modifications</h3>
+              <p className="text-muted-foreground">
+                We reserve the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the modified terms.
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy Dialog */}
+      <Dialog open={showPrivacy} onOpenChange={setShowPrivacy}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Privacy Policy</DialogTitle>
+            <DialogDescription>Last updated: {new Date().getFullYear()}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold text-base mb-2">1. Information We Collect</h3>
+              <p className="text-muted-foreground">
+                We collect information you provide directly, including name, email, fitness data (ACFT scores, run times), and health metrics. We also collect usage data and analytics to improve our service.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">2. How We Use Your Information</h3>
+              <p className="text-muted-foreground">
+                Your information is used to provide and improve FitSquad services, generate personalized workout plans, track fitness progress, and facilitate team management features. We do not sell your personal information to third parties.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">3. Data Sharing</h3>
+              <p className="text-muted-foreground">
+                Fitness data may be shared with your designated supervisors and commanders within your unit as part of team management features. We do not share your data outside your designated team without your consent.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">4. Data Security</h3>
+              <p className="text-muted-foreground">
+                We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">5. Your Rights</h3>
+              <p className="text-muted-foreground">
+                You have the right to access, correct, or delete your personal information. You may also request a copy of your data or opt out of certain data collection practices by contacting us.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">6. Cookies and Tracking</h3>
+              <p className="text-muted-foreground">
+                We use cookies and similar tracking technologies to enhance user experience, analyze usage patterns, and maintain session security. You can control cookie preferences through your browser settings.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-2">7. Changes to Privacy Policy</h3>
+              <p className="text-muted-foreground">
+                We may update this privacy policy from time to time. We will notify users of significant changes via email or through the platform.
+              </p>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
