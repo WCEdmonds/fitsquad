@@ -205,11 +205,11 @@ export default function PlannerPage() {
         <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>Fitness Plan Generator</CardTitle>
+              <CardTitle>Smart Planner</CardTitle>
               <CardDescription>
                 {userAccount?.accountType === 'Soldier'
-                  ? "Create a workout plan tailored to your personal goals and data."
-                  : "Create a tailored workout plan for your unit based on their latest data."
+                  ? "AI-powered workout plans tailored to your personal goals and fitness data."
+                  : "AI-powered workout plans for your unit based on their latest fitness data."
                 }
               </CardDescription>
             </CardHeader>

@@ -109,6 +109,16 @@ service cloud.firestore {
       allow update, delete: if false; // TODO: Add team membership check and validate workoutPlanId is immutable
     }
 
+    /**
+     * @description Controls access to the main editable team plan.
+     * Supervisors and Admins can edit, everyone can read.
+     */
+    match /teams/{teamId}/mainPlan/{planId} {
+      allow read: if true; // Everyone can view the team plan
+      allow create, update: if isSignedIn() && (isSupervisorOrAdmin()); // Only Supervisors and Admins can edit
+      allow delete: if isAdmin(); // Only Admins can delete
+    }
+
     // Helper functions
     function isSignedIn() {
       return request.auth != null;
@@ -142,6 +152,13 @@ service cloud.firestore {
       return isSignedIn() && (
         get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.accountType == 'Supervisor' ||
         get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.accountType == 'Commander'
+      );
+    }
+
+    function isSupervisorOrAdmin() {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.accountType == 'Supervisor' ||
+        get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.accountType == 'Admin'
       );
     }
 

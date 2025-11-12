@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck, Activity } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck, Activity, CalendarDays } from 'lucide-react';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,8 @@ import { haptics } from '@/lib/haptics';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
-  { href: '/dashboard/planner', label: 'Fitness Planner', icon: Bot },
+  { href: '/dashboard/plan-editor', label: 'Plan Editor', icon: CalendarDays },
+  { href: '/dashboard/planner', label: 'Smart Planner', icon: Bot },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
   { href: '/dashboard/fitness-logs', label: 'My Fitness Logs', icon: Activity },
