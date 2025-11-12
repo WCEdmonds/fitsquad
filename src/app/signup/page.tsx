@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { claimProfile, findUnclaimedProfile } from '@/lib/unclaimed-profiles';
 import { Account } from '@/lib/types';
+import { callSendInvite } from '@/lib/cloudFunctions';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -64,6 +65,133 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
+
+  const sendWelcomeEmail = async (email: string, firstName: string, isClaimed: boolean) => {
+    try {
+      const subject = isClaimed
+        ? '🎉 Welcome to FitSquad - Profile Claimed!'
+        : '🎉 Welcome to FitSquad!';
+
+      const body = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px 10px 0 0;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .content {
+      background: #f9fafb;
+      padding: 30px;
+      border-radius: 0 0 10px 10px;
+    }
+    .button {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    .feature-list {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .feature-list li {
+      margin: 10px 0;
+      padding-left: 25px;
+      position: relative;
+    }
+    .feature-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #667eea;
+      font-weight: bold;
+    }
+    .footer {
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>💪 Welcome to FitSquad!</h1>
+  </div>
+  <div class="content">
+    <h2>Hey ${firstName}! 👋</h2>
+
+    ${isClaimed
+      ? '<p><strong>Great news!</strong> You\'ve successfully claimed your profile and all your fitness data has been transferred to your account.</p>'
+      : '<p><strong>Thanks for joining FitSquad!</strong> We\'re excited to help you on your fitness journey.</p>'
+    }
+
+    <p>Your account is ready to go. Here's what you can do with FitSquad:</p>
+
+    <ul class="feature-list">
+      <li><strong>Track ACFT Scores:</strong> Log and monitor your Army Combat Fitness Test performance</li>
+      <li><strong>Join or Create Teams:</strong> Connect with your unit and track collective progress</li>
+      <li><strong>AI Workout Plans:</strong> Get personalized training plans tailored to your fitness data</li>
+      <li><strong>Progress Analytics:</strong> Visualize your improvement over time with detailed charts</li>
+      <li><strong>Team Management:</strong> Supervisors and commanders can manage team fitness data</li>
+    </ul>
+
+    <center>
+      <a href="https://mysquad.fit/dashboard" class="button">Go to Dashboard</a>
+    </center>
+
+    <p style="margin-top: 30px; color: #6b7280; font-size: 14px;">
+      <strong>Quick Tip:</strong> Start by logging your current ACFT scores in the Fitness Logs section. This helps our AI create better workout plans for you!
+    </p>
+  </div>
+  <div class="footer">
+    <p>Questions? Need help? Contact your unit administrator or reply to this email.</p>
+    <p style="margin-top: 10px;">
+      <strong>FitSquad</strong> - Track. Train. Achieve.<br>
+      <a href="https://mysquad.fit" style="color: #667eea; text-decoration: none;">mysquad.fit</a>
+    </p>
+  </div>
+</body>
+</html>
+      `;
+
+      await callSendInvite({
+        to: email,
+        subject,
+        body,
+      });
+
+      console.log('Welcome email sent successfully to:', email);
+    } catch (error) {
+      // Don't block signup if email fails
+      console.error('Failed to send welcome email:', error);
+    }
+  };
 
   const handleCheckClaimCode = async () => {
     if (!claimCode.trim()) {
@@ -154,6 +282,9 @@ function SignupForm() {
           throw new Error('Failed to claim profile. The claim code may have expired.');
         }
 
+        // Send welcome email (async, don't block navigation)
+        sendWelcomeEmail(user.email || email, firstName, true);
+
         // Profile claimed successfully - data has been migrated
         router.push(redirectUrl || '/dashboard');
         return;
@@ -174,6 +305,9 @@ function SignupForm() {
       const accountRef = doc(firestore, 'accounts', user.uid);
       // Wait for the Firestore document to be created before navigating
       await setDoc(accountRef, accountData, { merge: true });
+
+      // Send welcome email (async, don't block navigation)
+      sendWelcomeEmail(user.email || email, firstName, false);
 
       // Navigate to redirect URL if provided, otherwise go to dashboard
       router.push(redirectUrl || '/dashboard');
