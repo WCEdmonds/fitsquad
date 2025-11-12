@@ -59,17 +59,34 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
     console.log('🔍 Exercise Browser: Loading exercises...');
 
     try {
-      const data = await getAllExercises(500); // Load first 500 exercises
-      console.log('✅ Exercise Browser: Exercises loaded:', data.length);
+      // API has max limit of 100 per request, so we need to paginate
+      const allExercises: Exercise[] = [];
+      const limit = 100;
+      const totalToLoad = 500; // Load first 500 exercises across multiple requests
 
-      if (!data || data.length === 0) {
+      for (let offset = 0; offset < totalToLoad; offset += limit) {
+        console.log(`📥 Loading batch: offset=${offset}, limit=${limit}`);
+        const batch = await getAllExercises(limit, offset);
+
+        if (batch && batch.length > 0) {
+          allExercises.push(...batch);
+          console.log(`✅ Batch loaded: ${batch.length} exercises (total: ${allExercises.length})`);
+        } else {
+          console.log('⚠️ Empty batch, stopping pagination');
+          break; // No more exercises available
+        }
+      }
+
+      console.log('✅ Exercise Browser: All exercises loaded:', allExercises.length);
+
+      if (allExercises.length === 0) {
         const warningMsg = 'API returned empty data array';
         console.warn('⚠️', warningMsg);
         setError(warningMsg);
       }
 
-      setExercises(data);
-      setFilteredExercises(data);
+      setExercises(allExercises);
+      setFilteredExercises(allExercises);
     } catch (error: any) {
       console.error('❌ Exercise Browser: Failed to load exercises:', error);
 
@@ -83,6 +100,8 @@ export function ExerciseBrowser({ onSelectExercise, selectedExercises = [] }: Ex
         errorMessage += 'API endpoint not found.';
       } else if (error.message?.includes('500')) {
         errorMessage += 'Server error - please try again later.';
+      } else if (error.message?.includes('400')) {
+        errorMessage += 'Bad request - invalid parameters.';
       } else {
         errorMessage += error.message || 'Unknown error occurred.';
       }
