@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,9 @@ import {
 } from '@/components/ui/dialog';
 import { Dumbbell, Target, Brain, LineChart, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
+import { Capacitor } from '@capacitor/core';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 
 const features = [
   {
@@ -41,6 +44,29 @@ const features = [
 export default function LandingPage() {
   const [showTos, setShowTos] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const router = useRouter();
+  const { user, isUserLoading } = useUser();
+
+  // Redirect mobile users to login/dashboard - they should never see the landing page
+  useEffect(() => {
+    const isNative = Capacitor.isNativePlatform();
+
+    if (isNative) {
+      // If user is logged in, go to dashboard
+      if (user && !isUserLoading) {
+        router.push('/dashboard');
+      }
+      // If not logged in and not loading, go to login
+      else if (!user && !isUserLoading) {
+        router.push('/login');
+      }
+    }
+  }, [user, isUserLoading, router]);
+
+  // Don't render landing page for mobile users - they'll be redirected
+  if (Capacitor.isNativePlatform()) {
+    return null;
+  }
 
   return (
     <div className="w-full bg-background">
