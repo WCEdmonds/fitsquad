@@ -63,16 +63,16 @@ export default function LandingPage() {
                 priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-background/80"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-background/80"></div>
            </div>
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center justify-center text-center">
               <div className="flex flex-col justify-center space-y-6 max-w-4xl mx-auto">
                 <div className="space-y-4">
-                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none animate-in fade-in slide-in-from-bottom-4 duration-1000 text-white">
+                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none animate-in fade-in slide-in-from-bottom-4 duration-1000 text-black">
                     Revolutionize Your Unit's Fitness
                   </h1>
-                  <p className="max-w-[700px] text-white/90 text-lg md:text-xl lg:text-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
+                  <p className="max-w-[700px] text-black text-lg md:text-xl lg:text-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
                     Stop guessing. Start planning. FitSquad generates tailored workout programs based on your soldiers' actual performance data.
                   </p>
                 </div>
