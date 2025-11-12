@@ -134,7 +134,7 @@ export default function PlannerPage() {
     setIsSaving(true);
     try {
       const workoutPlansRef = collection(firestore, 'teams', userAccount.teamId, 'workoutPlans');
-      
+
       const today = new Date();
       const startDate = startOfWeek(today, { weekStartsOn: 1 }); // Monday
       const year = startDate.getFullYear();
@@ -150,10 +150,23 @@ export default function PlannerPage() {
       });
 
       setGeneratedPlanId(docRef.id); // Update with the real ID from Firestore
+      console.log('✅ Workout plan saved successfully', docRef.id);
       toast({ title: "Success", description: "Workout plan saved!" });
     } catch(err: any) {
-      console.error(err);
-      toast({ title: "Error", description: `Could not save the workout plan: ${err.message}`, variant: "destructive" });
+      console.error('❌ Error saving workout plan:', err);
+
+      let errorMessage = `Could not save the workout plan: ${err.message}`;
+
+      if (err.code === 'permission-denied') {
+        errorMessage = "Permission denied. Please check your account permissions and ensure you're part of a team.";
+        console.error('Save permission details:', {
+          userAccountType: userAccount?.accountType,
+          teamId: userAccount?.teamId,
+          errorCode: err.code,
+        });
+      }
+
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }

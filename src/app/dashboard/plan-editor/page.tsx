@@ -63,15 +63,60 @@ export default function PlanEditorPage() {
             lastUpdated: new Date().toISOString(),
             updatedBy: user?.uid,
           };
+
+          // Set in state immediately
           setTeamPlan(emptyPlan);
+
+          // If user can edit, create the document in Firestore
+          if (canEdit) {
+            try {
+              await setDoc(planRef, emptyPlan);
+              console.log('✅ Created initial empty plan in Firestore');
+            } catch (createError: any) {
+              console.error('❌ Error creating initial plan:', createError);
+              // Don't show error to user - they can still work with it in state
+              // and save manually later
+            }
+          }
         }
-      } catch (error) {
-        console.error('Error loading team plan:', error);
+      } catch (error: any) {
+        console.error('❌ Error loading team plan:', error);
+
+        // Provide more specific error messages
+        let errorMessage = "Could not load the team plan.";
+
+        if (error.code === 'permission-denied') {
+          errorMessage = "Permission denied. You may not have access to this team's plan.";
+          console.error('Permission details:', {
+            userAccountType: userAccount?.accountType,
+            teamId: userAccount?.teamId,
+            canEdit,
+          });
+        } else if (error.code === 'not-found') {
+          errorMessage = "Team not found.";
+        } else if (!userAccount?.teamId) {
+          errorMessage = "No team assigned to your account.";
+        }
+
         toast({
           title: "Error Loading Plan",
-          description: "Could not load the team plan. Please try again.",
+          description: errorMessage + " Creating empty plan...",
           variant: "destructive",
         });
+
+        // Still set an empty plan so user can see the interface
+        const fallbackPlan = {
+          weeks: Array.from({ length: 8 }, (_, weekIndex) => ({
+            weekNumber: weekIndex + 1,
+            days: Array.from({ length: 7 }, (_, dayIndex) => ({
+              dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIndex],
+              workout: null,
+            })),
+          })),
+          lastUpdated: new Date().toISOString(),
+          updatedBy: user?.uid,
+        };
+        setTeamPlan(fallbackPlan);
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +125,7 @@ export default function PlanEditorPage() {
     if (userAccount) {
       loadTeamPlan();
     }
-  }, [userAccount, firestore, user, toast]);
+  }, [userAccount, firestore, user, toast, canEdit]);
 
   async function handleSavePlan() {
     if (!userAccount?.teamId || !canEdit || !teamPlan) return;
@@ -94,15 +139,30 @@ export default function PlanEditorPage() {
         updatedBy: user?.uid,
       });
 
+      console.log('✅ Plan saved successfully');
       toast({
         title: "Plan Saved",
         description: "The team workout plan has been saved successfully.",
       });
-    } catch (error) {
-      console.error('Error saving plan:', error);
+    } catch (error: any) {
+      console.error('❌ Error saving plan:', error);
+
+      let errorMessage = "Could not save the team plan.";
+
+      if (error.code === 'permission-denied') {
+        errorMessage = "Permission denied. You may not have permission to edit this team's plan.";
+        console.error('Save permission details:', {
+          userAccountType: userAccount?.accountType,
+          teamId: userAccount?.teamId,
+          canEdit,
+        });
+      } else if (error.code === 'not-found') {
+        errorMessage = "Team not found.";
+      }
+
       toast({
         title: "Error Saving Plan",
-        description: "Could not save the team plan. Please try again.",
+        description: errorMessage + " " + (error.message || "Please try again."),
         variant: "destructive",
       });
     } finally {
