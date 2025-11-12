@@ -18,6 +18,7 @@ import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InviteDialog } from '@/components/invite-dialog';
 import { callSendInvite } from '@/lib/cloudFunctions';
+import { AddMemberDialog } from '@/components/add-member-dialog';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -68,13 +69,16 @@ export default function SoldiersPage() {
             const fetchSoldierData = async () => {
                 const soldierPromises = memberList.map(async (member) => {
                     const memberId = member.id; // Works for both full account docs and member refs
-                    
+
                     // In admin view, 'member' is the full account doc, otherwise we need to fetch it
-                    const accData = userAccount?.accountType === 'Admin' 
-                        ? member 
+                    const accData = userAccount?.accountType === 'Admin'
+                        ? member
                         : await getDocNonBlocking<any>(doc(firestore, 'accounts', memberId));
 
                     if (!accData) return null; // Skip if account data can't be fetched
+
+                    // Mark unclaimed profiles in the display
+                    const isUnclaimed = accData.claimed === false;
 
                     let teamName = "N/A";
                     if (accData.teamId) {
@@ -91,12 +95,12 @@ export default function SoldiersPage() {
 
                     const soldier: Soldier = {
                         id: memberId,
-                        email: accData.email || 'Unknown',
+                        email: accData.email || (isUnclaimed ? '(Unclaimed Profile)' : 'Unknown'),
                         firstName: accData.firstName || '',
                         lastName: accData.lastName || '',
                         rank: accData.accountType || 'Soldier',
                         teamId: accData.teamId,
-                        teamName: teamName,
+                        teamName: teamName + (isUnclaimed ? ' (Unclaimed)' : ''),
                         mdl: sData?.mdl || 0,
                         hrp: sData?.hrp || 0,
                         sdc: sData?.sdc || 0,
@@ -330,6 +334,20 @@ try {
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {/* Only show Create Profile for Supervisors/Commanders/Admins with a team */}
+            {userAccount &&
+             (userAccount.accountType === 'Supervisor' ||
+              userAccount.accountType === 'Commander' ||
+              userAccount.accountType === 'Admin') &&
+             userAccount.teamId && (
+              <AddMemberDialog
+                teamId={userAccount.teamId}
+                onMemberAdded={() => {
+                  // Refresh the soldier list
+                  window.location.reload();
+                }}
+              />
+            )}
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)} className="w-full sm:w-auto">
               <Mail className="mr-2 h-4 w-4" /> Invite Members
             </Button>
