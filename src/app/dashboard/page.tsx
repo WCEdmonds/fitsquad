@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users, Calendar } from 'lucide-react';
+import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users, Calendar, Activity } from 'lucide-react';
 import { Barbell, SneakerMove, PersonSimpleRun, Shield, ShieldCheck, Sword, Timer } from '@phosphor-icons/react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
@@ -369,7 +369,7 @@ export default function DashboardPage() {
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800 hover:scale-105 cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
             <CardTitle className="text-sm font-semibold">HRP</CardTitle>
-            <Dumbbell className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
             <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
