@@ -71,13 +71,13 @@ export default function DashboardLayout({
         isNative ? "h-screen flex flex-col fixed inset-0" : "flex min-h-screen flex-col"
       )}>
         {!isNative && (
-          <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background px-4 md:px-6 z-50 shrink-0">
+          <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background/80 backdrop-blur-lg px-4 md:px-6 z-50 shrink-0 shadow-sm">
              <Link
                 href="/dashboard"
-                className="flex items-center gap-2 font-semibold text-lg"
+                className="flex items-center gap-2 font-semibold text-lg hover:opacity-80 transition-opacity"
               >
-                <Dumbbell className="h-7 w-7" />
-                <span className="">FitSquad</span>
+                <Dumbbell className="h-7 w-7 text-primary" />
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">FitSquad</span>
             </Link>
             <div className="hidden md:flex ml-8">
               <DashboardNav />
@@ -163,7 +163,7 @@ export default function DashboardLayout({
           </DashboardErrorBoundary>
         </main>
         {!isNative && (
-          <footer className="py-4 px-6 text-center text-xs text-muted-foreground shrink-0">
+          <footer className="py-6 px-6 text-center text-xs text-muted-foreground shrink-0 border-t bg-background/50">
               © {new Date().getFullYear()} FitSquad by Quandary Development
           </footer>
         )}
