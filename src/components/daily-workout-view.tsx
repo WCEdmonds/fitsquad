@@ -39,6 +39,7 @@ interface DailyWorkoutViewProps {
         workout: Workout | null;
       }>;
     }>;
+    cycleStartDate?: string;
   };
   userId: string;
   teamId: string;
@@ -63,7 +64,32 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
 
   // Get current day's workout
   const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
-  const currentWeekInCycle = Math.floor((Date.now() - new Date(selectedDate.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000)) % 8;
+
+  // Calculate which week in the 8-week cycle we're in
+  const getCurrentWeekInCycle = () => {
+    if (!plan.cycleStartDate) {
+      // Fallback to week of year if no cycle start date
+      const startOfYear = new Date(selectedDate.getFullYear(), 0, 1);
+      const weekOfYear = Math.floor((selectedDate.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      return weekOfYear % 8;
+    }
+
+    // Calculate based on cycle start date
+    const cycleStart = new Date(plan.cycleStartDate);
+    // Adjust to Monday of cycle start week
+    const startMonday = new Date(cycleStart);
+    startMonday.setDate(cycleStart.getDate() - cycleStart.getDay() + (cycleStart.getDay() === 0 ? -6 : 1));
+
+    // Calculate days difference
+    const diffTime = selectedDate.getTime() - startMonday.getTime();
+    const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+    const weeksSinceStart = Math.floor(diffDays / 7);
+
+    // Cycle through 8 weeks
+    return Math.max(0, weeksSinceStart % 8);
+  };
+
+  const currentWeekInCycle = getCurrentWeekInCycle();
 
   const todaysWorkout = plan.weeks[currentWeekInCycle]?.days.find(
     day => day.dayOfWeek === dayOfWeek

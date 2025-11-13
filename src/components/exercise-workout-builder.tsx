@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Exercise {
   name: string;
@@ -39,6 +40,8 @@ interface Exercise {
   rest: string;
   perceivedExertion?: string;
   description?: string;
+  duration?: string;
+  distance?: string;
   imageUrl?: string; // ExerciseDB GIF URL
 }
 
@@ -707,7 +710,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
 
       {/* Custom Exercise Dialog */}
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Custom Exercise</DialogTitle>
             <DialogDescription>Create your own exercise with custom details</DialogDescription>
@@ -744,10 +747,30 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <Label htmlFor="custom-duration">Duration (optional)</Label>
+                <Input
+                  id="custom-duration"
+                  placeholder="e.g., 30 min, 45s"
+                  value={customExercise.duration || ''}
+                  onChange={(e) => setCustomExercise({ ...customExercise, duration: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="custom-distance">Distance (optional)</Label>
+                <Input
+                  id="custom-distance"
+                  placeholder="e.g., 5 miles, 400m"
+                  value={customExercise.distance || ''}
+                  onChange={(e) => setCustomExercise({ ...customExercise, distance: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="custom-rest">Rest</Label>
                 <Input
                   id="custom-rest"
-                  placeholder="e.g., 60s"
+                  placeholder="e.g., 60s, 2 min"
                   value={customExercise.rest}
                   onChange={(e) => setCustomExercise({ ...customExercise, rest: e.target.value })}
                 />
@@ -764,6 +787,16 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
                   onChange={(e) => setCustomExercise({ ...customExercise, perceivedExertion: e.target.value })}
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="custom-description">Description (optional)</Label>
+              <Textarea
+                id="custom-description"
+                placeholder="Describe how to perform this exercise..."
+                value={customExercise.description || ''}
+                onChange={(e) => setCustomExercise({ ...customExercise, description: e.target.value })}
+                className="h-24"
+              />
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowCustomDialog(false)} className="flex-1">
