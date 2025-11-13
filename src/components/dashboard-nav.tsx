@@ -12,8 +12,7 @@ import { haptics } from '@/lib/haptics';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
-  { href: '/dashboard/plan-editor', label: 'Plan Editor', icon: CalendarDays },
-  { href: '/dashboard/planner', label: 'Smart Planner', icon: Bot },
+  { href: '/dashboard/plan-editor', label: 'Plan Builder', icon: CalendarDays },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
   { href: '/dashboard/fitness-logs', label: 'My Fitness Logs', icon: Activity },

@@ -9,21 +9,20 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Lock, Pencil, Eye, Save, Download } from 'lucide-react';
+import { Calendar, Lock, Pencil, Eye, Save, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PlanCalendarView } from '@/components/plan-calendar-view';
-import { SmartPlannerImportDialog } from '@/components/smart-planner-import-dialog';
+import { SmartPlanDialog } from '@/components/smart-plan-dialog';
 
-export default function PlanEditorPage() {
+export default function PlanBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [teamPlan, setTeamPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [importTarget, setImportTarget] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
+  const [isSmartPlanDialogOpen, setIsSmartPlanDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -180,33 +179,38 @@ export default function PlanEditorPage() {
     });
   }
 
-  function handleImportWorkout(workout: any) {
+  function handleApplyGeneratedWorkouts(workouts: any[]) {
     if (!teamPlan || !canEdit) return;
 
-    // Find the first available rest day to place the workout
-    let placed = false;
     const updated = { ...teamPlan };
+    let placedCount = 0;
 
-    for (let weekIdx = 0; weekIdx < updated.weeks.length && !placed; weekIdx++) {
-      for (let dayIdx = 0; dayIdx < updated.weeks[weekIdx].days.length && !placed; dayIdx++) {
-        if (!updated.weeks[weekIdx].days[dayIdx].workout) {
-          updated.weeks[weekIdx].days[dayIdx].workout = workout;
-          placed = true;
+    // Map day names to indices (Monday = 0, Sunday = 6)
+    const dayNameToIndex: { [key: string]: number } = {
+      'Monday': 0,
+      'Tuesday': 1,
+      'Wednesday': 2,
+      'Thursday': 3,
+      'Friday': 4,
+      'Saturday': 5,
+      'Sunday': 6,
+    };
 
-          setTeamPlan(updated);
-          toast({
-            title: "Workout Imported",
-            description: `${workout.name} added to Week ${weekIdx + 1}, ${updated.weeks[weekIdx].days[dayIdx].dayOfWeek}.`,
-          });
-        }
+    // Place each workout on its corresponding day in Week 1
+    workouts.forEach((workout) => {
+      const dayIndex = dayNameToIndex[workout.day];
+      if (dayIndex !== undefined && updated.weeks.length > 0) {
+        // Place in Week 1 (index 0)
+        updated.weeks[0].days[dayIndex].workout = workout;
+        placedCount++;
       }
-    }
+    });
 
-    if (!placed) {
+    if (placedCount > 0) {
+      setTeamPlan(updated);
       toast({
-        title: "Plan Full",
-        description: "All days have workouts. Please remove a workout first or use copy/paste to replace one.",
-        variant: "destructive",
+        title: "Workouts Applied",
+        description: `${placedCount} workout${placedCount !== 1 ? 's' : ''} added to Week 1 of your plan.`,
       });
     }
   }
@@ -225,7 +229,7 @@ export default function PlanEditorPage() {
       <div className="container mx-auto p-6">
         <Alert>
           <AlertDescription>
-            Please log in to access the Plan Editor.
+            Please log in to access the Plan Builder.
           </AlertDescription>
         </Alert>
       </div>
@@ -238,7 +242,7 @@ export default function PlanEditorPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Calendar className="h-8 w-8" />
-            Plan Editor
+            Plan Builder
           </h1>
           <p className="text-muted-foreground mt-2">
             {canEdit
@@ -251,12 +255,12 @@ export default function PlanEditorPage() {
         {canEdit && (
           <div className="flex gap-2">
             <Button
-              onClick={() => setIsImportDialogOpen(true)}
+              onClick={() => setIsSmartPlanDialogOpen(true)}
               variant="outline"
               size="lg"
             >
-              <Download className="h-4 w-4 mr-2" />
-              Import from Smart Planner
+              <Sparkles className="h-4 w-4 mr-2" />
+              Smart Plan
             </Button>
             <Button
               onClick={handleSavePlan}
@@ -316,12 +320,11 @@ export default function PlanEditorPage() {
         </CardContent>
       </Card>
 
-      {/* Smart Planner Import Dialog */}
-      <SmartPlannerImportDialog
-        isOpen={isImportDialogOpen}
-        onClose={() => setIsImportDialogOpen(false)}
-        onImport={handleImportWorkout}
-        teamId={userAccount?.teamId || null}
+      {/* Smart Plan Dialog */}
+      <SmartPlanDialog
+        isOpen={isSmartPlanDialogOpen}
+        onClose={() => setIsSmartPlanDialogOpen(false)}
+        onPlanGenerated={handleApplyGeneratedWorkouts}
       />
     </div>
   );
