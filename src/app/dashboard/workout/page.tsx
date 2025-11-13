@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -16,8 +16,8 @@ import { Dumbbell, Plus, X, Check, Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
-import { getAllExercises, type Exercise as DBExercise } from '@/lib/exercisedb/api';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { searchExercises, type Exercise as DBExercise } from '@/lib/exercisedb/api';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
@@ -39,45 +39,37 @@ export default function QuickWorkoutPage() {
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const [dbExercises, setDbExercises] = useState<DBExercise[]>([]);
-  const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [isLoadingExercises, setIsLoadingExercises] = useState(false);
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Load exercises from database on mount
-  useEffect(() => {
-    async function loadExercises() {
-      try {
-        setIsLoadingExercises(true);
-        // Load all exercises from database (~1300 total)
-        const allExercises: DBExercise[] = [];
-        const limit = 100;
-        const totalToLoad = 1400; // Load full database
-
-        for (let offset = 0; offset < totalToLoad; offset += limit) {
-          const batch = await getAllExercises(limit, offset);
-          if (batch && batch.length > 0) {
-            allExercises.push(...batch);
-          } else {
-            break;
-          }
-        }
-
-        // Sort alphabetically for better search experience
-        allExercises.sort((a, b) => a.name.localeCompare(b.name));
-
-        setDbExercises(allExercises);
-      } catch (error) {
-        console.error('Error loading exercises:', error);
-        toast({
-          title: "Notice",
-          description: "Could not load exercise database. You can still enter exercises manually.",
-        });
-      } finally {
-        setIsLoadingExercises(false);
-      }
+  // Debounced search function
+  const performSearch = useCallback(async (query: string) => {
+    if (!query || query.trim().length < 2) {
+      setDbExercises([]);
+      return;
     }
 
-    loadExercises();
-  }, [toast]);
+    setIsLoadingExercises(true);
+    try {
+      const results = await searchExercises({ q: query, limit: 50 });
+      setDbExercises(results);
+    } catch (error) {
+      console.error('Error searching exercises:', error);
+      setDbExercises([]);
+    } finally {
+      setIsLoadingExercises(false);
+    }
+  }, []);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, performSearch]);
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '' }]);
@@ -110,6 +102,16 @@ export default function QuickWorkoutPage() {
 
     setExercises(updated);
     setOpenComboboxIndex(null);
+    setSearchQuery('');
+    setDbExercises([]);
+  };
+
+  const handlePopoverChange = (open: boolean, index: number) => {
+    setOpenComboboxIndex(open ? index : null);
+    if (!open) {
+      setSearchQuery('');
+      setDbExercises([]);
+    }
   };
 
   const handleSaveWorkout = async () => {
@@ -228,7 +230,7 @@ export default function QuickWorkoutPage() {
                     <Label htmlFor={`exercise-name-${index}`}>Exercise Name *</Label>
                     <Popover
                       open={openComboboxIndex === index}
-                      onOpenChange={(open) => setOpenComboboxIndex(open ? index : null)}
+                      onOpenChange={(open) => handlePopoverChange(open, index)}
                     >
                       <PopoverTrigger asChild>
                         <Button
@@ -242,37 +244,46 @@ export default function QuickWorkoutPage() {
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-full p-0" align="start">
-                        <Command>
+                        <Command shouldFilter={false}>
                           <CommandInput
-                            placeholder="Search exercises..."
+                            placeholder="Search exercises (type at least 2 characters)..."
                             className="h-9"
+                            value={searchQuery}
+                            onValueChange={setSearchQuery}
                           />
-                          <CommandEmpty>
-                            {isLoadingExercises ? (
+                          <CommandList>
+                            {searchQuery.length < 2 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">
+                                Type at least 2 characters to search
+                              </div>
+                            ) : isLoadingExercises ? (
                               <div className="flex items-center justify-center py-6">
                                 <Loader2 className="h-6 w-6 animate-spin" />
+                                <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
                               </div>
+                            ) : dbExercises.length === 0 ? (
+                              <CommandEmpty>
+                                <div className="py-6 text-center text-sm">No exercises found. Try different keywords or type manually below.</div>
+                              </CommandEmpty>
                             ) : (
-                              <div className="py-6 text-center text-sm">No exercise found. Try typing manually below.</div>
+                              <CommandGroup className="max-h-80 overflow-auto">
+                                {dbExercises.map((dbExercise) => (
+                                  <CommandItem
+                                    key={dbExercise.exerciseId}
+                                    value={dbExercise.name}
+                                    onSelect={() => handleSelectExercise(index, dbExercise)}
+                                  >
+                                    <div className="flex items-center justify-between w-full">
+                                      <span>{dbExercise.name}</span>
+                                      {dbExercise.bodyParts.includes('cardio') && (
+                                        <span className="ml-2 text-xs text-muted-foreground">(cardio)</span>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
                             )}
-                          </CommandEmpty>
-                          <CommandGroup className="max-h-80 overflow-auto">
-                            {dbExercises.map((dbExercise) => (
-                              <CommandItem
-                                key={dbExercise.exerciseId}
-                                value={dbExercise.name}
-                                keywords={[...dbExercise.bodyParts, ...dbExercise.equipments, ...dbExercise.targetMuscles]}
-                                onSelect={() => handleSelectExercise(index, dbExercise)}
-                              >
-                                <div className="flex items-center justify-between w-full">
-                                  <span>{dbExercise.name}</span>
-                                  {dbExercise.bodyParts.includes('cardio') && (
-                                    <span className="ml-2 text-xs text-muted-foreground">(cardio)</span>
-                                  )}
-                                </div>
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          </CommandList>
                         </Command>
                       </PopoverContent>
                     </Popover>
