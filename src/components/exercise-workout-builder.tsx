@@ -209,7 +209,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
       reps: '10',
       rest: '60s',
       perceivedExertion: '7',
-      description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
+      description: exercise.instructions?.map(cleanInstruction).join('. ') || exercise.targetMuscles.join(', '),
       imageUrl: exercise.gifUrl, // Save the GIF URL from ExerciseDB
     };
 

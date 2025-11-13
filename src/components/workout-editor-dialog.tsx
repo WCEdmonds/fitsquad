@@ -213,6 +213,11 @@ export function WorkoutEditorDialog({
   weekDays,
   onCopyToDay,
 }: WorkoutEditorDialogProps) {
+  // Helper function to clean instruction text
+  const cleanInstruction = (instruction: string): string => {
+    return instruction.replace(/^Step:\d+\s*/i, '').trim();
+  };
+
   const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library');
   const [customWorkout, setCustomWorkout] = useState<Workout>({
     name: '',
@@ -315,7 +320,7 @@ export function WorkoutEditorDialog({
       reps: '10',
       rest: '60s',
       perceivedExertion: '7', // Moderate intensity default
-      description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
+      description: exercise.instructions?.map(cleanInstruction).join('. ') || exercise.targetMuscles.join(', '),
       imageUrl: exercise.gifUrl, // Store the exercise GIF for reference
     };
 
