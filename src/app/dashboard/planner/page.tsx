@@ -214,7 +214,7 @@ export default function PlannerPage() {
       <div className="hidden print-only">
         {workoutPlan && <WorkoutPrintView plan={workoutPlan} />}
       </div>
-      <div className="grid h-full gap-6 lg:grid-cols-3 no-print">
+      <div className="grid h-full gap-6 lg:grid-cols-3 no-print pb-24 md:pb-4">
         <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>

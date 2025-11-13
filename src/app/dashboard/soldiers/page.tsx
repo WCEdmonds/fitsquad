@@ -313,7 +313,7 @@ try {
 
 
   return (
-    <>
+    <div className="pb-24 md:pb-4">
     <AddSoldierDialog
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
@@ -393,6 +393,6 @@ try {
         </Tabs>
       </CardContent>
     </Card>
-    </>
+    </div>
   );
 }

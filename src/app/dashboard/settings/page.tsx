@@ -25,6 +25,7 @@ export default function SettingsPage() {
     const { data: userAccount, isLoading } = useDoc(userAccountRef);
 
   return (
+    <div className="pb-24 md:pb-4">
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -57,5 +58,6 @@ export default function SettingsPage() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

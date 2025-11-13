@@ -249,7 +249,7 @@ export default function PlanBuilderPage() {
 
   if (isAccountLoading || isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto p-6 space-y-6 pb-24 md:pb-4">
         <Skeleton className="h-12 w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
@@ -258,7 +258,7 @@ export default function PlanBuilderPage() {
 
   if (!userAccount) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 pb-24 md:pb-4">
         <Alert>
           <AlertDescription>
             Please log in to access the Plan Builder.
@@ -269,7 +269,7 @@ export default function PlanBuilderPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 pb-24 md:pb-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">

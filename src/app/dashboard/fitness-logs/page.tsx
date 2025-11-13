@@ -163,6 +163,7 @@ export default function FitnessLogsPage() {
   };
 
   return (
+    <div className="pb-24 md:pb-4">
     <>
       <FitnessDataDialog
         isOpen={editDialogOpen}
@@ -261,5 +262,6 @@ export default function FitnessLogsPage() {
         </CardContent>
       </Card>
     </>
+    </div>
   );
 }
