@@ -58,7 +58,15 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
   const [availableBodyParts, setAvailableBodyParts] = useState<string[]>([]);
   const [availableEquipments, setAvailableEquipments] = useState<string[]>([]);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [customExercise, setCustomExercise] = useState<Exercise>({
+    name: '',
+    sets: '3',
+    reps: '10',
+    rest: '60s',
+    perceivedExertion: '7',
+  });
   const { toast } = useToast();
 
   const capitalizeWords = (str: string): string => {
@@ -231,11 +239,39 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
     return exercises.some((ex) => ex.name.toLowerCase() === exerciseId.toLowerCase());
   };
 
+  function handleAddCustomExercise() {
+    if (!customExercise.name.trim()) {
+      toast({
+        title: "Exercise Name Required",
+        description: "Please enter an exercise name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onUpdateExercises([...exercises, { ...customExercise }]);
+
+    // Reset form
+    setCustomExercise({
+      name: '',
+      sets: '3',
+      reps: '10',
+      rest: '60s',
+      perceivedExertion: '7',
+    });
+    setShowCustomDialog(false);
+
+    toast({
+      title: "Custom Exercise Added",
+      description: `${capitalizeWords(customExercise.name)} added to workout plan.`,
+    });
+  }
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[500px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-auto lg:h-[500px]">
         {/* Left sidebar - Filters and Search */}
-        <div className="md:col-span-1 space-y-4">
+        <div className="lg:col-span-1 space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Search & Filter</CardTitle>
@@ -339,7 +375,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
         </div>
 
         {/* Middle - Exercise List */}
-        <div className="md:col-span-1">
+        <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-base">Exercise Library</CardTitle>
@@ -369,7 +405,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
               ) : (
-                <ScrollArea className="h-[430px]">
+                <ScrollArea className="h-[300px] lg:h-[430px]">
                   <div className="space-y-2 p-4">
                     {filteredExercises.map((exercise) => (
                       <Card
@@ -439,14 +475,26 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
         </div>
 
         {/* Right - Workout Plan */}
-        <div className="md:col-span-1">
+        <div className="lg:col-span-1">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle className="text-base">Workout Plan</CardTitle>
-              <CardDescription>Drag to reorder exercises</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Workout Plan</CardTitle>
+                  <CardDescription className="hidden sm:block">Drag to reorder exercises</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCustomDialog(true)}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Custom</span>
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[430px]">
+              <ScrollArea className="h-[300px] lg:h-[430px]">
                 <div className="space-y-2 p-4">
                   {exercises.map((exercise, index) => (
                     <Card
@@ -459,7 +507,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
                     >
                       <CardContent className="pt-4">
                         <div className="flex items-start gap-2">
-                          <GripVertical className="h-5 w-5 text-muted-foreground mt-2" />
+                          <GripVertical className="h-5 w-5 text-muted-foreground mt-2 hidden sm:block" />
                           <div className="flex-1 space-y-3">
                             <div className="flex items-start justify-between">
                               <Input
@@ -478,7 +526,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
-                            <div className="grid grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                               <Input
                                 placeholder="Sets"
                                 value={exercise.sets}
@@ -523,70 +571,140 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
 
       {/* Exercise Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedExercise && capitalizeWords(selectedExercise.name)}</DialogTitle>
           </DialogHeader>
           {selectedExercise && (
-            <ScrollArea className="max-h-[500px]">
-              <div className="space-y-4">
-                {selectedExercise.gifUrl && (
-                  <img
-                    src={selectedExercise.gifUrl}
-                    alt={selectedExercise.name}
-                    className="w-full rounded-lg"
-                  />
-                )}
+            <div className="space-y-4">
+              {selectedExercise.gifUrl && (
+                <img
+                  src={selectedExercise.gifUrl}
+                  alt={selectedExercise.name}
+                  className="w-full rounded-lg"
+                />
+              )}
 
-                <div className="flex gap-2 flex-wrap">
-                  {selectedExercise.bodyParts.map((bp, idx) => (
-                    <Badge key={idx}>{capitalizeWords(bp)}</Badge>
-                  ))}
-                  {selectedExercise.targetMuscles.map((tm, idx) => (
-                    <Badge key={idx} variant="secondary">{capitalizeWords(tm)}</Badge>
-                  ))}
-                  {selectedExercise.equipments.map((eq, idx) => (
-                    <Badge key={idx} variant="outline">{capitalizeWords(eq)}</Badge>
-                  ))}
-                </div>
-
-                {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Instructions:</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      {selectedExercise.instructions.map((instruction, index) => (
-                        <li key={index}>{cleanInstruction(instruction)}</li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-
-                {selectedExercise.secondaryMuscles && selectedExercise.secondaryMuscles.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Secondary Muscles:</h4>
-                    <div className="flex gap-1 flex-wrap">
-                      {selectedExercise.secondaryMuscles.map((muscle, index) => (
-                        <Badge key={index} variant="outline">
-                          {capitalizeWords(muscle)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  onClick={() => {
-                    handleAddToPlan(selectedExercise);
-                    setShowDetailsDialog(false);
-                  }}
-                  disabled={isExerciseInPlan(selectedExercise.name)}
-                  className="w-full"
-                >
-                  {isExerciseInPlan(selectedExercise.name) ? 'Already in Plan' : 'Add to Plan'}
-                </Button>
+              <div className="flex gap-2 flex-wrap">
+                {selectedExercise.bodyParts.map((bp, idx) => (
+                  <Badge key={idx}>{capitalizeWords(bp)}</Badge>
+                ))}
+                {selectedExercise.targetMuscles.map((tm, idx) => (
+                  <Badge key={idx} variant="secondary">{capitalizeWords(tm)}</Badge>
+                ))}
+                {selectedExercise.equipments.map((eq, idx) => (
+                  <Badge key={idx} variant="outline">{capitalizeWords(eq)}</Badge>
+                ))}
               </div>
-            </ScrollArea>
+
+              {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Instructions:</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                    {selectedExercise.instructions.map((instruction, index) => (
+                      <li key={index}>{cleanInstruction(instruction)}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {selectedExercise.secondaryMuscles && selectedExercise.secondaryMuscles.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Secondary Muscles:</h4>
+                  <div className="flex gap-1 flex-wrap">
+                    {selectedExercise.secondaryMuscles.map((muscle, index) => (
+                      <Badge key={index} variant="outline">
+                        {capitalizeWords(muscle)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={() => {
+                  handleAddToPlan(selectedExercise);
+                  setShowDetailsDialog(false);
+                }}
+                disabled={isExerciseInPlan(selectedExercise.name)}
+                className="w-full"
+              >
+                {isExerciseInPlan(selectedExercise.name) ? 'Already in Plan' : 'Add to Plan'}
+              </Button>
+            </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Exercise Dialog */}
+      <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Custom Exercise</DialogTitle>
+            <DialogDescription>Create your own exercise with custom details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="custom-name">Exercise Name *</Label>
+              <Input
+                id="custom-name"
+                placeholder="e.g., Burpees, Box Jumps"
+                value={customExercise.name}
+                onChange={(e) => setCustomExercise({ ...customExercise, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="custom-sets">Sets</Label>
+                <Input
+                  id="custom-sets"
+                  placeholder="e.g., 3"
+                  value={customExercise.sets}
+                  onChange={(e) => setCustomExercise({ ...customExercise, sets: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="custom-reps">Reps</Label>
+                <Input
+                  id="custom-reps"
+                  placeholder="e.g., 10"
+                  value={customExercise.reps}
+                  onChange={(e) => setCustomExercise({ ...customExercise, reps: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="custom-rest">Rest</Label>
+                <Input
+                  id="custom-rest"
+                  placeholder="e.g., 60s"
+                  value={customExercise.rest}
+                  onChange={(e) => setCustomExercise({ ...customExercise, rest: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="custom-rpe">RPE (1-10)</Label>
+                <Input
+                  id="custom-rpe"
+                  type="number"
+                  min="1"
+                  max="10"
+                  placeholder="7"
+                  value={customExercise.perceivedExertion}
+                  onChange={(e) => setCustomExercise({ ...customExercise, perceivedExertion: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowCustomDialog(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleAddCustomExercise} className="flex-1">
+                Add Exercise
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

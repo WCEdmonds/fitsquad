@@ -281,28 +281,28 @@ export function WorkoutEditorDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[90vh]">
+      <DialogContent className="max-w-7xl max-h-[90vh] w-[95vw] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">
             {canEdit ? 'Edit' : 'View'} Workout - {dayName}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             {canEdit
-              ? 'Choose from templates, browse the exercise database, or create a custom workout'
+              ? 'Choose from templates or build a custom workout'
               : 'View the workout details for this day'}
           </DialogDescription>
         </DialogHeader>
 
         {canEdit ? (
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="library">Templates</TabsTrigger>
-              <TabsTrigger value="custom">Build Workout</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-auto">
+              <TabsTrigger value="library" className="text-xs sm:text-sm">Templates</TabsTrigger>
+              <TabsTrigger value="custom" className="text-xs sm:text-sm">Build Workout</TabsTrigger>
             </TabsList>
 
             <TabsContent value="library" className="mt-4">
-              <ScrollArea className="h-[500px] pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <ScrollArea className="h-[400px] sm:h-[500px] pr-2 sm:pr-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {WORKOUT_TEMPLATES.map((template) => (
                     <Card
                       key={template.id}
