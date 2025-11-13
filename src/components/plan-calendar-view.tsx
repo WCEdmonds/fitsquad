@@ -20,9 +20,11 @@ interface PlanCalendarViewProps {
   };
   onUpdateWorkout: (weekIndex: number, dayIndex: number, workout: any) => void;
   canEdit: boolean;
+  teamId?: string;
+  userId?: string;
 }
 
-export function PlanCalendarView({ plan, onUpdateWorkout, canEdit }: PlanCalendarViewProps) {
+export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userId }: PlanCalendarViewProps) {
   const [currentWeekStart, setCurrentWeekStart] = useState(0); // Show 2 weeks at a time
   const [selectedDay, setSelectedDay] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -116,6 +118,12 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit }: PlanCalenda
     setDraggedFrom(null);
   }
 
+  function handleCopyToDay(targetDays: Array<{ weekIndex: number; dayIndex: number }>, workout: any) {
+    targetDays.forEach(({ weekIndex, dayIndex }) => {
+      onUpdateWorkout(weekIndex, dayIndex, workout);
+    });
+  }
+
   const currentWorkout = selectedDay
     ? plan.weeks[selectedDay.weekIndex]?.days[selectedDay.dayIndex]?.workout
     : null;
@@ -123,6 +131,20 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit }: PlanCalenda
   const currentDayName = selectedDay
     ? plan.weeks[selectedDay.weekIndex]?.days[selectedDay.dayIndex]?.dayOfWeek
     : null;
+
+  // Generate list of all days (excluding current selected day) for copy dialog
+  const weekDaysForCopy = selectedDay
+    ? plan.weeks.flatMap((week, weekIdx) =>
+        week.days.map((day, dayIdx) => ({
+          weekIndex: weekIdx,
+          dayIndex: dayIdx,
+          dayName: `Week ${week.weekNumber} - ${day.dayOfWeek}`,
+          hasWorkout: !!day.workout,
+        }))
+      ).filter(
+        (day) => !(day.weekIndex === selectedDay.weekIndex && day.dayIndex === selectedDay.dayIndex)
+      )
+    : [];
 
   return (
     <div className="space-y-4">
@@ -270,6 +292,10 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit }: PlanCalenda
           workout={currentWorkout}
           dayName={currentDayName || ''}
           canEdit={canEdit}
+          teamId={teamId}
+          userId={userId}
+          weekDays={weekDaysForCopy}
+          onCopyToDay={handleCopyToDay}
         />
       )}
     </div>

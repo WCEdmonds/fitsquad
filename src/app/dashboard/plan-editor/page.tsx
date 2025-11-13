@@ -305,6 +305,8 @@ export default function PlanEditorPage() {
               plan={teamPlan}
               onUpdateWorkout={handleUpdateWorkout}
               canEdit={canEdit}
+              teamId={userAccount?.teamId}
+              userId={user?.uid}
             />
           ) : (
             <div className="text-center py-12 text-muted-foreground">

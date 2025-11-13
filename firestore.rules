@@ -119,6 +119,16 @@ service cloud.firestore {
       allow delete: if isAdmin(); // Only Admins can delete
     }
 
+    /**
+     * @description Controls access to custom workout templates for teams.
+     * Supervisors and Admins can create/edit/delete, everyone can read.
+     */
+    match /teams/{teamId}/customTemplates/{templateId} {
+      allow read: if true; // Everyone can view templates
+      allow create: if isSignedIn() && isSupervisorOrAdmin(); // Only Supervisors and Admins can create
+      allow update, delete: if isSignedIn() && isSupervisorOrAdmin(); // Only Supervisors and Admins can edit/delete
+    }
+
     // Helper functions
     function isSignedIn() {
       return request.auth != null;
