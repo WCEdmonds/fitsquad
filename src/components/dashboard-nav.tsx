@@ -15,7 +15,6 @@ const navItems = [
   { href: '/dashboard/plan', label: 'Plan', icon: CalendarDays },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
-  { href: '/dashboard/fitness-logs', label: 'My Fitness Logs', icon: Activity },
 ];
 
 const supervisorAdminNavItems = [
