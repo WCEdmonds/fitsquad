@@ -233,7 +233,16 @@ export function WorkoutEditorDialog({
     return collection(firestore, 'teams', teamId, 'customTemplates');
   }, [firestore, teamId]);
 
-  const { data: customTemplates, isLoading: isLoadingTemplates } = useCollection<Omit<WorkoutTemplate, 'id'>>(customTemplatesRef);
+  const { data: customTemplates, isLoading: isLoadingTemplates, error: templatesError } = useCollection<Omit<WorkoutTemplate, 'id'>>(customTemplatesRef);
+
+  // Log template loading errors but don't crash the app
+  useEffect(() => {
+    if (templatesError) {
+      console.warn('⚠️ Could not load custom templates:', templatesError);
+      // Don't show toast here to avoid annoying the user on every dialog open
+      // Custom templates will simply not appear, built-in templates still work
+    }
+  }, [templatesError]);
 
   useEffect(() => {
     if (workout) {
@@ -408,9 +417,12 @@ export function WorkoutEditorDialog({
   // Combine built-in and custom templates
   const allTemplates: WorkoutTemplate[] = useMemo(() => {
     const builtIn = WORKOUT_TEMPLATES.map(t => ({ ...t, isCustom: false }));
-    const custom = customTemplates?.map(t => ({ ...t, isCustom: true })) || [];
+    // Only include custom templates if they loaded successfully
+    const custom = (!templatesError && customTemplates)
+      ? customTemplates.map(t => ({ ...t, isCustom: true }))
+      : [];
     return [...builtIn, ...custom];
-  }, [customTemplates]);
+  }, [customTemplates, templatesError]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -440,8 +452,14 @@ export function WorkoutEditorDialog({
                     Loading templates...
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {allTemplates.map((template) => (
+                  <>
+                    {templatesError && (
+                      <div className="mb-3 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-400 p-2 rounded">
+                        ⚠️ Custom templates could not be loaded. Built-in templates are still available.
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {allTemplates.map((template) => (
                       <Card
                         key={template.id}
                         className="cursor-pointer hover:border-primary transition-colors"
@@ -467,15 +485,18 @@ export function WorkoutEditorDialog({
                       </Card>
                     ))}
                   </div>
+                  </>
                 )}
               </ScrollArea>
             </TabsContent>
 
             <TabsContent value="custom" className="mt-4">
-              <ExerciseWorkoutBuilder
-                exercises={customWorkout.exercises}
-                onUpdateExercises={(newExercises) => setCustomWorkout({ ...customWorkout, exercises: newExercises })}
-              />
+              <div className="h-[400px] sm:h-[500px] overflow-hidden">
+                <ExerciseWorkoutBuilder
+                  exercises={customWorkout.exercises}
+                  onUpdateExercises={(newExercises) => setCustomWorkout({ ...customWorkout, exercises: newExercises })}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         ) : (
