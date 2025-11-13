@@ -43,6 +43,7 @@ interface DailyWorkoutViewProps {
   };
   userId: string;
   teamId: string;
+  onDateChange?: (date: Date) => void;
 }
 
 interface ExerciseLog {
@@ -54,13 +55,20 @@ interface ExerciseLog {
   completedAt: Date;
 }
 
-export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps) {
+export function DailyWorkoutView({ plan, userId, teamId, onDateChange }: DailyWorkoutViewProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, ExerciseLog>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+
+  // Notify parent of date changes
+  useEffect(() => {
+    if (onDateChange) {
+      onDateChange(selectedDate);
+    }
+  }, [selectedDate, onDateChange]);
 
   // Get current day's workout
   const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Eye, CalendarDays, ListTodo } from 'lucide-react';
+import { Calendar, Eye, CalendarDays, ListTodo, FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -17,14 +17,23 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PlanCalendarView } from '@/components/plan-calendar-view';
 import { DailyWorkoutView } from '@/components/daily-workout-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { PlanPrintView } from '@/components/plan-print-view';
+import { Capacitor } from '@capacitor/core';
 
 export default function PlanPage() {
   const [teamPlan, setTeamPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'weekly' | 'daily'>('daily'); // Default to daily
+  const [isNative, setIsNative] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
 
   const userAccountRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -78,6 +87,10 @@ export default function PlanPage() {
     }
   }, [userAccount, firestore, toast]);
 
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
   if (isAccountLoading || isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -100,18 +113,30 @@ export default function PlanPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
-            Team Workout Plan
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            View your team's 8-week workout schedule
-          </p>
-        </div>
+    <>
+      {/* Hidden print view */}
+      <div className="hidden print-only">
+        {teamPlan && <PlanPrintView plan={teamPlan} viewMode={viewMode} selectedDate={selectedDate} />}
       </div>
+
+      <div className="container mx-auto p-6 space-y-6 no-print">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <Calendar className="h-8 w-8" />
+              Team Workout Plan
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              View your team's 8-week workout schedule
+            </p>
+          </div>
+          {teamPlan && !isNative && (
+            <Button variant="outline" onClick={handleDownloadPdf}>
+              <FileText className="h-4 w-4 mr-2" />
+              Download PDF
+            </Button>
+          )}
+        </div>
 
       {/* View Mode Tabs */}
       <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'weekly' | 'daily')}>
@@ -133,6 +158,7 @@ export default function PlanPage() {
               plan={teamPlan}
               userId={user?.uid || ''}
               teamId={userAccount?.teamId || ''}
+              onDateChange={setSelectedDate}
             />
           ) : (
             <Card>
@@ -184,6 +210,7 @@ export default function PlanPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </>
   );
 }

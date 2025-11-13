@@ -176,14 +176,39 @@ export default function PlanBuilderPage() {
     }
   }
 
-  function handleUpdateWorkout(weekIndex: number, dayIndex: number, workout: any) {
-    if (!canEdit) return;
+  async function handleUpdateWorkout(weekIndex: number, dayIndex: number, workout: any) {
+    if (!canEdit || !userAccount?.teamId) return;
 
-    setTeamPlan((prev: any) => {
-      const updated = { ...prev };
-      updated.weeks[weekIndex].days[dayIndex].workout = workout;
-      return updated;
-    });
+    // Update state first for immediate UI feedback
+    const updatedPlan = { ...teamPlan };
+    updatedPlan.weeks[weekIndex].days[dayIndex].workout = workout;
+    setTeamPlan(updatedPlan);
+
+    // Auto-save to Firestore
+    try {
+      const planRef = doc(firestore, 'teams', userAccount.teamId, 'mainPlan', 'current');
+      const cycleStartDate = updatedPlan.cycleStartDate || new Date().toISOString();
+
+      await setDoc(planRef, {
+        ...updatedPlan,
+        cycleStartDate,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: user?.uid,
+      });
+
+      console.log('✅ Workout saved and plan auto-saved');
+      toast({
+        title: "Workout Saved",
+        description: "The workout has been saved to your plan.",
+      });
+    } catch (error: any) {
+      console.error('❌ Error auto-saving plan:', error);
+      toast({
+        title: "Warning",
+        description: "Workout updated locally but failed to save to server. Please click Save Plan to retry.",
+        variant: "destructive",
+      });
+    }
   }
 
   function handleApplyGeneratedWorkouts(workouts: any[]) {
