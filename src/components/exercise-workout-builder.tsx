@@ -74,6 +74,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
   const [availableBodyParts, setAvailableBodyParts] = useState<string[]>([]);
   const [availableEquipments, setAvailableEquipments] = useState<string[]>([]);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showCardioDialog, setShowCardioDialog] = useState(false);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [customExercise, setCustomExercise] = useState<Exercise>({
@@ -284,12 +285,12 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
   }
 
   function handleSelectCardioPreset(preset: typeof CARDIO_PRESETS[0]) {
-    setCustomExercise({
-      name: preset.name,
-      sets: preset.sets,
-      reps: preset.reps,
-      rest: preset.rest,
-      perceivedExertion: preset.perceivedExertion,
+    onUpdateExercises([...exercises, { ...preset }]);
+    setShowCardioDialog(false);
+
+    toast({
+      title: "Cardio Exercise Added",
+      description: `${preset.name} added to workout plan.`,
     });
   }
 
@@ -509,14 +510,24 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
                   <CardTitle className="text-base">Workout Plan</CardTitle>
                   <CardDescription className="hidden sm:block">Drag to reorder exercises</CardDescription>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCustomDialog(true)}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Custom</span>
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCardioDialog(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Cardio</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCustomDialog(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    <span className="hidden sm:inline">Custom</span>
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
@@ -662,58 +673,47 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
         </DialogContent>
       </Dialog>
 
-      {/* Custom Exercise Dialog */}
-      <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
+      {/* Cardio Exercise Dialog */}
+      <Dialog open={showCardioDialog} onOpenChange={setShowCardioDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
+            <DialogTitle>Add Cardio Exercise</DialogTitle>
+            <DialogDescription>Select a cardio exercise to add to your workout</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[500px]">
+            <div className="grid grid-cols-2 gap-3 p-1">
+              {CARDIO_PRESETS.map((preset, idx) => (
+                <Card
+                  key={idx}
+                  className="cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => handleSelectCardioPreset(preset)}
+                >
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm">{preset.name}</CardTitle>
+                    <CardDescription className="text-xs">
+                      {preset.sets}x{preset.reps} • {preset.rest} rest • RPE {preset.perceivedExertion}/10
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Exercise Dialog */}
+      <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
             <DialogTitle>Add Custom Exercise</DialogTitle>
-            <DialogDescription>Choose from cardio presets or create your own exercise</DialogDescription>
+            <DialogDescription>Create your own exercise with custom details</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Cardio Presets Section */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Quick Cardio Presets</Label>
-              <ScrollArea className="h-[200px] border rounded-md p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  {CARDIO_PRESETS.map((preset, idx) => (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      size="sm"
-                      className="justify-start h-auto py-2 text-left"
-                      onClick={() => handleSelectCardioPreset(preset)}
-                    >
-                      <div className="flex flex-col items-start gap-0.5">
-                        <span className="font-medium text-xs">{preset.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {preset.sets}x{preset.reps}
-                        </span>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </ScrollArea>
-              <p className="text-xs text-muted-foreground">
-                Click a preset to populate the form below, then customize or add as-is
-              </p>
-            </div>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
-              </div>
-            </div>
-
-            {/* Manual Input Form */}
             <div>
               <Label htmlFor="custom-name">Exercise Name *</Label>
               <Input
                 id="custom-name"
-                placeholder="e.g., Burpees, Box Jumps, 5K Run"
+                placeholder="e.g., Burpees, Box Jumps, Turkish Get-ups"
                 value={customExercise.name}
                 onChange={(e) => setCustomExercise({ ...customExercise, name: e.target.value })}
               />
