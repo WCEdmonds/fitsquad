@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -40,18 +40,29 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
   };
 
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    // Auto-load to current week, showing 2 weeks at a time
+    // Auto-load to current week, showing 1 week at a time on mobile, 2 on desktop
     const currentWeek = getCurrentWeek();
-    // Align to show current week in first position
-    return Math.max(0, Math.min(plan.weeks.length - 2, currentWeek));
+    return Math.max(0, Math.min(plan.weeks.length - 1, currentWeek));
   });
+
+  const [weeksToShow, setWeeksToShow] = useState(1); // Default to 1 for mobile
+
+  // Detect screen size
+  useEffect(() => {
+    const updateWeeksToShow = () => {
+      setWeeksToShow(window.innerWidth >= 768 ? 2 : 1); // md breakpoint
+    };
+
+    updateWeeksToShow();
+    window.addEventListener('resize', updateWeeksToShow);
+    return () => window.removeEventListener('resize', updateWeeksToShow);
+  }, []);
 
   const [selectedDay, setSelectedDay] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedWorkout, setCopiedWorkout] = useState<any | null>(null);
   const [draggedFrom, setDraggedFrom] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
 
-  const weeksToShow = 2; // Show 2 weeks at a time
   const displayedWeeks = plan.weeks.slice(currentWeekStart, currentWeekStart + weeksToShow);
 
   // Calculate the actual date for a given week and day
@@ -198,10 +209,13 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
 
         <div className="flex items-center gap-4">
           <div className="text-sm font-medium">
-            Weeks {currentWeekStart + 1} - {Math.min(currentWeekStart + weeksToShow, plan.weeks.length)}
+            {weeksToShow === 1
+              ? `Week ${currentWeekStart + 1}`
+              : `Weeks ${currentWeekStart + 1} - ${Math.min(currentWeekStart + weeksToShow, plan.weeks.length)}`
+            }
           </div>
           {copiedWorkout && (
-            <div className="flex items-center gap-2 text-xs bg-primary/10 px-3 py-1 rounded-full">
+            <div className="hidden md:flex items-center gap-2 text-xs bg-primary/10 px-3 py-1 rounded-full">
               <Clipboard className="h-3 w-3" />
               <span>{copiedWorkout.name} copied</span>
             </div>
@@ -234,7 +248,7 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                 {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="flex flex-col md:grid md:grid-cols-7 gap-2">
               {week.days.map((day, dayIdx) => {
                 const absoluteWeekIdx = currentWeekStart + weekIdx;
                 const isDragging = draggedFrom?.weekIndex === absoluteWeekIdx && draggedFrom?.dayIndex === dayIdx;
@@ -248,7 +262,7 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                     onDrop={(e) => handleDrop(absoluteWeekIdx, dayIdx, e)}
                     onDragEnd={handleDragEnd}
                     className={cn(
-                      "p-3 transition-all hover:shadow-md min-h-[140px] relative",
+                      "p-4 transition-all hover:shadow-md md:min-h-[140px] relative",
                       canEdit && "cursor-pointer hover:border-primary",
                       !canEdit && "cursor-default",
                       isDragging && "opacity-50 border-dashed border-2",
@@ -258,9 +272,9 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-sm">{day.dayOfWeek}</div>
-                          <div className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-3 md:flex-col md:items-start md:gap-0">
+                          <div className="font-semibold text-base md:text-sm">{day.dayOfWeek}</div>
+                          <div className="text-sm md:text-xs text-muted-foreground">
                             {formatDate(getDateForDay(absoluteWeekIdx, dayIdx))}
                           </div>
                         </div>
@@ -286,21 +300,21 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
 
                       {day.workout ? (
                         <div className="space-y-1">
-                          <div className="text-xs font-semibold text-primary">
+                          <div className="text-sm md:text-xs font-semibold text-primary">
                             {day.workout.name}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-sm md:text-xs text-muted-foreground">
                             {day.workout.focus}
                           </div>
                           {day.workout.exercises && day.workout.exercises.length > 0 && (
-                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                            <div className="text-sm md:text-xs text-muted-foreground space-y-0.5 mt-1">
                               {day.workout.exercises.slice(0, 3).map((exercise: any, idx: number) => (
                                 <div key={idx} className="truncate">
                                   • {exercise.name} {exercise.sets && exercise.reps && `(${exercise.sets}x${exercise.reps})`}
                                 </div>
                               ))}
                               {day.workout.exercises.length > 3 && (
-                                <div className="text-xs text-muted-foreground/70 italic">
+                                <div className="text-sm md:text-xs text-muted-foreground/70 italic">
                                   +{day.workout.exercises.length - 3} more...
                                 </div>
                               )}
