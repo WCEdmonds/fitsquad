@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, Circle, Dumbbell, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { CheckCircle2, Circle, Dumbbell, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Maximize2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -47,7 +48,7 @@ interface ExerciseLog {
   exerciseName: string;
   completedSets: number[];
   actualReps: string[];
-  weight: string;
+  weights: string[]; // Changed from single weight to array of weights per set
   notes: string;
   completedAt: Date;
 }
@@ -56,6 +57,7 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, ExerciseLog>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
 
@@ -77,7 +79,7 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
           exerciseName: exercise.name,
           completedSets: [],
           actualReps: Array(setsCount).fill(''),
-          weight: '',
+          weights: Array(setsCount).fill(''),
           notes: '',
           completedAt: new Date(),
         };
@@ -119,11 +121,17 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
     });
   }
 
-  function handleWeightChange(exerciseName: string, value: string) {
-    setExerciseLogs(prev => ({
-      ...prev,
-      [exerciseName]: { ...prev[exerciseName], weight: value },
-    }));
+  function handleWeightChange(exerciseName: string, setIndex: number, value: string) {
+    setExerciseLogs(prev => {
+      const log = prev[exerciseName];
+      const weights = [...log.weights];
+      weights[setIndex] = value;
+
+      return {
+        ...prev,
+        [exerciseName]: { ...log, weights },
+      };
+    });
   }
 
   function handleNotesChange(exerciseName: string, value: string) {
@@ -151,7 +159,7 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
           completedSets: log.completedSets.length,
           totalSets: log.actualReps.length,
           actualReps: log.actualReps.filter(r => r.trim() !== ''),
-          weight: log.weight,
+          weights: log.weights.filter(w => w.trim() !== ''),
           notes: log.notes,
         })),
         createdAt: serverTimestamp(),
@@ -173,7 +181,7 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
           exerciseName: exercise.name,
           completedSets: [],
           actualReps: Array(setsCount).fill(''),
-          weight: '',
+          weights: Array(setsCount).fill(''),
           notes: '',
           completedAt: new Date(),
         };
@@ -282,12 +290,18 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
                     <div className="flex items-start gap-4">
                       {/* Exercise Image */}
                       {exercise.imageUrl ? (
-                        <img
-                          src={exercise.imageUrl}
-                          alt={exercise.name}
-                          className="w-20 h-20 rounded-md object-cover border flex-shrink-0"
-                          loading="lazy"
-                        />
+                        <div className="relative group">
+                          <img
+                            src={exercise.imageUrl}
+                            alt={exercise.name}
+                            className="w-20 h-20 rounded-md object-cover border flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            loading="lazy"
+                            onClick={() => setExpandedImage(exercise.imageUrl!)}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <Maximize2 className="h-6 w-6 text-white drop-shadow-lg" />
+                          </div>
+                        </div>
                       ) : (
                         <div className="w-20 h-20 rounded-md border bg-muted flex items-center justify-center flex-shrink-0">
                           <Dumbbell className="h-8 w-8 text-muted-foreground" />
@@ -321,52 +335,53 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
                   </CardHeader>
 
                   <CardContent className="space-y-4">
-                    {/* Set Tracking */}
+                    {/* Set Tracking with Reps and Weight */}
                     <div>
-                      <Label className="text-sm font-semibold mb-2 block">Sets</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      <Label className="text-sm font-semibold mb-3 block">Sets</Label>
+                      <div className="space-y-3">
                         {Array.from({ length: setsCount }).map((_, setIndex) => {
                           const isSetCompleted = log?.completedSets.includes(setIndex);
                           return (
-                            <div key={setIndex} className="flex items-center gap-2">
-                              <Checkbox
-                                id={`${exercise.name}-set-${setIndex}`}
-                                checked={isSetCompleted}
-                                onCheckedChange={() => handleToggleSet(exercise.name, setIndex)}
-                              />
-                              <Label
-                                htmlFor={`${exercise.name}-set-${setIndex}`}
-                                className="text-sm cursor-pointer"
-                              >
-                                Set {setIndex + 1}
-                              </Label>
-                              <Input
-                                type="text"
-                                placeholder="reps"
-                                value={log?.actualReps[setIndex] || ''}
-                                onChange={(e) => handleRepsChange(exercise.name, setIndex, e.target.value)}
-                                className="w-16 h-8 text-sm"
-                              />
+                            <div key={setIndex} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                              <div className="flex items-center gap-2 min-w-[100px]">
+                                <Checkbox
+                                  id={`${exercise.name}-set-${setIndex}`}
+                                  checked={isSetCompleted}
+                                  onCheckedChange={() => handleToggleSet(exercise.name, setIndex)}
+                                />
+                                <Label
+                                  htmlFor={`${exercise.name}-set-${setIndex}`}
+                                  className="text-sm cursor-pointer font-medium"
+                                >
+                                  Set {setIndex + 1}
+                                </Label>
+                              </div>
+                              <div className="flex items-center gap-2 flex-1">
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="text"
+                                    placeholder="reps"
+                                    value={log?.actualReps[setIndex] || ''}
+                                    onChange={(e) => handleRepsChange(exercise.name, setIndex, e.target.value)}
+                                    className="w-16 h-9 text-sm"
+                                  />
+                                  <span className="text-xs text-muted-foreground">reps</span>
+                                </div>
+                                <span className="text-muted-foreground">×</span>
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="text"
+                                    placeholder="weight"
+                                    value={log?.weights[setIndex] || ''}
+                                    onChange={(e) => handleWeightChange(exercise.name, setIndex, e.target.value)}
+                                    className="w-20 h-9 text-sm"
+                                  />
+                                  <span className="text-xs text-muted-foreground">lbs</span>
+                                </div>
+                              </div>
                             </div>
                           );
                         })}
-                      </div>
-                    </div>
-
-                    {/* Weight Input */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor={`${exercise.name}-weight`} className="text-sm">
-                          Weight Used (lbs/kg)
-                        </Label>
-                        <Input
-                          id={`${exercise.name}-weight`}
-                          type="text"
-                          placeholder="e.g., 135 lbs"
-                          value={log?.weight || ''}
-                          onChange={(e) => handleWeightChange(exercise.name, e.target.value)}
-                          className="mt-1"
-                        />
                       </div>
                     </div>
 
@@ -412,6 +427,19 @@ export function DailyWorkoutView({ plan, userId, teamId }: DailyWorkoutViewProps
           </CardContent>
         </Card>
       )}
+
+      {/* Image Expansion Dialog */}
+      <Dialog open={!!expandedImage} onOpenChange={() => setExpandedImage(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          {expandedImage && (
+            <img
+              src={expandedImage}
+              alt="Exercise demonstration"
+              className="w-full h-full object-contain rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

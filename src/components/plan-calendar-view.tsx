@@ -17,6 +17,7 @@ interface PlanCalendarViewProps {
         workout: any | null;
       }>;
     }>;
+    cycleStartDate?: string; // ISO date string for the start of the 8-week cycle
   };
   onUpdateWorkout: (weekIndex: number, dayIndex: number, workout: any) => void;
   canEdit: boolean;
@@ -25,15 +26,50 @@ interface PlanCalendarViewProps {
 }
 
 export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userId }: PlanCalendarViewProps) {
-  const [currentWeekStart, setCurrentWeekStart] = useState(0); // Show 2 weeks at a time
+  const { toast } = useToast();
+
+  // Calculate current week in the cycle
+  const getCurrentWeek = () => {
+    const cycleStart = plan.cycleStartDate ? new Date(plan.cycleStartDate) : new Date();
+    const today = new Date();
+    const diffTime = today.getTime() - cycleStart.getTime();
+    const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
+
+    // Clamp to 0-7 range (8 weeks total, 0-indexed)
+    return Math.max(0, Math.min(7, diffWeeks));
+  };
+
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    // Auto-load to current week, showing 2 weeks at a time
+    const currentWeek = getCurrentWeek();
+    // Align to show current week in first position
+    return Math.max(0, Math.min(plan.weeks.length - 2, currentWeek));
+  });
+
   const [selectedDay, setSelectedDay] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedWorkout, setCopiedWorkout] = useState<any | null>(null);
   const [draggedFrom, setDraggedFrom] = useState<{ weekIndex: number; dayIndex: number } | null>(null);
-  const { toast } = useToast();
 
   const weeksToShow = 2; // Show 2 weeks at a time
   const displayedWeeks = plan.weeks.slice(currentWeekStart, currentWeekStart + weeksToShow);
+
+  // Calculate the actual date for a given week and day
+  const getDateForDay = (weekIndex: number, dayIndex: number): Date => {
+    const cycleStart = plan.cycleStartDate ? new Date(plan.cycleStartDate) : new Date();
+    // Start from the Monday of the cycle start week
+    const startMonday = new Date(cycleStart);
+    startMonday.setDate(cycleStart.getDate() - cycleStart.getDay() + 1); // Adjust to Monday
+
+    // Add weeks and days
+    const targetDate = new Date(startMonday);
+    targetDate.setDate(startMonday.getDate() + (weekIndex * 7) + dayIndex);
+    return targetDate;
+  };
+
+  const formatDate = (date: Date): string => {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   function handleDayClick(weekIndex: number, dayIndex: number) {
     setSelectedDay({ weekIndex: currentWeekStart + weekIndex, dayIndex });
@@ -185,9 +221,19 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
 
       {/* Calendar grid */}
       <div className="space-y-6">
-        {displayedWeeks.map((week, weekIdx) => (
+        {displayedWeeks.map((week, weekIdx) => {
+          const absoluteWeekIdx = currentWeekStart + weekIdx;
+          const weekStartDate = getDateForDay(absoluteWeekIdx, 0); // Monday
+          const weekEndDate = getDateForDay(absoluteWeekIdx, 6); // Sunday
+
+          return (
           <div key={week.weekNumber}>
-            <h3 className="text-lg font-semibold mb-3">Week {week.weekNumber}</h3>
+            <div className="flex items-baseline gap-3 mb-3">
+              <h3 className="text-lg font-semibold">Week {week.weekNumber}</h3>
+              <span className="text-sm text-muted-foreground">
+                {weekStartDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
             <div className="grid grid-cols-7 gap-2">
               {week.days.map((day, dayIdx) => {
                 const absoluteWeekIdx = currentWeekStart + weekIdx;
@@ -212,7 +258,12 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="font-medium text-sm">{day.dayOfWeek}</div>
+                        <div>
+                          <div className="font-medium text-sm">{day.dayOfWeek}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatDate(getDateForDay(absoluteWeekIdx, dayIdx))}
+                          </div>
+                        </div>
                         {canEdit && day.workout && (
                           <div className="flex gap-1">
                             <Button
@@ -285,7 +336,8 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Workout editor dialog */}

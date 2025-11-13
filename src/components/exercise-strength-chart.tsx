@@ -22,7 +22,8 @@ interface WorkoutLog {
     exerciseName: string;
     completedSets: number;
     actualReps: string[];
-    weight: string;
+    weights: string[]; // Changed to array for per-set weights
+    weight?: string; // Keep for backwards compatibility with old logs
     notes: string;
   }>;
 }
@@ -94,25 +95,42 @@ export function ExerciseStrengthChart({ userId }: ExerciseStrengthChartProps) {
       const exercise = log.exercises.find((e) => e.exerciseName === selectedExercise);
       if (!exercise) return;
 
-      // Parse weight (extract number from string like "135 lbs" or "60kg")
-      const weightMatch = exercise.weight.match(/(\d+\.?\d*)/);
-      const weight = weightMatch ? parseFloat(weightMatch[1]) : 0;
-
       // Calculate metrics
       let totalReps = 0;
       let volume = 0;
+      let maxWeight = 0;
 
-      exercise.actualReps.forEach((repsStr) => {
-        const reps = parseInt(repsStr) || 0;
-        totalReps += reps;
-        volume += weight * reps; // Volume = weight × reps
-      });
+      // Handle new format with per-set weights array
+      if (exercise.weights && exercise.weights.length > 0) {
+        exercise.actualReps.forEach((repsStr, index) => {
+          const reps = parseInt(repsStr) || 0;
+          const weightStr = exercise.weights[index] || '0';
+          const weightMatch = weightStr.match(/(\d+\.?\d*)/);
+          const weight = weightMatch ? parseFloat(weightMatch[1]) : 0;
+
+          totalReps += reps;
+          volume += weight * reps; // Volume = weight × reps for each set
+          maxWeight = Math.max(maxWeight, weight);
+        });
+      }
+      // Handle old format with single weight (backwards compatibility)
+      else if (exercise.weight) {
+        const weightMatch = exercise.weight.match(/(\d+\.?\d*)/);
+        const weight = weightMatch ? parseFloat(weightMatch[1]) : 0;
+        maxWeight = weight;
+
+        exercise.actualReps.forEach((repsStr) => {
+          const reps = parseInt(repsStr) || 0;
+          totalReps += reps;
+          volume += weight * reps;
+        });
+      }
 
       if (volume > 0 || totalReps > 0) {
         data.push({
           date: log.date,
           volume,
-          maxWeight: weight,
+          maxWeight,
           totalReps,
           formattedDate: new Date(log.date).toLocaleDateString('en-US', {
             month: 'short',

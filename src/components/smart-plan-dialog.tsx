@@ -21,12 +21,159 @@ import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Badge } from './ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Dumbbell, Zap } from 'lucide-react';
 
 interface SmartPlanDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onPlanGenerated: (workouts: any[]) => void;
 }
+
+// Pre-made workout templates
+const WORKOUT_TEMPLATES = [
+  {
+    id: 'upper-lower',
+    name: '4-Day Upper/Lower Split',
+    description: 'Classic strength training split focusing on upper and lower body',
+    workouts: [
+      {
+        name: 'Upper Body Strength',
+        focus: 'Strength',
+        day: 'Monday',
+        exercises: [
+          { name: 'Bench Press', sets: '4', reps: '6-8', rest: '2-3min', perceivedExertion: '8', description: 'Barbell bench press for chest and triceps' },
+          { name: 'Bent Over Row', sets: '4', reps: '6-8', rest: '2-3min', perceivedExertion: '8', description: 'Barbell rows for back development' },
+          { name: 'Overhead Press', sets: '3', reps: '8-10', rest: '90s', perceivedExertion: '7', description: 'Standing overhead press' },
+          { name: 'Pull-ups', sets: '3', reps: '8-12', rest: '90s', perceivedExertion: '7', description: 'Pull-ups or lat pulldowns' },
+          { name: 'Dumbbell Curls', sets: '3', reps: '10-12', rest: '60s', perceivedExertion: '6', description: 'Bicep curls' },
+        ],
+      },
+      {
+        name: 'Lower Body Strength',
+        focus: 'Strength',
+        day: 'Tuesday',
+        exercises: [
+          { name: 'Back Squat', sets: '4', reps: '6-8', rest: '2-3min', perceivedExertion: '8', description: 'Barbell back squat' },
+          { name: 'Romanian Deadlift', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'RDL for hamstrings' },
+          { name: 'Bulgarian Split Squat', sets: '3', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Single leg work' },
+          { name: 'Leg Press', sets: '3', reps: '12-15', rest: '90s', perceivedExertion: '6', description: 'Leg press machine' },
+          { name: 'Calf Raises', sets: '4', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Standing or seated calf raises' },
+        ],
+      },
+      {
+        name: 'Upper Body Hypertrophy',
+        focus: 'Hypertrophy',
+        day: 'Thursday',
+        exercises: [
+          { name: 'Incline Dumbbell Press', sets: '4', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Incline bench press' },
+          { name: 'Cable Row', sets: '4', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Seated cable rows' },
+          { name: 'Lateral Raises', sets: '3', reps: '12-15', rest: '60s', perceivedExertion: '6', description: 'Shoulder lateral raises' },
+          { name: 'Face Pulls', sets: '3', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Cable face pulls' },
+          { name: 'Tricep Pushdowns', sets: '3', reps: '12-15', rest: '60s', perceivedExertion: '6', description: 'Cable tricep extensions' },
+        ],
+      },
+      {
+        name: 'Lower Body Hypertrophy',
+        focus: 'Hypertrophy',
+        day: 'Friday',
+        exercises: [
+          { name: 'Front Squat', sets: '4', reps: '10-12', rest: '2min', perceivedExertion: '7', description: 'Front squats' },
+          { name: 'Leg Curl', sets: '4', reps: '12-15', rest: '90s', perceivedExertion: '6', description: 'Lying or seated leg curls' },
+          { name: 'Walking Lunges', sets: '3', reps: '12-15', rest: '90s', perceivedExertion: '7', description: 'Walking lunges' },
+          { name: 'Leg Extension', sets: '3', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Leg extension machine' },
+          { name: 'Glute Bridges', sets: '3', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Barbell or bodyweight glute bridges' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'push-pull-legs',
+    name: '3-Day Push/Pull/Legs',
+    description: 'Efficient split for training 3 days per week',
+    workouts: [
+      {
+        name: 'Push Day',
+        focus: 'Strength',
+        day: 'Monday',
+        exercises: [
+          { name: 'Bench Press', sets: '4', reps: '6-8', rest: '2-3min', perceivedExertion: '8', description: 'Flat barbell bench press' },
+          { name: 'Overhead Press', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'Standing military press' },
+          { name: 'Incline Dumbbell Press', sets: '3', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Incline press' },
+          { name: 'Tricep Dips', sets: '3', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Parallel bar dips' },
+          { name: 'Lateral Raises', sets: '3', reps: '12-15', rest: '60s', perceivedExertion: '6', description: 'Dumbbell lateral raises' },
+        ],
+      },
+      {
+        name: 'Pull Day',
+        focus: 'Strength',
+        day: 'Wednesday',
+        exercises: [
+          { name: 'Deadlift', sets: '4', reps: '5-6', rest: '3min', perceivedExertion: '9', description: 'Conventional deadlift' },
+          { name: 'Pull-ups', sets: '4', reps: '8-12', rest: '2min', perceivedExertion: '7', description: 'Wide grip pull-ups' },
+          { name: 'Barbell Row', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'Bent over barbell rows' },
+          { name: 'Face Pulls', sets: '3', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Rear delt work' },
+          { name: 'Barbell Curl', sets: '3', reps: '10-12', rest: '60s', perceivedExertion: '6', description: 'Standing barbell curls' },
+        ],
+      },
+      {
+        name: 'Leg Day',
+        focus: 'Strength',
+        day: 'Friday',
+        exercises: [
+          { name: 'Back Squat', sets: '4', reps: '6-8', rest: '3min', perceivedExertion: '8', description: 'Barbell back squat' },
+          { name: 'Romanian Deadlift', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'RDL for hamstrings' },
+          { name: 'Leg Press', sets: '3', reps: '12-15', rest: '90s', perceivedExertion: '7', description: 'Leg press' },
+          { name: 'Leg Curl', sets: '3', reps: '12-15', rest: '90s', perceivedExertion: '6', description: 'Hamstring curls' },
+          { name: 'Calf Raises', sets: '4', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Calf raises' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'full-body',
+    name: '3-Day Full Body',
+    description: 'Full body workouts for maximizing frequency',
+    workouts: [
+      {
+        name: 'Full Body A',
+        focus: 'Strength',
+        day: 'Monday',
+        exercises: [
+          { name: 'Back Squat', sets: '4', reps: '6-8', rest: '3min', perceivedExertion: '8', description: 'Barbell back squat' },
+          { name: 'Bench Press', sets: '4', reps: '6-8', rest: '2-3min', perceivedExertion: '8', description: 'Flat bench press' },
+          { name: 'Bent Over Row', sets: '3', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'Barbell rows' },
+          { name: 'Overhead Press', sets: '3', reps: '8-10', rest: '90s', perceivedExertion: '7', description: 'Military press' },
+          { name: 'Plank', sets: '3', reps: '60s', rest: '60s', perceivedExertion: '6', description: 'Core stability' },
+        ],
+      },
+      {
+        name: 'Full Body B',
+        focus: 'Strength',
+        day: 'Wednesday',
+        exercises: [
+          { name: 'Deadlift', sets: '4', reps: '5-6', rest: '3min', perceivedExertion: '9', description: 'Conventional deadlift' },
+          { name: 'Overhead Press', sets: '4', reps: '6-8', rest: '2min', perceivedExertion: '7', description: 'Standing press' },
+          { name: 'Pull-ups', sets: '3', reps: '8-12', rest: '2min', perceivedExertion: '7', description: 'Pull-ups' },
+          { name: 'Bulgarian Split Squat', sets: '3', reps: '10-12', rest: '90s', perceivedExertion: '7', description: 'Single leg work' },
+          { name: 'Face Pulls', sets: '3', reps: '15-20', rest: '60s', perceivedExertion: '6', description: 'Rear delts' },
+        ],
+      },
+      {
+        name: 'Full Body C',
+        focus: 'Strength',
+        day: 'Friday',
+        exercises: [
+          { name: 'Front Squat', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'Front squats' },
+          { name: 'Incline Dumbbell Press', sets: '4', reps: '8-10', rest: '2min', perceivedExertion: '7', description: 'Incline press' },
+          { name: 'Romanian Deadlift', sets: '3', reps: '10-12', rest: '2min', perceivedExertion: '7', description: 'RDL' },
+          { name: 'Cable Row', sets: '3', reps: '10-12', rest: '90s', perceivedExertion: '6', description: 'Seated rows' },
+          { name: 'Hanging Leg Raises', sets: '3', reps: '12-15', rest: '60s', perceivedExertion: '6', description: 'Core work' },
+        ],
+      },
+    ],
+  },
+];
 
 export function SmartPlanDialog({
   isOpen,
@@ -223,6 +370,17 @@ export function SmartPlanDialog({
 
   const availableWorkouts = generatedPlan ? getWorkoutsFromPlan(generatedPlan) : [];
 
+  const handleApplyTemplate = (template: typeof WORKOUT_TEMPLATES[0]) => {
+    onPlanGenerated(template.workouts);
+
+    toast({
+      title: "Template Applied",
+      description: `${template.workouts.length} workout${template.workouts.length !== 1 ? 's' : ''} from "${template.name}" added to your calendar.`,
+    });
+
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseDialog}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -232,21 +390,84 @@ export function SmartPlanDialog({
             Smart Plan Generator
           </DialogTitle>
           <DialogDescription>
-            {!generatedPlan
-              ? "AI-powered workout plans tailored to your team's fitness data and goals"
-              : "Review and apply the generated workouts to your calendar"
-            }
+            Choose from pre-made templates or generate a custom AI-powered plan
           </DialogDescription>
         </DialogHeader>
 
         {!generatedPlan ? (
-          <div className="py-4">
-            <PlannerForm
-              onSubmit={handleFormSubmit}
-              isLoading={isGenerating}
-              accountType={userAccount?.accountType}
-            />
-          </div>
+          <Tabs defaultValue="templates" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="templates" className="flex items-center gap-2">
+                <Dumbbell className="h-4 w-4" />
+                Templates
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                AI Generate
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Templates Tab */}
+            <TabsContent value="templates" className="mt-4">
+              <ScrollArea className="h-[500px]">
+                <div className="space-y-3 pr-4">
+                  {WORKOUT_TEMPLATES.map((template) => (
+                    <Card key={template.id} className="cursor-pointer hover:border-primary transition-colors">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-base">{template.name}</CardTitle>
+                            <CardDescription className="text-sm mt-1">
+                              {template.description}
+                            </CardDescription>
+                          </div>
+                          <Badge variant="secondary">{template.workouts.length} workouts</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 mb-4">
+                          {template.workouts.slice(0, 3).map((workout, idx) => (
+                            <div key={idx} className="text-sm flex items-start gap-2">
+                              <span className="text-muted-foreground">•</span>
+                              <div className="flex-1">
+                                <span className="font-medium">{workout.name}</span>
+                                <span className="text-muted-foreground ml-2">
+                                  ({workout.exercises.length} exercises)
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {template.workouts.length > 3 && (
+                            <p className="text-xs text-muted-foreground italic">
+                              +{template.workouts.length - 3} more workouts...
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => handleApplyTemplate(template)}
+                          className="w-full"
+                          size="sm"
+                        >
+                          Use This Template
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* AI Generation Tab */}
+            <TabsContent value="ai" className="mt-4">
+              <div className="py-4">
+                <PlannerForm
+                  onSubmit={handleFormSubmit}
+                  isLoading={isGenerating}
+                  accountType={userAccount?.accountType}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg">

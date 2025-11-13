@@ -218,7 +218,7 @@ export function WorkoutEditorDialog({
     return instruction.replace(/^Step:\d+\s*/i, '').trim();
   };
 
-  const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'custom'>('custom');
   const [customWorkout, setCustomWorkout] = useState<Workout>({
     name: '',
     focus: '',
@@ -253,15 +253,15 @@ export function WorkoutEditorDialog({
   useEffect(() => {
     if (workout) {
       setCustomWorkout(workout);
-      setActiveTab('custom');
     } else {
       setCustomWorkout({
         name: '',
         focus: '',
         exercises: [],
       });
-      setActiveTab('library');
     }
+    // Always default to custom tab
+    setActiveTab('custom');
   }, [workout, isOpen]);
 
   function handleSelectTemplate(template: typeof WORKOUT_TEMPLATES[0]) {

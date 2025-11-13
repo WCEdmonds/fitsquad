@@ -59,6 +59,7 @@ export default function PlanBuilderPage() {
                 workout: null,
               })),
             })),
+            cycleStartDate: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
             updatedBy: user?.uid,
           };
@@ -112,6 +113,7 @@ export default function PlanBuilderPage() {
               workout: null,
             })),
           })),
+          cycleStartDate: new Date().toISOString(),
           lastUpdated: new Date().toISOString(),
           updatedBy: user?.uid,
         };
@@ -132,8 +134,13 @@ export default function PlanBuilderPage() {
     setIsSaving(true);
     try {
       const planRef = doc(firestore, 'teams', userAccount.teamId, 'mainPlan', 'current');
+
+      // Set cycle start date to today if not already set (for new plans)
+      const cycleStartDate = teamPlan.cycleStartDate || new Date().toISOString();
+
       await setDoc(planRef, {
         ...teamPlan,
+        cycleStartDate,
         lastUpdated: new Date().toISOString(),
         updatedBy: user?.uid,
       });
