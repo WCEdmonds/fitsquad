@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 const bottomNavItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/dashboard/soldiers', label: 'Team', icon: Users },
-  { href: '/dashboard/plan-editor', label: 'Plan', icon: Calendar },
+  { href: '/dashboard/plan', label: 'Plan', icon: Calendar },
   { href: '/dashboard/saved-plans', label: 'Saved', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];

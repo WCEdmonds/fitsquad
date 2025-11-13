@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck, Activity, CalendarDays } from 'lucide-react';
+import { BarChart3, Users, Bot, Dumbbell, Archive, Settings, LineChart, ShieldCheck, Activity, CalendarDays, Edit } from 'lucide-react';
 import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
@@ -12,14 +12,18 @@ import { haptics } from '@/lib/haptics';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
-  { href: '/dashboard/plan-editor', label: 'Plan Builder', icon: CalendarDays },
+  { href: '/dashboard/plan', label: 'Plan', icon: CalendarDays },
   { href: '/dashboard/saved-plans', label: 'Saved Plans', icon: Archive },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
   { href: '/dashboard/fitness-logs', label: 'My Fitness Logs', icon: Activity },
 ];
 
+const supervisorAdminNavItems = [
+  { href: '/dashboard/plan-editor', label: 'Plan Builder', icon: Edit },
+];
+
 const commanderNavItems = [
-    { href: '/dashboard/manage-teams', label: 'Manage Teams', icon: ShieldCheck },
+  { href: '/dashboard/manage-teams', label: 'Manage Teams', icon: ShieldCheck },
 ]
 
 interface DashboardNavProps {
@@ -44,6 +48,13 @@ export function DashboardNav({ isMobile = false, onLinkClick }: DashboardNavProp
     : 'flex items-center gap-6 text-sm font-medium';
 
   const allNavItems = [...navItems];
+
+  // Add Plan Builder for Supervisor/Admin only
+  if (userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') {
+    allNavItems.push(...supervisorAdminNavItems);
+  }
+
+  // Add Manage Teams for Commander
   if (userAccount?.accountType === 'Commander') {
     allNavItems.push(...commanderNavItems);
   }
