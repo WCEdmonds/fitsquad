@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Trash2, Plus, Minus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ExerciseBrowser } from '@/components/exercise-browser';
+import { ExerciseWorkoutBuilder } from '@/components/exercise-workout-builder';
 import type { Exercise as ExerciseDBExercise } from '@/lib/exercisedb';
 
 // Workout template library
@@ -113,6 +114,45 @@ const WORKOUT_TEMPLATES = [
       { name: '2-Mile Run', sets: '1', reps: '1 run', rest: 'N/A', perceivedExertion: '8', description: '2MR at race pace' },
     ],
   },
+  {
+    id: 'running-cardio',
+    name: 'Running & Cardio',
+    focus: 'Cardio',
+    description: 'Running-focused cardiovascular training',
+    exercises: [
+      { name: '4x400m Sprints', sets: '4', reps: '400m', rest: '90-120s', perceivedExertion: '8', description: 'Sprint 400m, rest, repeat' },
+      { name: 'Long Run', sets: '1', reps: '5-8 miles', rest: 'N/A', perceivedExertion: '6', description: 'Steady-state endurance run' },
+      { name: 'Interval Running', sets: '6', reps: '2 min fast / 1 min jog', rest: 'As noted', perceivedExertion: '8', description: 'Alternating pace intervals' },
+      { name: 'Hill Sprints', sets: '8', reps: '30s uphill', rest: '90s', perceivedExertion: '9', description: 'Max effort uphill sprints' },
+      { name: 'Tempo Run', sets: '1', reps: '20-30 min', rest: 'N/A', perceivedExertion: '7', description: 'Comfortably hard pace' },
+    ],
+  },
+  {
+    id: 'bike-cardio',
+    name: 'Cycling Cardio',
+    focus: 'Cardio',
+    description: 'Bicycle-based cardio workout',
+    exercises: [
+      { name: 'Stationary Bike HIIT', sets: '10', reps: '30s sprint / 30s easy', rest: 'As noted', perceivedExertion: '8', description: 'High intensity intervals on bike' },
+      { name: 'Long Ride', sets: '1', reps: '45-60 min', rest: 'N/A', perceivedExertion: '5', description: 'Steady moderate pace cycling' },
+      { name: 'Bike Tabata', sets: '8', reps: '20s max / 10s rest', rest: 'As noted', perceivedExertion: '9', description: 'Maximum effort intervals' },
+      { name: 'Hill Climbs (Bike)', sets: '5', reps: '3 min climb', rest: '2 min', perceivedExertion: '8', description: 'Resistance/incline intervals' },
+      { name: 'Recovery Ride', sets: '1', reps: '30 min', rest: 'N/A', perceivedExertion: '3', description: 'Easy spin for active recovery' },
+    ],
+  },
+  {
+    id: 'mixed-cardio',
+    name: 'Mixed Cardio',
+    focus: 'Cardio',
+    description: 'Variety of cardio exercises',
+    exercises: [
+      { name: 'Rowing Intervals', sets: '5', reps: '500m', rest: '90s', perceivedExertion: '8', description: 'Row 500m at hard pace' },
+      { name: 'Assault Bike', sets: '6', reps: '1 min', rest: '60s', perceivedExertion: '9', description: 'Max effort on assault bike' },
+      { name: 'Jump Rope', sets: '5', reps: '3 min', rest: '60s', perceivedExertion: '7', description: 'Continuous jump rope' },
+      { name: 'Stair Climber', sets: '1', reps: '20 min', rest: 'N/A', perceivedExertion: '6', description: 'Steady pace on stair machine' },
+      { name: 'Swimming', sets: '1', reps: '30 min', rest: 'N/A', perceivedExertion: '6', description: 'Continuous swimming laps' },
+    ],
+  },
 ];
 
 interface Exercise {
@@ -149,7 +189,7 @@ export function WorkoutEditorDialog({
   dayName,
   canEdit,
 }: WorkoutEditorDialogProps) {
-  const [activeTab, setActiveTab] = useState<'library' | 'custom' | 'exercise-db'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library');
   const [customWorkout, setCustomWorkout] = useState<Workout>({
     name: '',
     focus: '',
@@ -168,7 +208,7 @@ export function WorkoutEditorDialog({
       });
       setActiveTab('library');
     }
-  }, [workout]);
+  }, [workout, isOpen]);
 
   function handleSelectTemplate(template: typeof WORKOUT_TEMPLATES[0]) {
     onSave({
@@ -254,16 +294,15 @@ export function WorkoutEditorDialog({
         </DialogHeader>
 
         {canEdit ? (
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom' | 'exercise-db')}>
-            <TabsList className="grid w-full grid-cols-3">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom')}>
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="library">Templates</TabsTrigger>
-              <TabsTrigger value="exercise-db">Exercise Database</TabsTrigger>
-              <TabsTrigger value="custom">Custom Workout</TabsTrigger>
+              <TabsTrigger value="custom">Build Workout</TabsTrigger>
             </TabsList>
 
             <TabsContent value="library" className="mt-4">
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {WORKOUT_TEMPLATES.map((template) => (
                     <Card
                       key={template.id}
@@ -285,96 +324,11 @@ export function WorkoutEditorDialog({
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="exercise-db" className="mt-4">
-              <ExerciseBrowser
-                onSelectExercise={handleSelectExerciseFromDB}
-                selectedExercises={customWorkout.exercises.map((ex, idx) => ({
-                  exerciseId: `custom-${idx}`,
-                  name: ex.name,
-                  bodyParts: [],
-                  targetMuscles: [],
-                  equipments: [],
-                  secondaryMuscles: [],
-                  gifUrl: '',
-                  instructions: [ex.description],
-                }))}
-              />
-            </TabsContent>
-
             <TabsContent value="custom" className="mt-4">
-              <ScrollArea className="h-[400px] pr-4">
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>Exercises</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddExercise}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Exercise
-                      </Button>
-                    </div>
-
-                    {customWorkout.exercises.map((exercise, index) => (
-                      <Card key={index}>
-                        <CardContent className="pt-4 space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 space-y-3">
-                              <Input
-                                placeholder="Exercise name"
-                                value={exercise.name}
-                                onChange={(e) => handleUpdateExercise(index, 'name', e.target.value)}
-                              />
-                              <div className="grid grid-cols-4 gap-2">
-                                <Input
-                                  placeholder="Sets"
-                                  value={exercise.sets}
-                                  onChange={(e) => handleUpdateExercise(index, 'sets', e.target.value)}
-                                />
-                                <Input
-                                  placeholder="Reps"
-                                  value={exercise.reps}
-                                  onChange={(e) => handleUpdateExercise(index, 'reps', e.target.value)}
-                                />
-                                <Input
-                                  placeholder="Rest"
-                                  value={exercise.rest}
-                                  onChange={(e) => handleUpdateExercise(index, 'rest', e.target.value)}
-                                />
-                                <Input
-                                  placeholder="RPE (1-10)"
-                                  value={exercise.perceivedExertion || ''}
-                                  onChange={(e) => handleUpdateExercise(index, 'perceivedExertion', e.target.value)}
-                                  type="number"
-                                  min="1"
-                                  max="10"
-                                />
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveExercise(index)}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-
-                    {customWorkout.exercises.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground text-sm">
-                        No exercises added yet. Click "Add Exercise" to get started.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </ScrollArea>
+              <ExerciseWorkoutBuilder
+                exercises={customWorkout.exercises}
+                onUpdateExercises={(newExercises) => setCustomWorkout({ ...customWorkout, exercises: newExercises })}
+              />
             </TabsContent>
           </Tabs>
         ) : (
