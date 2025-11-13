@@ -116,11 +116,11 @@ export function PlanPrintView({ plan, viewMode, selectedDate }: PlanPrintViewPro
 
   // Print weekly/full plan view
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-6 space-y-6">
       <div className="text-center border-b pb-4">
-        <h1 className="text-3xl font-bold">8-Week Workout Plan</h1>
+        <h1 className="text-2xl font-bold">8-Week Workout Plan</h1>
         {plan.cycleStartDate && (
-          <p className="text-lg text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Starting: {new Date(plan.cycleStartDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         )}
@@ -128,43 +128,52 @@ export function PlanPrintView({ plan, viewMode, selectedDate }: PlanPrintViewPro
 
       {plan.weeks.map((week, weekIdx) => (
         <div key={week.weekNumber} className="break-inside-avoid">
-          <h2 className="text-2xl font-bold mb-4 flex items-baseline gap-3">
+          <h2 className="text-lg font-bold mb-3 flex items-baseline gap-2">
             Week {week.weekNumber}
             {plan.cycleStartDate && (
-              <span className="text-sm text-muted-foreground font-normal">
+              <span className="text-xs text-muted-foreground font-normal">
                 {formatDate(weekIdx, 0)} - {formatDate(weekIdx, 6)}
               </span>
             )}
           </h2>
 
-          <div className="grid grid-cols-7 gap-2">
-            {week.days.map((day, dayIdx) => (
-              <div key={day.dayOfWeek} className="border rounded p-2">
-                <div className="font-semibold text-sm mb-1">{day.dayOfWeek.slice(0, 3)}</div>
-                {plan.cycleStartDate && (
-                  <div className="text-xs text-muted-foreground mb-2">
-                    {formatDate(weekIdx, dayIdx)}
-                  </div>
-                )}
-                {day.workout ? (
-                  <div className="text-xs space-y-1">
-                    <div className="font-medium">{day.workout.name}</div>
-                    <div className="text-muted-foreground text-[10px]">{day.workout.focus}</div>
-                    <ul className="list-disc list-inside text-[10px] mt-1">
-                      {day.workout.exercises.slice(0, 3).map((ex, exIdx) => (
-                        <li key={exIdx} className="truncate">{ex.name}</li>
-                      ))}
-                      {day.workout.exercises.length > 3 && (
-                        <li>+{day.workout.exercises.length - 3} more</li>
-                      )}
-                    </ul>
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground">Rest</div>
-                )}
-              </div>
-            ))}
-          </div>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr>
+                {week.days.map((day) => (
+                  <th key={day.dayOfWeek} className="border p-2 text-xs font-semibold bg-gray-50">
+                    {day.dayOfWeek.slice(0, 3)}
+                    {plan.cycleStartDate && (
+                      <div className="text-[10px] font-normal text-muted-foreground mt-1">
+                        {formatDate(weekIdx, week.days.indexOf(day))}
+                      </div>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {week.days.map((day, dayIdx) => (
+                  <td key={dayIdx} className="border p-2 align-top text-xs">
+                    {day.workout ? (
+                      <div className="space-y-1">
+                        <div className="font-semibold text-xs">{day.workout.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{day.workout.focus}</div>
+                        <ul className="list-disc list-inside text-[10px] space-y-0.5 mt-1">
+                          {day.workout.exercises.map((ex, exIdx) => (
+                            <li key={exIdx} className="leading-tight">{ex.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-muted-foreground italic">Rest Day</div>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
         </div>
       ))}
     </div>
