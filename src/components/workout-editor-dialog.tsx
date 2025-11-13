@@ -166,6 +166,7 @@ interface Exercise {
   rest: string;
   perceivedExertion?: string; // RPE (Rate of Perceived Exertion) scale 1-10
   description?: string; // Optional, mainly for templates
+  imageUrl?: string; // ExerciseDB GIF URL for visual reference
 }
 
 interface Workout {
@@ -315,6 +316,7 @@ export function WorkoutEditorDialog({
       rest: '60s',
       perceivedExertion: '7', // Moderate intensity default
       description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
+      imageUrl: exercise.gifUrl, // Store the exercise GIF for reference
     };
 
     // Add to custom workout
@@ -513,26 +515,43 @@ export function WorkoutEditorDialog({
                   {workout.exercises.map((exercise, index) => (
                     <Card key={index}>
                       <CardContent className="pt-4">
-                        <h4 className="font-semibold">{exercise.name}</h4>
-                        <div className="grid grid-cols-4 gap-2 mt-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Sets:</span> {exercise.sets}
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Reps:</span> {exercise.reps}
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Rest:</span> {exercise.rest}
-                          </div>
-                          {exercise.perceivedExertion && (
-                            <div>
-                              <span className="text-muted-foreground">RPE:</span> {exercise.perceivedExertion}/10
+                        <div className="flex gap-4">
+                          {/* Exercise Image */}
+                          {exercise.imageUrl && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={exercise.imageUrl}
+                                alt={exercise.name}
+                                className="w-24 h-24 rounded-md object-cover border"
+                                loading="lazy"
+                              />
                             </div>
                           )}
+
+                          {/* Exercise Details */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold">{exercise.name}</h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Sets:</span> {exercise.sets}
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Reps:</span> {exercise.reps}
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Rest:</span> {exercise.rest}
+                              </div>
+                              {exercise.perceivedExertion && (
+                                <div>
+                                  <span className="text-muted-foreground">RPE:</span> {exercise.perceivedExertion}/10
+                                </div>
+                              )}
+                            </div>
+                            {exercise.description && (
+                              <p className="text-sm text-muted-foreground mt-2">{exercise.description}</p>
+                            )}
+                          </div>
                         </div>
-                        {exercise.description && (
-                          <p className="text-sm text-muted-foreground mt-2">{exercise.description}</p>
-                        )}
                       </CardContent>
                     </Card>
                   ))}
