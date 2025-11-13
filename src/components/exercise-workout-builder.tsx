@@ -46,6 +46,22 @@ interface ExerciseWorkoutBuilderProps {
   onUpdateExercises: (exercises: Exercise[]) => void;
 }
 
+// Common cardio exercise presets
+const CARDIO_PRESETS = [
+  { name: '4x400m Sprints', sets: '4', reps: '400m', rest: '90-120s', perceivedExertion: '8' },
+  { name: 'Long Run', sets: '1', reps: '5-8 miles', rest: 'N/A', perceivedExertion: '6' },
+  { name: 'Interval Running', sets: '6', reps: '2 min fast / 1 min jog', rest: 'As noted', perceivedExertion: '8' },
+  { name: 'Hill Sprints', sets: '8', reps: '30s uphill', rest: '90s', perceivedExertion: '9' },
+  { name: 'Tempo Run', sets: '1', reps: '20-30 min', rest: 'N/A', perceivedExertion: '7' },
+  { name: 'Rowing Intervals', sets: '5', reps: '500m', rest: '90s', perceivedExertion: '8' },
+  { name: 'Assault Bike', sets: '6', reps: '1 min', rest: '60s', perceivedExertion: '9' },
+  { name: 'Jump Rope', sets: '5', reps: '3 min', rest: '60s', perceivedExertion: '7' },
+  { name: 'Stationary Bike HIIT', sets: '10', reps: '30s sprint / 30s easy', rest: 'As noted', perceivedExertion: '8' },
+  { name: 'Bike Tabata', sets: '8', reps: '20s max / 10s rest', rest: 'As noted', perceivedExertion: '9' },
+  { name: 'Stair Climber', sets: '1', reps: '20 min', rest: 'N/A', perceivedExertion: '6' },
+  { name: 'Swimming', sets: '1', reps: '30 min', rest: 'N/A', perceivedExertion: '6' },
+];
+
 export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: ExerciseWorkoutBuilderProps) {
   const [dbExercises, setDbExercises] = useState<ExerciseDBExercise[]>([]);
   const [filteredExercises, setFilteredExercises] = useState<ExerciseDBExercise[]>([]);
@@ -264,6 +280,16 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
     toast({
       title: "Custom Exercise Added",
       description: `${capitalizeWords(customExercise.name)} added to workout plan.`,
+    });
+  }
+
+  function handleSelectCardioPreset(preset: typeof CARDIO_PRESETS[0]) {
+    setCustomExercise({
+      name: preset.name,
+      sets: preset.sets,
+      reps: preset.reps,
+      rest: preset.rest,
+      perceivedExertion: preset.perceivedExertion,
     });
   }
 
@@ -638,17 +664,56 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
 
       {/* Custom Exercise Dialog */}
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Custom Exercise</DialogTitle>
-            <DialogDescription>Create your own exercise with custom details</DialogDescription>
+            <DialogDescription>Choose from cardio presets or create your own exercise</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Cardio Presets Section */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Quick Cardio Presets</Label>
+              <ScrollArea className="h-[200px] border rounded-md p-3">
+                <div className="grid grid-cols-2 gap-2">
+                  {CARDIO_PRESETS.map((preset, idx) => (
+                    <Button
+                      key={idx}
+                      variant="outline"
+                      size="sm"
+                      className="justify-start h-auto py-2 text-left"
+                      onClick={() => handleSelectCardioPreset(preset)}
+                    >
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-medium text-xs">{preset.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {preset.sets}x{preset.reps}
+                        </span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground">
+                Click a preset to populate the form below, then customize or add as-is
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
+              </div>
+            </div>
+
+            {/* Manual Input Form */}
             <div>
               <Label htmlFor="custom-name">Exercise Name *</Label>
               <Input
                 id="custom-name"
-                placeholder="e.g., Burpees, Box Jumps"
+                placeholder="e.g., Burpees, Box Jumps, 5K Run"
                 value={customExercise.name}
                 onChange={(e) => setCustomExercise({ ...customExercise, name: e.target.value })}
               />
