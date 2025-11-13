@@ -347,63 +347,63 @@ export default function DashboardPage() {
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">Total</CardTitle>
-            <Users className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">Total</CardTitle>
+            <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-blue-700 dark:text-blue-300">{teamMembers?.length ?? 0}</div>
-            <p className="text-[10px] text-muted-foreground">soldiers</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{teamMembers?.length ?? 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">soldiers</p>
           </CardContent>
         </Card>
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">MDL</CardTitle>
-            <Barbell weight="bold" className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">MDL</CardTitle>
+            <Barbell weight="bold" className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-purple-700 dark:text-purple-300">{avgMdl}</div>
-            <p className="text-[10px] text-muted-foreground">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{avgMdl}</div>
+            <p className="text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">HRP</CardTitle>
-            <Dumbbell className="h-3 w-3 text-orange-600 dark:text-orange-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">HRP</CardTitle>
+            <Dumbbell className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
-            <p className="text-[10px] text-muted-foreground">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
+            <p className="text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">SDC</CardTitle>
-            <PersonSimpleRun weight="bold" className="h-3 w-3 text-green-600 dark:text-green-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">SDC</CardTitle>
+            <PersonSimpleRun weight="bold" className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-green-700 dark:text-green-300">{avgSdc}</div>
-            <p className="text-[10px] text-muted-foreground">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">{avgSdc}</div>
+            <p className="text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">PLK</CardTitle>
-            <Timer weight="bold" className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">PLK</CardTitle>
+            <Timer weight="bold" className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-yellow-700 dark:text-yellow-300">{avgPlk}</div>
-            <p className="text-[10px] text-muted-foreground">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{avgPlk}</div>
+            <p className="text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
         <Card className="aspect-square flex flex-col bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-3 pt-3">
-            <CardTitle className="text-xs font-medium">2MR</CardTitle>
-            <SneakerMove weight="bold" className="h-3 w-3 text-red-600 dark:text-red-400" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+            <CardTitle className="text-sm font-semibold">2MR</CardTitle>
+            <SneakerMove weight="bold" className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-3 pb-3">
-            <div className="text-xl font-bold text-red-700 dark:text-red-300">{avgRunTime}</div>
-            <p className="text-[10px] text-muted-foreground">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
+            <div className="text-3xl font-bold text-red-700 dark:text-red-300">{avgRunTime}</div>
+            <p className="text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
       </div>
