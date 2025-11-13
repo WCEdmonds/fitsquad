@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -12,10 +12,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dumbbell, Plus, X, Check } from 'lucide-react';
+import { Dumbbell, Plus, X, Check, Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
+import { getAllExercises, type Exercise as DBExercise } from '@/lib/exercisedb/api';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface Exercise {
   name: string;
@@ -34,6 +38,43 @@ export default function QuickWorkoutPage() {
     { name: '', sets: '', reps: '', weight: '', notes: '' }
   ]);
   const [isSaving, setIsSaving] = useState(false);
+  const [dbExercises, setDbExercises] = useState<DBExercise[]>([]);
+  const [isLoadingExercises, setIsLoadingExercises] = useState(true);
+  const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
+
+  // Load exercises from database on mount
+  useEffect(() => {
+    async function loadExercises() {
+      try {
+        setIsLoadingExercises(true);
+        // Load first 500 exercises including cardio
+        const allExercises: DBExercise[] = [];
+        const limit = 100;
+        const totalToLoad = 500;
+
+        for (let offset = 0; offset < totalToLoad; offset += limit) {
+          const batch = await getAllExercises(limit, offset);
+          if (batch && batch.length > 0) {
+            allExercises.push(...batch);
+          } else {
+            break;
+          }
+        }
+
+        setDbExercises(allExercises);
+      } catch (error) {
+        console.error('Error loading exercises:', error);
+        toast({
+          title: "Notice",
+          description: "Could not load exercise database. You can still enter exercises manually.",
+        });
+      } finally {
+        setIsLoadingExercises(false);
+      }
+    }
+
+    loadExercises();
+  }, [toast]);
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '' }]);
@@ -47,6 +88,25 @@ export default function QuickWorkoutPage() {
     const updated = [...exercises];
     updated[index][field] = value;
     setExercises(updated);
+  };
+
+  const handleSelectExercise = (index: number, dbExercise: DBExercise) => {
+    const updated = [...exercises];
+    updated[index].name = dbExercise.name;
+
+    // Auto-suggest sets/reps based on exercise type
+    const isCardio = dbExercise.bodyParts.includes('cardio');
+    if (isCardio) {
+      updated[index].sets = '1';
+      updated[index].reps = '20 min';
+      updated[index].weight = '';
+    } else {
+      updated[index].sets = '3';
+      updated[index].reps = '10';
+    }
+
+    setExercises(updated);
+    setOpenComboboxIndex(null);
   };
 
   const handleSaveWorkout = async () => {
@@ -163,11 +223,59 @@ export default function QuickWorkoutPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor={`exercise-name-${index}`}>Exercise Name *</Label>
+                    <Popover
+                      open={openComboboxIndex === index}
+                      onOpenChange={(open) => setOpenComboboxIndex(open ? index : null)}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openComboboxIndex === index}
+                          className="w-full justify-between"
+                        >
+                          {exercise.name || "Select exercise..."}
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search exercises..."
+                            className="h-9"
+                          />
+                          <CommandEmpty>
+                            {isLoadingExercises ? (
+                              <div className="flex items-center justify-center py-6">
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                              </div>
+                            ) : (
+                              "No exercise found."
+                            )}
+                          </CommandEmpty>
+                          <CommandGroup className="max-h-64 overflow-auto">
+                            {dbExercises.map((dbExercise) => (
+                              <CommandItem
+                                key={dbExercise.exerciseId}
+                                value={dbExercise.name}
+                                onSelect={() => handleSelectExercise(index, dbExercise)}
+                              >
+                                {dbExercise.name}
+                                {dbExercise.bodyParts.includes('cardio') && (
+                                  <span className="ml-2 text-xs text-muted-foreground">(cardio)</span>
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <Input
                       id={`exercise-name-${index}`}
-                      placeholder="e.g., Bench Press, Squats"
+                      placeholder="Or type manually..."
                       value={exercise.name}
                       onChange={(e) => handleExerciseChange(index, 'name', e.target.value)}
+                      className="mt-1"
                     />
                   </div>
 
@@ -182,7 +290,7 @@ export default function QuickWorkoutPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor={`exercise-reps-${index}`}>Reps</Label>
+                      <Label htmlFor={`exercise-reps-${index}`}>Reps/Time</Label>
                       <Input
                         id={`exercise-reps-${index}`}
                         placeholder="10"
