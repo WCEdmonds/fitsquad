@@ -39,6 +39,7 @@ interface Exercise {
   rest: string;
   perceivedExertion?: string;
   description?: string;
+  imageUrl?: string; // ExerciseDB GIF URL
 }
 
 interface ExerciseWorkoutBuilderProps {
@@ -209,6 +210,7 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
       rest: '60s',
       perceivedExertion: '7',
       description: exercise.instructions?.join('. ') || exercise.targetMuscles.join(', '),
+      imageUrl: exercise.gifUrl, // Save the GIF URL from ExerciseDB
     };
 
     onUpdateExercises([...exercises, newExercise]);
