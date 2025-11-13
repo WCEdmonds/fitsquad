@@ -504,27 +504,29 @@ export function ExerciseWorkoutBuilder({ exercises, onUpdateExercises }: Exercis
         {/* Right - Workout Plan */}
         <div className="lg:col-span-1">
           <Card className="h-full">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
                   <CardTitle className="text-base">Workout Plan</CardTitle>
-                  <CardDescription className="hidden sm:block">Drag to reorder exercises</CardDescription>
+                  <CardDescription className="text-xs mt-1">Drag to reorder</CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCardioDialog(true)}
+                    className="h-8"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-4 w-4 sm:mr-1" />
                     <span className="hidden sm:inline">Cardio</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCustomDialog(true)}
+                    className="h-8"
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-4 w-4 sm:mr-1" />
                     <span className="hidden sm:inline">Custom</span>
                   </Button>
                 </div>
