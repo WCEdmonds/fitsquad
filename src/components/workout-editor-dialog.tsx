@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trash2, Plus, Minus, Save, Copy, Bookmark } from 'lucide-react';
+import { Trash2, Plus, Minus, Save, Copy, Bookmark, Dumbbell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseBrowser } from '@/components/exercise-browser';
@@ -517,14 +517,22 @@ export function WorkoutEditorDialog({
                       <CardContent className="pt-4">
                         <div className="flex gap-4">
                           {/* Exercise Image */}
-                          {exercise.imageUrl && (
+                          {exercise.imageUrl ? (
                             <div className="flex-shrink-0">
                               <img
                                 src={exercise.imageUrl}
                                 alt={exercise.name}
-                                className="w-24 h-24 rounded-md object-cover border"
+                                className="w-24 h-24 rounded-md object-cover border bg-muted"
                                 loading="lazy"
+                                onError={(e) => {
+                                  console.error('Failed to load image:', exercise.imageUrl);
+                                  e.currentTarget.style.display = 'none';
+                                }}
                               />
+                            </div>
+                          ) : (
+                            <div className="flex-shrink-0 w-24 h-24 rounded-md border bg-muted flex items-center justify-center">
+                              <Dumbbell className="h-8 w-8 text-muted-foreground" />
                             </div>
                           )}
 
