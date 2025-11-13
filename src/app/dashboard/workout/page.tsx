@@ -27,6 +27,9 @@ interface Exercise {
   reps: string;
   weight: string;
   notes: string;
+  isCardio: boolean;
+  duration?: string; // For cardio: e.g., "30 min"
+  distance?: string; // For cardio: e.g., "5 miles"
 }
 
 export default function QuickWorkoutPage() {
@@ -35,7 +38,7 @@ export default function QuickWorkoutPage() {
   const { toast } = useToast();
   const [workoutName, setWorkoutName] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([
-    { name: '', sets: '', reps: '', weight: '', notes: '' }
+    { name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const [dbExercises, setDbExercises] = useState<DBExercise[]>([]);
@@ -72,16 +75,16 @@ export default function QuickWorkoutPage() {
   }, [searchQuery, performSearch]);
 
   const handleAddExercise = () => {
-    setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '' }]);
+    setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }]);
   };
 
   const handleRemoveExercise = (index: number) => {
     setExercises(exercises.filter((_, i) => i !== index));
   };
 
-  const handleExerciseChange = (index: number, field: keyof Exercise, value: string) => {
+  const handleExerciseChange = (index: number, field: keyof Exercise, value: string | boolean) => {
     const updated = [...exercises];
-    updated[index][field] = value;
+    updated[index][field] = value as any;
     setExercises(updated);
   };
 
@@ -89,15 +92,24 @@ export default function QuickWorkoutPage() {
     const updated = [...exercises];
     updated[index].name = dbExercise.name;
 
-    // Auto-suggest sets/reps based on exercise type
+    // Auto-suggest fields based on exercise type
     const isCardio = dbExercise.bodyParts.includes('cardio');
+    updated[index].isCardio = isCardio;
+
     if (isCardio) {
-      updated[index].sets = '1';
-      updated[index].reps = '20 min';
+      // For cardio, set duration and distance defaults
+      updated[index].duration = '30';
+      updated[index].distance = '3';
+      updated[index].sets = '';
+      updated[index].reps = '';
       updated[index].weight = '';
     } else {
+      // For strength, set sets/reps/weight defaults
       updated[index].sets = '3';
       updated[index].reps = '10';
+      updated[index].weight = '';
+      updated[index].duration = undefined;
+      updated[index].distance = undefined;
     }
 
     setExercises(updated);
@@ -141,9 +153,15 @@ export default function QuickWorkoutPage() {
         workoutName: workoutName || 'Custom Workout',
         exercises: validExercises.map(ex => ({
           exerciseName: ex.name,
-          sets: ex.sets || 'N/A',
-          reps: ex.reps || 'N/A',
-          weight: ex.weight || 'N/A',
+          isCardio: ex.isCardio,
+          ...(ex.isCardio ? {
+            duration: ex.duration || 'N/A',
+            distance: ex.distance || 'N/A',
+          } : {
+            sets: ex.sets || 'N/A',
+            reps: ex.reps || 'N/A',
+            weight: ex.weight || 'N/A',
+          }),
           notes: ex.notes || '',
         })),
         completedAt: serverTimestamp(),
@@ -160,7 +178,7 @@ export default function QuickWorkoutPage() {
 
       // Reset form
       setWorkoutName('');
-      setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '' }]);
+      setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }]);
 
     } catch (error: any) {
       console.error('Error saving workout:', error);
@@ -294,37 +312,74 @@ export default function QuickWorkoutPage() {
                       onChange={(e) => handleExerciseChange(index, 'name', e.target.value)}
                       className="mt-1"
                     />
+                    <div className="flex items-center space-x-2 mt-2">
+                      <input
+                        type="checkbox"
+                        id={`exercise-cardio-${index}`}
+                        checked={exercise.isCardio}
+                        onChange={(e) => handleExerciseChange(index, 'isCardio', e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <Label htmlFor={`exercise-cardio-${index}`} className="text-sm font-normal cursor-pointer">
+                        This is a cardio exercise
+                      </Label>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-2">
-                      <Label htmlFor={`exercise-sets-${index}`}>Sets</Label>
-                      <Input
-                        id={`exercise-sets-${index}`}
-                        placeholder="3"
-                        value={exercise.sets}
-                        onChange={(e) => handleExerciseChange(index, 'sets', e.target.value)}
-                      />
+                  {exercise.isCardio ? (
+                    // Cardio fields: Duration and Distance
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`exercise-duration-${index}`}>Duration (min)</Label>
+                        <Input
+                          id={`exercise-duration-${index}`}
+                          placeholder="30"
+                          value={exercise.duration || ''}
+                          onChange={(e) => handleExerciseChange(index, 'duration', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`exercise-distance-${index}`}>Distance (mi)</Label>
+                        <Input
+                          id={`exercise-distance-${index}`}
+                          placeholder="3"
+                          value={exercise.distance || ''}
+                          onChange={(e) => handleExerciseChange(index, 'distance', e.target.value)}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`exercise-reps-${index}`}>Reps/Time</Label>
-                      <Input
-                        id={`exercise-reps-${index}`}
-                        placeholder="10"
-                        value={exercise.reps}
-                        onChange={(e) => handleExerciseChange(index, 'reps', e.target.value)}
-                      />
+                  ) : (
+                    // Strength fields: Sets, Reps, Weight
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`exercise-sets-${index}`}>Sets</Label>
+                        <Input
+                          id={`exercise-sets-${index}`}
+                          placeholder="3"
+                          value={exercise.sets}
+                          onChange={(e) => handleExerciseChange(index, 'sets', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`exercise-reps-${index}`}>Reps</Label>
+                        <Input
+                          id={`exercise-reps-${index}`}
+                          placeholder="10"
+                          value={exercise.reps}
+                          onChange={(e) => handleExerciseChange(index, 'reps', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`exercise-weight-${index}`}>Weight (lbs)</Label>
+                        <Input
+                          id={`exercise-weight-${index}`}
+                          placeholder="135"
+                          value={exercise.weight}
+                          onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`exercise-weight-${index}`}>Weight</Label>
-                      <Input
-                        id={`exercise-weight-${index}`}
-                        placeholder="135"
-                        value={exercise.weight}
-                        onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor={`exercise-notes-${index}`}>Notes</Label>
