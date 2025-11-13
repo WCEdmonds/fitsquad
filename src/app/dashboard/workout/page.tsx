@@ -47,10 +47,10 @@ export default function QuickWorkoutPage() {
     async function loadExercises() {
       try {
         setIsLoadingExercises(true);
-        // Load first 500 exercises including cardio
+        // Load all exercises from database (~1300 total)
         const allExercises: DBExercise[] = [];
         const limit = 100;
-        const totalToLoad = 500;
+        const totalToLoad = 1400; // Load full database
 
         for (let offset = 0; offset < totalToLoad; offset += limit) {
           const batch = await getAllExercises(limit, offset);
@@ -60,6 +60,9 @@ export default function QuickWorkoutPage() {
             break;
           }
         }
+
+        // Sort alphabetically for better search experience
+        allExercises.sort((a, b) => a.name.localeCompare(b.name));
 
         setDbExercises(allExercises);
       } catch (error) {
@@ -250,20 +253,23 @@ export default function QuickWorkoutPage() {
                                 <Loader2 className="h-6 w-6 animate-spin" />
                               </div>
                             ) : (
-                              "No exercise found."
+                              <div className="py-6 text-center text-sm">No exercise found. Try typing manually below.</div>
                             )}
                           </CommandEmpty>
-                          <CommandGroup className="max-h-64 overflow-auto">
+                          <CommandGroup className="max-h-80 overflow-auto">
                             {dbExercises.map((dbExercise) => (
                               <CommandItem
                                 key={dbExercise.exerciseId}
                                 value={dbExercise.name}
+                                keywords={[...dbExercise.bodyParts, ...dbExercise.equipments, ...dbExercise.targetMuscles]}
                                 onSelect={() => handleSelectExercise(index, dbExercise)}
                               >
-                                {dbExercise.name}
-                                {dbExercise.bodyParts.includes('cardio') && (
-                                  <span className="ml-2 text-xs text-muted-foreground">(cardio)</span>
-                                )}
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{dbExercise.name}</span>
+                                  {dbExercise.bodyParts.includes('cardio') && (
+                                    <span className="ml-2 text-xs text-muted-foreground">(cardio)</span>
+                                  )}
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
