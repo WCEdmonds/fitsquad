@@ -202,7 +202,7 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                     onDrop={(e) => handleDrop(absoluteWeekIdx, dayIdx, e)}
                     onDragEnd={handleDragEnd}
                     className={cn(
-                      "p-3 transition-all hover:shadow-md min-h-[120px] relative",
+                      "p-3 transition-all hover:shadow-md min-h-[140px] relative",
                       canEdit && "cursor-pointer hover:border-primary",
                       !canEdit && "cursor-default",
                       isDragging && "opacity-50 border-dashed border-2",
@@ -241,9 +241,18 @@ export function PlanCalendarView({ plan, onUpdateWorkout, canEdit, teamId, userI
                           <div className="text-xs text-muted-foreground">
                             {day.workout.focus}
                           </div>
-                          {day.workout.exercises && (
-                            <div className="text-xs text-muted-foreground">
-                              {day.workout.exercises.length} exercise{day.workout.exercises.length !== 1 ? 's' : ''}
+                          {day.workout.exercises && day.workout.exercises.length > 0 && (
+                            <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                              {day.workout.exercises.slice(0, 3).map((exercise: any, idx: number) => (
+                                <div key={idx} className="truncate">
+                                  • {exercise.name} {exercise.sets && exercise.reps && `(${exercise.sets}x${exercise.reps})`}
+                                </div>
+                              ))}
+                              {day.workout.exercises.length > 3 && (
+                                <div className="text-xs text-muted-foreground/70 italic">
+                                  +{day.workout.exercises.length - 3} more...
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
