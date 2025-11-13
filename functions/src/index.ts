@@ -138,14 +138,48 @@ const prompt = `
 
     logger.info("Generating AI plan with prompt...");
 
-    const result = await ai.generate({
-      model: "googleai/gemini-2.5-flash",
-      prompt: prompt,
-      output: {
-        format: "json",
-        schema: GenerateTailoredWorkoutPlanOutputSchema,
-      },
-    });
+    // Try primary model first, fallback to lite if overloaded
+    let result;
+    let usedModel = "googleai/gemini-2.5-flash";
+
+    try {
+      logger.info("Attempting generation with gemini-2.5-flash...");
+      result = await ai.generate({
+        model: "googleai/gemini-2.5-flash",
+        prompt: prompt,
+        output: {
+          format: "json",
+          schema: GenerateTailoredWorkoutPlanOutputSchema,
+        },
+      });
+    } catch (primaryError: any) {
+      // Check if error is due to model overload (503, 429, or "overloaded" in message)
+      const isOverloadError =
+        primaryError.status === 503 ||
+        primaryError.status === 429 ||
+        primaryError.code === 503 ||
+        primaryError.code === 429 ||
+        (primaryError.message && primaryError.message.toLowerCase().includes('overload'));
+
+      if (isOverloadError) {
+        logger.warn("Primary model overloaded, falling back to gemini-2.5-flash-lite...", primaryError);
+        usedModel = "googleai/gemini-2.5-flash-lite";
+
+        // Retry with lighter model
+        result = await ai.generate({
+          model: "googleai/gemini-2.5-flash-lite",
+          prompt: prompt,
+          output: {
+            format: "json",
+            schema: GenerateTailoredWorkoutPlanOutputSchema,
+          },
+        });
+      } else {
+        // Not an overload error, rethrow
+        logger.error("AI generation failed with non-overload error:", primaryError);
+        throw primaryError;
+      }
+    }
 
     const output = result.output;
 
@@ -153,7 +187,7 @@ const prompt = `
       throw new Error("AI failed to generate a valid plan.");
     }
 
-    logger.info("AI generation successful.");
+    logger.info(`AI generation successful using ${usedModel}`);
     return output;
   },
 );
