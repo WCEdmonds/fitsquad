@@ -17,6 +17,7 @@ import {
 import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
 import { collection, doc, query, orderBy, getDoc, DocumentData } from 'firebase/firestore';
 import { AnalyticsChart } from '@/components/analytics-chart';
+import { ExerciseStrengthChart } from '@/components/exercise-strength-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LineChart, Users, AreaChart, User } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -165,15 +166,27 @@ export default function AnalyticsPage() {
                 </div>
             )}
             
-            {!isLoadingProgress && selectedSoldierId && progressData.length > 0 && (
-                <AnalyticsChart data={progressData} />
-            )}
+            {!isLoadingProgress && selectedSoldierId && (
+                <div className="space-y-8">
+                    {/* AFT Progress */}
+                    {progressData.length > 0 ? (
+                        <div>
+                            <h3 className="text-lg font-semibold mb-4">Fitness Test Progress</h3>
+                            <AnalyticsChart data={progressData} />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[300px]">
+                            <LineChart className="w-16 h-16 text-muted-foreground mb-4"/>
+                            <h3 className="text-xl font-semibold">No Fitness Test Data Found</h3>
+                            <p className="text-muted-foreground">This soldier has not logged any fitness test data yet.</p>
+                        </div>
+                    )}
 
-            {!isLoadingProgress && selectedSoldierId && progressData.length === 0 && (
-                 <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg min-h-[400px]">
-                    <LineChart className="w-16 h-16 text-muted-foreground mb-4"/>
-                    <h3 className="text-xl font-semibold">No Progress Data Found</h3>
-                    <p className="text-muted-foreground">This soldier has not logged any fitness data yet.</p>
+                    {/* Exercise Strength Progression */}
+                    <div>
+                        <h3 className="text-lg font-semibold mb-4">Exercise Strength Progression</h3>
+                        <ExerciseStrengthChart userId={selectedSoldierId} />
+                    </div>
                 </div>
             )}
 
