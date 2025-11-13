@@ -129,6 +129,17 @@ service cloud.firestore {
       allow update, delete: if isSignedIn() && isSupervisorOrAdmin(); // Only Supervisors and Admins can edit/delete
     }
 
+    /**
+     * @description Controls access to user workout logs.
+     * Users can read and write their own logs. Team members and supervisors can read.
+     */
+    match /users/{userId}/workoutLogs/{logId} {
+      allow read: if isOwner(userId) || isAdmin(); // User can read their own logs, admins can read all
+      allow create: if isSignedIn() && request.resource.data.userId == userId; // User can create their own logs
+      allow update: if isOwner(userId); // User can update their own logs
+      allow delete: if isOwner(userId) || isAdmin(); // User can delete their own logs, admins can delete
+    }
+
     // Helper functions
     function isSignedIn() {
       return request.auth != null;

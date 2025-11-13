@@ -9,16 +9,19 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Eye } from 'lucide-react';
+import { Calendar, Eye, CalendarDays, ListTodo } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PlanCalendarView } from '@/components/plan-calendar-view';
+import { DailyWorkoutView } from '@/components/daily-workout-view';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function PlanPage() {
   const [teamPlan, setTeamPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'weekly' | 'daily'>('daily'); // Default to daily
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
@@ -110,48 +113,77 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* View-only indicator */}
-      <Alert className="border-blue-500 bg-blue-50">
-        <div className="flex items-center gap-2">
-          <Eye className="h-4 w-4" />
-          <AlertDescription>
-            <strong>View Mode:</strong> You are viewing the team plan.
-            {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') &&
-              ' To make changes, visit the Plan Builder page.'
-            }
-          </AlertDescription>
-        </div>
-      </Alert>
+      {/* View Mode Tabs */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'weekly' | 'daily')}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="daily" className="flex items-center gap-2">
+            <ListTodo className="h-4 w-4" />
+            Today's Workout
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4" />
+            8-Week Plan
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Calendar View */}
-      <Card>
-        <CardHeader>
-          <CardTitle>8-Week Workout Calendar</CardTitle>
-          <CardDescription>
-            Click on any day to view workout details
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Daily View */}
+        <TabsContent value="daily" className="mt-6">
           {teamPlan ? (
-            <PlanCalendarView
+            <DailyWorkoutView
               plan={teamPlan}
-              onUpdateWorkout={() => {}} // No-op for view-only
-              canEdit={false}
-              teamId={userAccount?.teamId}
-              userId={user?.uid}
+              userId={user?.uid || ''}
+              teamId={userAccount?.teamId || ''}
             />
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
-              <p>Your team's workout plan hasn't been created yet.</p>
-              {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') && (
-                <p className="mt-2 text-sm">Visit the Plan Builder to create your first plan.</p>
-              )}
-            </div>
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
+                <p className="text-muted-foreground text-center">
+                  Your team's workout plan hasn't been created yet.
+                </p>
+                {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Visit the Plan Builder to create your first plan.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        {/* Weekly Calendar View */}
+        <TabsContent value="weekly" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>8-Week Workout Calendar</CardTitle>
+              <CardDescription>
+                Click on any day to view workout details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {teamPlan ? (
+                <PlanCalendarView
+                  plan={teamPlan}
+                  onUpdateWorkout={() => {}} // No-op for view-only
+                  canEdit={false}
+                  teamId={userAccount?.teamId}
+                  userId={user?.uid}
+                />
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
+                  <p>Your team's workout plan hasn't been created yet.</p>
+                  {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') && (
+                    <p className="mt-2 text-sm">Visit the Plan Builder to create your first plan.</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
