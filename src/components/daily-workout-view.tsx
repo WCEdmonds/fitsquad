@@ -439,7 +439,7 @@ export function DailyWorkoutView({ plan, userId, teamId, onDateChange }: DailyWo
           </div>
 
           {/* Save Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-4 pb-24 md:pb-4">
             <Button
               size="lg"
               onClick={handleSaveWorkoutLog}
