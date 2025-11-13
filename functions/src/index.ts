@@ -130,6 +130,7 @@ const prompt = `
           - sets: Number of sets as a string (e.g., "3", "4")
           - reps: Number of reps or duration as a string (e.g., "12", "10-15", "30 seconds", "2 minutes")
           - rest: Rest period as a string (e.g., "60 seconds", "90 seconds", "2 minutes")
+          - perceivedExertion: Rate of Perceived Exertion (RPE) as a string from "1" to "10", where 1 is very easy and 10 is maximum effort (e.g., "7", "8", "9")
           - description: A brief 1-2 sentence description of how to perform the exercise
       5.  Create a suitable title for the overall plan.
       6.  You MUST return a valid JSON object that strictly adheres to the schema. All string fields must be non-empty strings.
