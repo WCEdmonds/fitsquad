@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
@@ -10,7 +10,7 @@ import { Loader2, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { TeamInvitation } from '@/lib/types';
 
-export default function InvitationPage() {
+function InvitationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
@@ -352,5 +352,25 @@ export default function InvitationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Wrapper component with Suspense boundary
+export default function InvitationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Card className="w-full max-w-md">
+            <CardContent className="pt-6 flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading invitation...</p>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <InvitationContent />
+    </Suspense>
   );
 }
