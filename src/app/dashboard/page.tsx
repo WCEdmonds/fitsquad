@@ -14,6 +14,7 @@ import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getColle
 import { collection, doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Soldier } from '@/lib/types';
 import { SoldierDataForm } from '@/components/soldier-data-form';
@@ -30,6 +31,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
@@ -46,6 +54,30 @@ export default function DashboardPage() {
   const [hasSoldierData, setHasSoldierData] = useState<boolean | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+
+  const acftEventDescriptions: Record<string, { title: string; description: string }> = {
+    MDL: {
+      title: "Maximum Deadlift (MDL)",
+      description: "The 3-Repetition Maximum Deadlift measures lower body muscular strength, power, and balance. Soldiers perform three deadlifts using a hex bar with progressively heavier weights, starting at 140 lbs for males and 120 lbs for females. The maximum weight successfully lifted three times is your score."
+    },
+    HRP: {
+      title: "Hand Release Push-up (HRP)",
+      description: "The Hand Release Push-up – Arm Extension measures upper body muscular endurance. From the prone position, perform as many correct push-ups as possible in two minutes. At the bottom of each rep, lift your hands completely off the ground before pushing back up. This tests chest, shoulder, and tricep endurance."
+    },
+    SDC: {
+      title: "Sprint-Drag-Carry (SDC)",
+      description: "The Sprint-Drag-Carry measures anaerobic capacity and muscular strength/endurance. Complete five 50-meter shuttles: sprint, sled drag (90 lbs), lateral shuffle, kettlebell carry (40 lbs each hand), and sprint. This event simulates critical combat tasks like moving under fire and carrying casualties."
+    },
+    PLK: {
+      title: "Plank (PLK)",
+      description: "The Plank measures core muscular endurance in seconds. Maintain a proper forearm plank position for as long as possible, up to 4 minutes and 20 seconds. Your body should form a straight line from head to heels, with weight on forearms and toes. This tests the core strength needed for all military tasks."
+    },
+    "2MR": {
+      title: "2-Mile Run (2MR)",
+      description: "The 2-Mile Run measures aerobic endurance and cardiovascular fitness. Complete two miles on a measured course as fast as possible. This event tests your aerobic capacity - the foundation of military readiness and the ability to sustain operations over extended periods."
+    }
+  };
 
   const userDocRef = useMemoFirebase(() => {
     if (!user) return null;
@@ -284,7 +316,18 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="grid gap-6 pb-24 md:pb-4">
+    <div className="grid gap-6">
+      {/* Logo at top */}
+      <div className="flex justify-center">
+        <Image
+          src="/fitsquad-logo.png"
+          alt="FitSquad Logo"
+          width={48}
+          height={48}
+          className="rounded-lg"
+        />
+      </div>
+
       <div className="flex justify-between items-start flex-wrap gap-4">
        <div className="flex items-center gap-4">
           <h1 className="text-2xl md:text-3xl font-bold">
@@ -347,65 +390,80 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">Total</CardTitle>
-            <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+      <div className="grid gap-2 grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
+        <Card className="aspect-square flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform cursor-pointer">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">Total</CardTitle>
+            <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{teamMembers?.length ?? 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">soldiers</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-blue-700 dark:text-blue-300">{teamMembers?.length ?? 0}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">soldiers</p>
           </CardContent>
         </Card>
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">MDL</CardTitle>
-            <Barbell weight="bold" className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        <Card
+          onClick={() => setSelectedEvent('MDL')}
+          className="aspect-square flex flex-col bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800 hover:scale-105 transition-transform cursor-pointer"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">MDL</CardTitle>
+            <Barbell weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{avgMdl}</div>
-            <p className="text-xs text-muted-foreground mt-1">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-purple-700 dark:text-purple-300">{avgMdl}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">HRP</CardTitle>
-            <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+        <Card
+          onClick={() => setSelectedEvent('HRP')}
+          className="aspect-square flex flex-col bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800 hover:scale-105 transition-transform cursor-pointer"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">HRP</CardTitle>
+            <Activity className="h-4 w-4 md:h-5 md:w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
-            <p className="text-xs text-muted-foreground mt-1">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">SDC</CardTitle>
-            <PersonSimpleRun weight="bold" className="h-5 w-5 text-green-600 dark:text-green-400" />
+        <Card
+          onClick={() => setSelectedEvent('SDC')}
+          className="aspect-square flex flex-col bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800 hover:scale-105 transition-transform cursor-pointer"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">SDC</CardTitle>
+            <PersonSimpleRun weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-green-700 dark:text-green-300">{avgSdc}</div>
-            <p className="text-xs text-muted-foreground mt-1">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-green-700 dark:text-green-300">{avgSdc}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">PLK</CardTitle>
-            <Timer weight="bold" className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        <Card
+          onClick={() => setSelectedEvent('PLK')}
+          className="aspect-square flex flex-col bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800 hover:scale-105 transition-transform cursor-pointer"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">PLK</CardTitle>
+            <Timer weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-yellow-600 dark:text-yellow-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{avgPlk}</div>
-            <p className="text-xs text-muted-foreground mt-1">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-yellow-700 dark:text-yellow-300">{avgPlk}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
-        <Card className="aspect-square flex flex-col bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800 hover:scale-105 cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
-            <CardTitle className="text-sm font-semibold">2MR</CardTitle>
-            <SneakerMove weight="bold" className="h-5 w-5 text-red-600 dark:text-red-400" />
+        <Card
+          onClick={() => setSelectedEvent('2MR')}
+          className="aspect-square flex flex-col bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800 hover:scale-105 transition-transform cursor-pointer"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-semibold">2MR</CardTitle>
+            <SneakerMove weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col justify-center px-4 pb-4">
-            <div className="text-3xl font-bold text-red-700 dark:text-red-300">{avgRunTime}</div>
-            <p className="text-xs text-muted-foreground mt-1">avg score</p>
+          <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+            <div className="text-xl md:text-3xl font-bold text-red-700 dark:text-red-300">{avgRunTime}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
           </CardContent>
         </Card>
       </div>
@@ -436,6 +494,18 @@ export default function DashboardPage() {
       </div>
       </>
       )}
+
+      {/* ACFT Event Description Dialog */}
+      <Dialog open={selectedEvent !== null} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedEvent && acftEventDescriptions[selectedEvent]?.title}</DialogTitle>
+            <DialogDescription className="pt-4 text-base leading-relaxed">
+              {selectedEvent && acftEventDescriptions[selectedEvent]?.description}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

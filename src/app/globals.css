@@ -23,6 +23,17 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* For Capacitor native apps - prevent body scroll completely */
+html.capacitor,
+html.capacitor body {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 /* Re-enable selection for input fields and text areas */
 input, textarea, [contenteditable] {
   -webkit-user-select: auto;
