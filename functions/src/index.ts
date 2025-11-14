@@ -32,7 +32,7 @@ function getAppBaseUrl(): string {
       return baseUrl;
     }
   } catch (e) {
-    logger.warn('Could not read Firebase config, using default', e);
+    logger.warn("Could not read Firebase config, using default", e);
   }
   // Fall back to environment variable or default
   return process.env.APP_BASE_URL || "https://mysquad.fit";
