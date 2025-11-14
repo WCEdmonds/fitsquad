@@ -396,7 +396,7 @@ export default function AnalyticsPage() {
 
 
     return (
-        <>
+        <div className="pb-24 md:pb-4">
             <Card>
                 <CardHeader>
                     <CardTitle>Soldier Analytics</CardTitle>
@@ -510,7 +510,7 @@ export default function AnalyticsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </>
+        </div>
     );
 }
 

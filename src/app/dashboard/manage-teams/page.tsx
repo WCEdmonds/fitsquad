@@ -135,7 +135,7 @@ export default function ManageTeamsPage() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 pb-24 md:pb-4">
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">

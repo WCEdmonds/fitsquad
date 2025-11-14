@@ -31,6 +31,7 @@ export default function SavedPlansPage() {
   const { data: savedPlans, isLoading } = useCollection(workoutPlansRef);
 
   return (
+    <div className="pb-24 md:pb-4">
     <Card>
       <CardHeader>
         <CardTitle>Saved Workout Plans</CardTitle>
@@ -60,5 +61,6 @@ export default function SavedPlansPage() {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

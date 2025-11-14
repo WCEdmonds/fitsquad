@@ -284,7 +284,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 pb-24 md:pb-4">
       <div className="flex justify-between items-start flex-wrap gap-4">
        <div className="flex items-center gap-4">
           <h1 className="text-2xl md:text-3xl font-bold">

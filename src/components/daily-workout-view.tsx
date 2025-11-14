@@ -250,19 +250,20 @@ export function DailyWorkoutView({ plan, userId, teamId, onDateChange }: DailyWo
       {/* Date Navigation */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => changeDay(-1)}
+              className="shrink-0"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
-            <div className="text-center">
+            <div className="text-center flex-1 min-w-0">
               <div className="flex items-center gap-2 justify-center">
-                <CalendarIcon className="h-5 w-5" />
-                <h2 className="text-xl font-bold">
+                <CalendarIcon className="h-5 w-5 shrink-0" />
+                <h2 className="text-base md:text-xl font-bold">
                   {selectedDate.toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'long',
@@ -280,6 +281,7 @@ export function DailyWorkoutView({ plan, userId, teamId, onDateChange }: DailyWo
               variant="outline"
               size="sm"
               onClick={() => changeDay(1)}
+              className="shrink-0"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
