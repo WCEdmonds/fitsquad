@@ -59,7 +59,7 @@ export default function DashboardLayout({
 
   // Initialize demo data for App Store review account
   React.useEffect(() => {
-    if (!user || !firestore || !isDemoAccount(user.email)) return;
+    if (!user || !firestore || !isDemoAccount(user.email || '')) return;
 
     const initDemo = async () => {
       try {

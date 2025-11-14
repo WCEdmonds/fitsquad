@@ -277,46 +277,57 @@ export const generatePlanV2 = onRequest(
       }
 
       const accountData = accountSnap.data();
-      const now = new Date();
-      const weekStart = accountData?.aiGenerationsWeekStart
-        ? new Date(accountData.aiGenerationsWeekStart)
-        : null;
 
-      // Check if we need to reset the weekly counter
-      let aiGenerationsThisWeek = accountData?.aiGenerationsThisWeek || 0;
-      let needsReset = false;
+      // Admins have unlimited AI generations - skip rate limiting
+      const isAdmin = accountData?.accountType === "Admin";
 
-      if (!weekStart || (now.getTime() - weekStart.getTime()) > 7 * 24 * 60 * 60 * 1000) {
-        // More than a week has passed, reset counter
-        needsReset = true;
-        aiGenerationsThisWeek = 0;
+      if (!isAdmin) {
+        // Rate limiting for non-admin users
+        const now = new Date();
+        const weekStart = accountData?.aiGenerationsWeekStart
+          ? new Date(accountData.aiGenerationsWeekStart)
+          : null;
+
+        // Check if we need to reset the weekly counter
+        let aiGenerationsThisWeek = accountData?.aiGenerationsThisWeek || 0;
+        let needsReset = false;
+
+        if (!weekStart || (now.getTime() - weekStart.getTime()) > 7 * 24 * 60 * 60 * 1000) {
+          // More than a week has passed, reset counter
+          needsReset = true;
+          aiGenerationsThisWeek = 0;
+        }
+
+        // Check if user has exceeded limit (5 per week)
+        if (aiGenerationsThisWeek >= 5) {
+          response.status(429).json({
+            error: {
+              message: "AI generation limit reached. You can generate up to 5 workout plans per week. Your limit will reset next week.",
+            },
+          });
+          return;
+        }
+
+        // Increment counter
+        const newCount = aiGenerationsThisWeek + 1;
+        const updateData: any = {
+          aiGenerationsThisWeek: newCount,
+        };
+
+        if (needsReset) {
+          updateData.aiGenerationsWeekStart = now.toISOString();
+        }
+
+        await accountRef.update(updateData);
+
+        logger.info(
+          `User ${userId} has used ${newCount}/5 AI generations this week`,
+        );
+      } else {
+        logger.info(
+          `Admin user ${userId} bypassing rate limiting`,
+        );
       }
-
-      // Check if user has exceeded limit (5 per week)
-      if (aiGenerationsThisWeek >= 5) {
-        response.status(429).json({
-          error: {
-            message: "AI generation limit reached. You can generate up to 5 workout plans per week. Your limit will reset next week.",
-          },
-        });
-        return;
-      }
-
-      // Increment counter
-      const newCount = aiGenerationsThisWeek + 1;
-      const updateData: any = {
-        aiGenerationsThisWeek: newCount,
-      };
-
-      if (needsReset) {
-        updateData.aiGenerationsWeekStart = now.toISOString();
-      }
-
-      await accountRef.update(updateData);
-
-      logger.info(
-        `User ${userId} has used ${newCount}/5 AI generations this week`,
-      );
 
       // Call the actual generation flow
       const result = await generatePlanFlow(inputData);

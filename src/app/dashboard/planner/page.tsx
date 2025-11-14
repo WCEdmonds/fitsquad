@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { cn } from "@/lib/utils"; // <-- This was the missing import
 import {
   Card,
   CardContent,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { PlannerForm, type PlannerFormValues } from '@/components/planner-form';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, FileText, Loader2, Save } from 'lucide-react';
+import { Calendar, FileText, Loader2, Save, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getCollectionNonBlocking } from '@/firebase';
 import { collection, doc, addDoc } from 'firebase/firestore';
@@ -223,6 +224,11 @@ export default function PlannerPage() {
     window.print();
   }
 
+  const handleNewPlan = () => {
+    setWorkoutPlan(null);
+    setGeneratedPlanId(null);
+  }
+
   // Show loading state while user account or team data is loading
   if (isAccountLoading || (userAccount?.teamId && isMembersLoading)) {
     return (
@@ -261,8 +267,12 @@ export default function PlannerPage() {
       <div className="hidden print-only">
         {workoutPlan && <WorkoutPrintView plan={workoutPlan} />}
       </div>
-      <div className="grid h-full gap-6 lg:grid-cols-3 no-print pb-24 md:pb-4">
-        <div className="lg:col-span-1">
+      <div className="grid h-full gap-6 lg:grid-cols-3 no-print">
+        {/* Hide form on mobile when plan is generated */}
+        <div className={cn(
+          "lg:col-span-1",
+          workoutPlan && "hidden lg:block"
+        )}>
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Smart Planner</CardTitle>
@@ -285,15 +295,28 @@ export default function PlannerPage() {
         <div className="lg:col-span-2">
           <Card className="h-full min-h-[600px]">
             <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>{workoutPlan?.title ?? 'Generated Plan'}</CardTitle>
-                    <CardDescription>
-                      {workoutPlan ? 'Review the weekly plan below.' : 'Your generated workout plan will appear here.'}
-                    </CardDescription>
+                <div className="flex justify-between items-center gap-4">
+                  <div className="flex items-center gap-2 flex-1">
+                    {/* Back button on mobile when plan is shown */}
+                    {workoutPlan && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleNewPlan}
+                        className="lg:hidden"
+                      >
+                        <ArrowLeft className="h-5 w-5" />
+                      </Button>
+                    )}
+                    <div>
+                      <CardTitle>{workoutPlan?.title ?? 'Generated Plan'}</CardTitle>
+                      <CardDescription>
+                        {workoutPlan ? 'Review the weekly plan below.' : 'Your generated workout plan will appear here.'}
+                      </CardDescription>
+                    </div>
                   </div>
                   {workoutPlan && (
-                    <div className="flex gap-2">
+                    <div className="hidden md:flex gap-2">
                       <Button variant="outline" onClick={handleSavePlan} disabled={isSaving}>
                         {isSaving ? <Loader2 className="mr-2 animate-spin" /> : <Save className="mr-2" />}
                         Save Plan
