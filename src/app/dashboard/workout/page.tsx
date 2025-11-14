@@ -28,6 +28,8 @@ interface Exercise {
   weight: string;
   notes: string;
   isCardio?: boolean;
+  gifUrl?: string;
+  instructions?: string[];
 }
 
 interface WorkoutTemplate {
@@ -309,6 +311,8 @@ export default function QuickWorkoutPage() {
   const handleSelectExercise = (index: number, dbExercise: DBExercise) => {
     const updated = [...exercises];
     updated[index].name = dbExercise.name;
+    updated[index].gifUrl = dbExercise.gifUrl;
+    updated[index].instructions = dbExercise.instructions;
 
     // Auto-suggest sets/reps based on exercise type
     const isCardio = dbExercise.bodyParts.includes('cardio');
@@ -316,9 +320,11 @@ export default function QuickWorkoutPage() {
       updated[index].sets = '1';
       updated[index].reps = '20 min';
       updated[index].weight = '';
+      updated[index].isCardio = true;
     } else {
       updated[index].sets = '3';
       updated[index].reps = '10';
+      updated[index].isCardio = false;
     }
 
     setExercises(updated);
@@ -591,6 +597,29 @@ export default function QuickWorkoutPage() {
                       className="mt-1"
                     />
                   </div>
+
+                  {/* Exercise GIF and Instructions */}
+                  {exercise.gifUrl && (
+                    <div className="space-y-2">
+                      <img
+                        src={exercise.gifUrl}
+                        alt={exercise.name}
+                        className="w-full max-w-xs mx-auto rounded-lg"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
+                  {exercise.instructions && exercise.instructions.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">How to perform:</Label>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                        {exercise.instructions.map((instruction, idx) => (
+                          <li key={idx} className="leading-relaxed">{instruction}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-2">
