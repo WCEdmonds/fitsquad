@@ -185,6 +185,7 @@ export default function SoldiersPage() {
                   soldierName: `${soldierData.firstName} ${soldierData.lastName}`,
                   teamName: teamData.name,
                   inviterName: inviterName,
+                  teamId: teamId,
                   invitationId: invitationDoc.id,
                 });
 
@@ -248,6 +249,7 @@ export default function SoldiersPage() {
             soldierName: `${soldierData.firstName} ${soldierData.lastName}`,
             teamName: teamData?.name || 'your team',
             inviterName: inviterName,
+            teamId: effectiveTeamId,
             invitationId: invitationDoc.id,
           });
 

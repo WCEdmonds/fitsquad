@@ -131,6 +131,27 @@ service cloud.firestore {
     }
 
     /**
+     * @description Controls access to team invitations.
+     * - Team members and supervisors/admins can read invitations in their team
+     * - The invited soldier can read/accept/decline their own invitation
+     * - Only supervisors and admins can create invitations
+     */
+    match /teams/{teamId}/invitations/{invitationId} {
+      allow get: if isSignedIn() && (
+        isTeamMember(teamId) ||
+        request.auth.uid == resource.data.soldierId ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (isTeamMember(teamId) || isAdmin());
+      allow create: if isSignedIn() && isSupervisorOrAdmin();
+      allow update: if isSignedIn() && (
+        isSupervisorOrAdmin() ||
+        (request.auth.uid == resource.data.soldierId && onlyStatusChanged())
+      );
+      allow delete: if isAdmin();
+    }
+
+    /**
      * @description Controls access to user workout logs.
      * Users can read and write their own logs. Team members and supervisors can read.
      */
@@ -221,6 +242,25 @@ service cloud.firestore {
              requestingUserAccount.teamId != null &&
              targetUserAccount.teamId != null &&
              requestingUserAccount.teamId == targetUserAccount.teamId;
+    }
+
+    function isTeamMember(teamId) {
+      let memberRef = /databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid);
+      return exists(memberRef);
+    }
+
+    function onlyStatusChanged() {
+      let newData = request.resource.data;
+      let oldData = resource.data;
+      let allowedChanges = ['status', 'acceptedAt', 'declinedAt'];
+
+      // Check that only allowed fields have changed
+      for (field in newData) {
+        if (field not in allowedChanges && newData[field] != oldData[field]) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 }

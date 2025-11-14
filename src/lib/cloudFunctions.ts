@@ -67,6 +67,7 @@ export interface SendTeamInvitationInput {
   soldierName: string;
   teamName: string;
   inviterName: string;
+  teamId: string;
   invitationId: string;
 }
 

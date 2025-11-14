@@ -96,6 +96,15 @@ const VerifyEmailInputSchema = z.object({
   code: z.string().describe("The 6-digit verification code."),
 });
 
+const SendTeamInvitationInputSchema = z.object({
+  to: z.string().email().describe("The soldier's email address."),
+  soldierName: z.string().describe("The soldier's full name."),
+  teamName: z.string().describe("The team name."),
+  inviterName: z.string().describe("The name of the person sending the invitation."),
+  teamId: z.string().describe("The team document ID."),
+  invitationId: z.string().describe("The invitation document ID."),
+});
+
 // ============================================================================
 //   AI FLOW DEFINITION (CORRECTED)
 // ============================================================================
@@ -594,6 +603,168 @@ export const verifyEmail = onRequest(
       });
     } catch (err) {
       logger.error("Error verifying email:", err);
+      if (err instanceof z.ZodError) {
+        response.status(400).json({
+          success: false,
+          error: "Invalid input",
+          details: err.errors,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        response.status(500).json({ success: false, error: errorMessage });
+      }
+    }
+  },
+);
+
+// ============================================================================
+//
+//   FUNCTION 4: sendTeamInvitation (HTTP Endpoint)
+//
+// ============================================================================
+
+export const sendTeamInvitation = onRequest(
+  {
+    cors: true,
+    secrets: [mailgunApiKey, mailgunDomain, mailgunFromEmail],
+  },
+  async (request, response) => {
+    logger.info("Function received request for sendTeamInvitation", {
+      to: request.body.to,
+      teamName: request.body.teamName,
+    });
+
+    try {
+      // 1. Validate input
+      const input = SendTeamInvitationInputSchema.parse(request.body);
+
+      // 2. Get secrets
+      const apiKey = process.env.MAILGUN_API_KEY;
+      const domain = process.env.MAILGUN_DOMAIN;
+      const fromEmail = process.env.MAILGUN_FROM_EMAIL;
+
+      if (!apiKey || !domain || !fromEmail) {
+        logger.error("Mailgun environment variables are not configured.");
+        response.status(500).json({
+          success: false,
+          error: "Email server is not configured.",
+        });
+        return;
+      }
+
+      // 3. Create invitation email HTML
+      const acceptLink = `https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}?action=accept`;
+      const declineLink = `https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}?action=decline`;
+
+      const emailBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+            .header h1 { margin: 0; font-size: 28px; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+            .greeting { font-size: 16px; margin-bottom: 20px; }
+            .team-info { background: white; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0; }
+            .team-info p { margin: 5px 0; }
+            .team-name { font-weight: bold; font-size: 18px; color: #667eea; }
+            .inviter { color: #666; font-size: 14px; }
+            .actions { margin: 30px 0; text-align: center; }
+            .btn { display: inline-block; padding: 12px 30px; margin: 0 10px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: all 0.3s; }
+            .btn-accept { background: #10b981; color: white; }
+            .btn-accept:hover { background: #059669; }
+            .btn-decline { background: #ef4444; color: white; }
+            .btn-decline:hover { background: #dc2626; }
+            .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #666; text-align: center; }
+            .expires { background: #fef3c7; border: 1px solid #fcd34d; padding: 12px; border-radius: 6px; margin: 20px 0; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🏋️ Team Invitation</h1>
+              <p>You're invited to join a team on FitSquad</p>
+            </div>
+            <div class="content">
+              <div class="greeting">
+                <p>Hi <strong>${input.soldierName}</strong>,</p>
+                <p><strong>${input.inviterName}</strong> has invited you to join <strong>"${input.teamName}"</strong> on FitSquad!</p>
+              </div>
+
+              <div class="team-info">
+                <p class="team-name">📍 ${input.teamName}</p>
+                <p class="inviter">Invited by: ${input.inviterName}</p>
+              </div>
+
+              <p>Once you accept, you'll be able to:</p>
+              <ul>
+                <li>Track your ACFT fitness scores</li>
+                <li>View team performance metrics</li>
+                <li>Access team-generated workout plans</li>
+                <li>Collaborate with your team members</li>
+              </ul>
+
+              <div class="expires">
+                ⏰ This invitation expires in 30 days
+              </div>
+
+              <div class="actions">
+                <a href="${acceptLink}" class="btn btn-accept">✓ Accept Invitation</a>
+                <a href="${declineLink}" class="btn btn-decline">✗ Decline Invitation</a>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                If the buttons above don't work, you can also visit: <br>
+                <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}</code>
+              </p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} FitSquad. All rights reserved.</p>
+              <p>This is an automated message, please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // 4. Prepare form for Mailgun
+      const form = new FormData();
+      form.append("from", `FitSquad <${fromEmail}>`);
+      form.append("to", input.to);
+      form.append("subject", `You're invited to join "${input.teamName}" on FitSquad`);
+      form.append("html", emailBody);
+
+      // 5. Send email via Mailgun
+      const mailgunResponse = await fetch(
+        `https://api.mailgun.net/v3/${domain}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              "Basic " + Buffer.from(`api:${apiKey}`).toString("base64"),
+          },
+          body: form,
+        },
+      );
+
+      if (!mailgunResponse.ok) {
+        const errorBody = await mailgunResponse.text();
+        logger.error("Mailgun API Error:", errorBody);
+        throw new Error(
+          `Mailgun API Error: ${mailgunResponse.status} ${mailgunResponse.statusText}`,
+        );
+      }
+
+      const result = await mailgunResponse.json();
+      logger.info("Team invitation email sent successfully:", result);
+
+      // 6. Respond
+      response.status(200).json({ success: true });
+    } catch (err) {
+      logger.error("Team invitation send error:", err);
       if (err instanceof z.ZodError) {
         response.status(400).json({
           success: false,
