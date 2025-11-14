@@ -318,20 +318,20 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex justify-between items-start flex-wrap gap-4">
-       <div className="flex items-center gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold">
+      <div className="flex justify-between items-start flex-wrap gap-4 w-full">
+       <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold truncate">
             {teamData?.name ?? (account?.accountType === 'Commander' ? "Select a Team" : "Dashboard")}
           </h1>
           {teamData && (
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="flex-shrink-0">
                     <MoreHorizontal className="h-4 w-4" />
                     <span className="sr-only">Team Actions</span>
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="z-50">
                     <DropdownMenuItem onClick={handleCopyTeamCode}>
                         <Copy className="mr-2 h-4 w-4" />
                         Copy Team Code

@@ -73,3 +73,17 @@ export type WorkoutPlan = {
   planContent: string;
   createdAt: string;
 };
+
+export type TeamInvitation = {
+  id: string;
+  teamId: string;
+  teamName: string;
+  soldierId: string;
+  soldierEmail: string;
+  invitedBy: string; // UID of supervisor/commander who sent invite
+  status: 'pending' | 'accepted' | 'declined'; // pending, accepted, or declined
+  createdAt: string; // ISO timestamp
+  expiresAt: string; // ISO timestamp - 30 days from creation
+  acceptedAt?: string; // ISO timestamp - when soldier accepted
+  declinedAt?: string; // ISO timestamp - when soldier declined
+};

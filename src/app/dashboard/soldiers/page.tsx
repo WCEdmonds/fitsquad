@@ -12,12 +12,12 @@ import type { Soldier } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Mail, UserPlus } from 'lucide-react';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser, getDocNonBlocking, getCollectionNonBlocking } from '@/firebase';
-import { collection, doc, getDocs, query, where, writeBatch, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, writeBatch, getDoc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InviteDialog } from '@/components/invite-dialog';
-import { callSendInvite } from '@/lib/cloudFunctions';
+import { callSendInvite, callSendTeamInvitation } from '@/lib/cloudFunctions';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -149,6 +149,7 @@ export default function SoldiersPage() {
                 }
                 const soldierUser = userSnapshot.docs[0];
                 const soldierId = soldierUser.id;
+                const soldierData = soldierUser.data();
 
                 const teamsRef = collection(firestore, 'teams');
                 const teamQuery = query(teamsRef, where('teamCode', '==', teamCode));
@@ -160,20 +161,38 @@ export default function SoldiersPage() {
                 }
                 const teamDoc = teamSnapshot.docs[0];
                 const teamId = teamDoc.id;
+                const teamData = teamDoc.data();
 
-                const batch = writeBatch(firestore);
-                const teamMemberRef = doc(firestore, 'teams', teamId, 'members', soldierId);
-                batch.set(teamMemberRef, { uid: soldierId, email: soldierUser.data().email, role: soldierUser.data().accountType });
-                
-                const soldierAccountRef = doc(firestore, 'accounts', soldierId);
-                batch.update(soldierAccountRef, { teamId: teamId });
-                
-                await batch.commit();
-                toast({ title: 'Success', description: `Soldier added to team ${teamDoc.data().name}.` });
+                // Create team invitation
+                const invitationsRef = collection(firestore, 'teams', teamId, 'invitations');
+                const invitationDoc = await addDoc(invitationsRef, {
+                  teamId: teamId,
+                  teamName: teamData.name,
+                  soldierId: soldierId,
+                  soldierEmail: email,
+                  invitedBy: user.uid,
+                  status: 'pending',
+                  createdAt: new Date().toISOString(),
+                  expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                });
+
+                // Send invitation email
+                const inviterDoc = await getDoc(doc(firestore, 'accounts', user.uid));
+                const inviterName = inviterDoc.data()?.firstName || 'A team member';
+
+                await callSendTeamInvitation({
+                  to: email,
+                  soldierName: `${soldierData.firstName} ${soldierData.lastName}`,
+                  teamName: teamData.name,
+                  inviterName: inviterName,
+                  invitationId: invitationDoc.id,
+                });
+
+                toast({ title: 'Invitation Sent', description: `Invitation sent to ${email} to join ${teamData.name}.` });
                 setIsAddDialogOpen(false);
             } catch (error: any) {
                  console.error('Error adding soldier (Admin): ', error);
-                 toast({ title: 'Error', description: `Failed to add soldier: ${error.message}`, variant: 'destructive' });
+                 toast({ title: 'Error', description: `Failed to send invitation: ${error.message}`, variant: 'destructive' });
             }
             return;
         }
@@ -203,25 +222,40 @@ export default function SoldiersPage() {
             return;
           }
 
-          const batch = writeBatch(firestore);
+          // Get team data
+          const teamDoc = await getDoc(doc(firestore, 'teams', effectiveTeamId));
+          const teamData = teamDoc.data();
 
-          const teamMemberRef = doc(firestore, 'teams', effectiveTeamId, 'members', soldierId);
-          batch.set(teamMemberRef, {
-            uid: soldierId,
-            email: soldierData.email,
-            role: soldierData.accountType,
+          // Create team invitation instead of immediately adding
+          const invitationsRef = collection(firestore, 'teams', effectiveTeamId, 'invitations');
+          const invitationDoc = await addDoc(invitationsRef, {
+            teamId: effectiveTeamId,
+            teamName: teamData?.name,
+            soldierId: soldierId,
+            soldierEmail: email,
+            invitedBy: user.uid,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           });
 
-          const soldierAccountRef = doc(firestore, 'accounts', soldierId);
-          batch.update(soldierAccountRef, { teamId: effectiveTeamId });
+          // Send invitation email
+          const inviterDoc = await getDoc(doc(firestore, 'accounts', user.uid));
+          const inviterName = inviterDoc.data()?.firstName || 'A team member';
 
-          await batch.commit();
+          await callSendTeamInvitation({
+            to: email,
+            soldierName: `${soldierData.firstName} ${soldierData.lastName}`,
+            teamName: teamData?.name || 'your team',
+            inviterName: inviterName,
+            invitationId: invitationDoc.id,
+          });
 
-          toast({ title: 'Success', description: 'Soldier has been added to the team.' });
+          toast({ title: 'Invitation Sent', description: `Invitation sent to ${email} to join the team.` });
           setIsAddDialogOpen(false);
         } catch (error: any) {
           console.error('Error adding soldier: ', error);
-          toast({ title: 'Error', description: `Failed to add soldier: ${error.message}`, variant: 'destructive' });
+          toast({ title: 'Error', description: `Failed to send invitation: ${error.message}`, variant: 'destructive' });
         }
     };
 
