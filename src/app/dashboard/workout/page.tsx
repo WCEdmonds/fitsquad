@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dumbbell, Plus, X, Check, Search, Loader2, Zap, Weight, PersonStanding, Timer } from 'lucide-react';
+import { Dumbbell, Plus, X, Check, Search, Loader2, Zap, Weight, PersonStanding, Timer, ArrowUp, ArrowDown, Mountain, Waves, Backpack, Flame, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
@@ -40,8 +40,8 @@ interface WorkoutTemplate {
 const workoutTemplates: WorkoutTemplate[] = [
   {
     id: 'gym-strength',
-    name: 'Gym Strength',
-    description: 'Full body strength training with weights',
+    name: 'Full Body Strength',
+    description: 'Complete strength training with compound lifts',
     icon: Weight,
     exercises: [
       { name: 'Barbell Squat', sets: '4', reps: '8', weight: '185', notes: '' },
@@ -49,6 +49,48 @@ const workoutTemplates: WorkoutTemplate[] = [
       { name: 'Deadlift', sets: '3', reps: '6', weight: '225', notes: '' },
       { name: 'Overhead Press', sets: '3', reps: '10', weight: '95', notes: '' },
       { name: 'Barbell Row', sets: '3', reps: '10', weight: '115', notes: '' },
+    ],
+  },
+  {
+    id: 'upper-push',
+    name: 'Upper Body Push',
+    description: 'Chest, shoulders, and triceps workout',
+    icon: ArrowUp,
+    exercises: [
+      { name: 'Bench Press', sets: '4', reps: '8', weight: '135', notes: '' },
+      { name: 'Incline Dumbbell Press', sets: '3', reps: '10', weight: '60', notes: 'Per dumbbell' },
+      { name: 'Overhead Press', sets: '4', reps: '8', weight: '95', notes: '' },
+      { name: 'Dips', sets: '3', reps: '12', weight: '', notes: 'Bodyweight or weighted' },
+      { name: 'Lateral Raises', sets: '3', reps: '15', weight: '20', notes: '' },
+      { name: 'Tricep Pushdowns', sets: '3', reps: '12', weight: '60', notes: '' },
+    ],
+  },
+  {
+    id: 'upper-pull',
+    name: 'Upper Body Pull',
+    description: 'Back and biceps focused workout',
+    icon: ArrowDown,
+    exercises: [
+      { name: 'Pull-ups', sets: '4', reps: '8', weight: '', notes: 'Add weight if needed' },
+      { name: 'Barbell Row', sets: '4', reps: '8', weight: '135', notes: '' },
+      { name: 'Lat Pulldown', sets: '3', reps: '10', weight: '120', notes: '' },
+      { name: 'Dumbbell Row', sets: '3', reps: '10', weight: '60', notes: 'Per arm' },
+      { name: 'Face Pulls', sets: '3', reps: '15', weight: '50', notes: '' },
+      { name: 'Barbell Curl', sets: '3', reps: '12', weight: '65', notes: '' },
+    ],
+  },
+  {
+    id: 'leg-day',
+    name: 'Leg Day',
+    description: 'Complete lower body workout',
+    icon: Mountain,
+    exercises: [
+      { name: 'Barbell Squat', sets: '5', reps: '6', weight: '225', notes: '' },
+      { name: 'Romanian Deadlift', sets: '4', reps: '8', weight: '185', notes: '' },
+      { name: 'Leg Press', sets: '4', reps: '12', weight: '360', notes: '' },
+      { name: 'Walking Lunges', sets: '3', reps: '20', weight: '40', notes: 'Per leg' },
+      { name: 'Leg Curl', sets: '3', reps: '12', weight: '90', notes: '' },
+      { name: 'Calf Raises', sets: '4', reps: '15', weight: '135', notes: '' },
     ],
   },
   {
@@ -65,15 +107,17 @@ const workoutTemplates: WorkoutTemplate[] = [
     ],
   },
   {
-    id: 'cardio-run',
-    name: 'Cardio Run',
-    description: 'Running-focused cardio workout',
-    icon: Timer,
+    id: 'core-abs',
+    name: 'Core & Abs',
+    description: 'Targeted core strengthening workout',
+    icon: Activity,
     exercises: [
-      { name: 'Warm-up Jog', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace' },
-      { name: 'Interval Sprints', sets: '8', reps: '30 sec', weight: '', notes: '90 sec rest between' },
-      { name: 'Steady Run', sets: '1', reps: '20 min', weight: '', notes: 'Moderate pace' },
-      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace' },
+      { name: 'Plank', sets: '4', reps: '60 sec', weight: '', notes: '' },
+      { name: 'Russian Twists', sets: '4', reps: '30', weight: '25', notes: 'With plate or dumbbell' },
+      { name: 'Hanging Leg Raises', sets: '4', reps: '12', weight: '', notes: '' },
+      { name: 'Ab Wheel Rollouts', sets: '3', reps: '15', weight: '', notes: '' },
+      { name: 'Side Plank', sets: '3', reps: '45 sec', weight: '', notes: 'Each side' },
+      { name: 'Mountain Climbers', sets: '3', reps: '30', weight: '', notes: '' },
     ],
   },
   {
@@ -87,6 +131,105 @@ const workoutTemplates: WorkoutTemplate[] = [
       { name: 'Burpees', sets: '4', reps: '12', weight: '', notes: '30 sec rest' },
       { name: 'High Knees', sets: '4', reps: '30 sec', weight: '', notes: '30 sec rest' },
       { name: 'Jump Rope', sets: '4', reps: '1 min', weight: '', notes: '30 sec rest' },
+    ],
+  },
+  {
+    id: 'easy-run',
+    name: 'Easy Recovery Run',
+    description: 'Low-intensity aerobic base building',
+    icon: Timer,
+    exercises: [
+      { name: 'Warm-up Walk', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace' },
+      { name: 'Easy Run', sets: '1', reps: '30 min', weight: '', notes: 'Conversational pace, Zone 2' },
+      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace' },
+      { name: 'Stretching', sets: '1', reps: '10 min', weight: '', notes: 'Focus on legs' },
+    ],
+  },
+  {
+    id: 'tempo-run',
+    name: 'Tempo Run',
+    description: 'Sustained threshold pace training',
+    icon: Flame,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace' },
+      { name: 'Tempo Run', sets: '1', reps: '20 min', weight: '', notes: 'Comfortably hard, 80-85% effort' },
+      { name: 'Cool-down Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace' },
+      { name: 'Dynamic Stretching', sets: '1', reps: '5 min', weight: '', notes: '' },
+    ],
+  },
+  {
+    id: 'interval-run',
+    name: 'Interval Sprints',
+    description: 'Speed and power development',
+    icon: Zap,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace' },
+      { name: '400m Intervals', sets: '6', reps: '400m', weight: '', notes: '90-95% effort, 2 min rest' },
+      { name: 'Cool-down Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace' },
+      { name: 'Walking', sets: '1', reps: '5 min', weight: '', notes: 'Recovery' },
+    ],
+  },
+  {
+    id: 'long-run',
+    name: 'Long Distance Run',
+    description: 'Endurance building for 2-mile test prep',
+    icon: Timer,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace' },
+      { name: 'Long Run', sets: '1', reps: '60 min', weight: '', notes: 'Steady, sustainable pace' },
+      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace' },
+      { name: 'Stretching & Foam Rolling', sets: '1', reps: '15 min', weight: '', notes: 'Full body recovery' },
+    ],
+  },
+  {
+    id: 'ruck-march',
+    name: 'Ruck March',
+    description: 'Military load-bearing conditioning',
+    icon: Backpack,
+    exercises: [
+      { name: 'Ruck March', sets: '1', reps: '60 min', weight: '35', notes: '35-45 lbs, maintain 15 min/mile pace' },
+      { name: 'Farmer Carries', sets: '3', reps: '100m', weight: '50', notes: '2-3 min rest' },
+      { name: 'Overhead Ruck Hold', sets: '3', reps: '30 sec', weight: '35', notes: 'Ruck overhead' },
+      { name: 'Cool-down Walk', sets: '1', reps: '10 min', weight: '', notes: 'No ruck' },
+    ],
+  },
+  {
+    id: 'swim',
+    name: 'Swim Workout',
+    description: 'Low-impact cardio and conditioning',
+    icon: Waves,
+    exercises: [
+      { name: 'Warm-up Swim', sets: '1', reps: '200m', weight: '', notes: 'Easy freestyle' },
+      { name: 'Freestyle Intervals', sets: '8', reps: '50m', weight: '', notes: '30 sec rest between' },
+      { name: 'Kickboard Drills', sets: '4', reps: '100m', weight: '', notes: 'Flutter kick' },
+      { name: 'Cool-down Swim', sets: '1', reps: '200m', weight: '', notes: 'Easy pace' },
+    ],
+  },
+  {
+    id: 'crossfit-wod',
+    name: 'CrossFit Style WOD',
+    description: 'Varied functional fitness workout',
+    icon: Flame,
+    exercises: [
+      { name: 'Thrusters', sets: '21-15-9', reps: '', weight: '95', notes: 'For time' },
+      { name: 'Pull-ups', sets: '21-15-9', reps: '', weight: '', notes: 'For time with thrusters' },
+      { name: 'Box Jumps', sets: '3', reps: '20', weight: '', notes: '24" box, 1 min rest' },
+      { name: 'Kettlebell Swings', sets: '3', reps: '25', weight: '53', notes: 'American style' },
+      { name: 'Burpees', sets: '3', reps: '15', weight: '', notes: '1 min rest' },
+    ],
+  },
+  {
+    id: 'mobility',
+    name: 'Mobility & Recovery',
+    description: 'Flexibility and injury prevention',
+    icon: Activity,
+    exercises: [
+      { name: 'Foam Rolling', sets: '1', reps: '10 min', weight: '', notes: 'Full body' },
+      { name: 'Leg Swings', sets: '2', reps: '20', weight: '', notes: 'Front/back and side to side' },
+      { name: 'Hip 90/90 Stretch', sets: '3', reps: '60 sec', weight: '', notes: 'Each side' },
+      { name: 'Shoulder Dislocations', sets: '3', reps: '15', weight: '', notes: 'With band or PVC' },
+      { name: 'Cat-Cow Stretch', sets: '3', reps: '15', weight: '', notes: '' },
+      { name: 'Deep Squat Hold', sets: '3', reps: '90 sec', weight: '', notes: '' },
     ],
   },
 ];
