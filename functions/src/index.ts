@@ -1,6 +1,5 @@
 // FIX: 'onCallGenkit' is in 'firebase-functions/https' (requires firebase-functions v6+)
 // 'onRequest' is in 'firebase-functions/v2/https'
-import { onCallGenkit } from "firebase-functions/https";
 import { onRequest } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 
