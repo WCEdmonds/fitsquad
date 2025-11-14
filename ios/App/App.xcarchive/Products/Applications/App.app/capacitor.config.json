@@ -1,0 +1,35 @@
+{
+	"appId": "fit.mysquad.app",
+	"appName": "FitSquad",
+	"webDir": "out",
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0,
+			"launchAutoHide": true,
+			"backgroundColor": "#FFFFFF",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": false,
+			"splashFullScreen": true,
+			"splashImmersive": true
+		},
+		"Keyboard": {
+			"resize": "native",
+			"style": "dark",
+			"resizeOnFullScreen": true
+		},
+		"StatusBar": {
+			"style": "light",
+			"backgroundColor": "#00000000"
+		}
+	},
+	"ios": {
+		"contentInset": "automatic",
+		"allowsLinkPreview": false
+	},
+	"packageClassList": [
+		"HapticsPlugin",
+		"KeyboardPlugin",
+		"SplashScreenPlugin",
+		"StatusBarPlugin"
+	]
+}

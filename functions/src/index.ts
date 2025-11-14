@@ -159,7 +159,7 @@ const prompt = `
         primaryError.status === 429 ||
         primaryError.code === 503 ||
         primaryError.code === 429 ||
-        (primaryError.message && primaryError.message.toLowerCase().includes('overload'));
+        (primaryError.message && primaryError.message.toLowerCase().includes("overload"));
 
       if (isOverloadError) {
         logger.warn("Primary model overloaded, falling back to gemini-2.5-flash-lite...", primaryError);
