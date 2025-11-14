@@ -27,9 +27,9 @@ interface Exercise {
   reps: string;
   weight: string;
   notes: string;
-  isCardio: boolean;
-  duration?: string; // For cardio: e.g., "30 min"
-  distance?: string; // For cardio: e.g., "5 miles"
+  isCardio?: boolean;
+  gifUrl?: string;
+  instructions?: string[];
 }
 
 interface WorkoutTemplate {
@@ -251,6 +251,7 @@ export default function QuickWorkoutPage() {
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTemplates, setShowTemplates] = useState(true);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
 
   // Debounced search function
   const performSearch = useCallback(async (query: string) => {
@@ -280,14 +281,50 @@ export default function QuickWorkoutPage() {
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
 
-  const handleLoadTemplate = (template: WorkoutTemplate) => {
+  const handleLoadTemplate = async (template: WorkoutTemplate) => {
+    setIsLoadingTemplate(true);
     setWorkoutName(template.name);
-    setExercises([...template.exercises]);
-    setShowTemplates(false);
-    toast({
-      title: "Template Loaded!",
-      description: `${template.name} workout loaded. Customize as needed.`,
-    });
+
+    try {
+      // Try to match template exercises with ExerciseDB entries
+      const enrichedExercises = await Promise.all(
+        template.exercises.map(async (exercise) => {
+          try {
+            // Search for the exercise in the database
+            const results = await searchExercises({ q: exercise.name, limit: 1 });
+
+            if (results && results.length > 0) {
+              const dbExercise = results[0];
+              // Check if it's a good match (similar name)
+              const nameLower = exercise.name.toLowerCase();
+              const dbNameLower = dbExercise.name.toLowerCase();
+
+              if (dbNameLower.includes(nameLower) || nameLower.includes(dbNameLower)) {
+                return {
+                  ...exercise,
+                  gifUrl: dbExercise.gifUrl,
+                  instructions: dbExercise.instructions,
+                };
+              }
+            }
+          } catch (error) {
+            console.log(`Could not find exercise data for: ${exercise.name}`);
+          }
+
+          // Return original exercise if no match found
+          return exercise;
+        })
+      );
+
+      setExercises(enrichedExercises);
+      setShowTemplates(false);
+      toast({
+        title: "Template Loaded!",
+        description: `${template.name} workout loaded. Customize as needed.`,
+      });
+    } finally {
+      setIsLoadingTemplate(false);
+    }
   };
 
   const handleStartCustom = () => {
@@ -302,34 +339,29 @@ export default function QuickWorkoutPage() {
     setExercises(exercises.filter((_, i) => i !== index));
   };
 
-  const handleExerciseChange = (index: number, field: keyof Exercise, value: string | boolean) => {
+  const handleExerciseChange = (index: number, field: keyof Exercise, value: string) => {
     const updated = [...exercises];
-    updated[index][field] = value as any;
+    updated[index][field] = value;
     setExercises(updated);
   };
 
   const handleSelectExercise = (index: number, dbExercise: DBExercise) => {
     const updated = [...exercises];
     updated[index].name = dbExercise.name;
+    updated[index].gifUrl = dbExercise.gifUrl;
+    updated[index].instructions = dbExercise.instructions;
 
-    // Auto-suggest fields based on exercise type
+    // Auto-suggest sets/reps based on exercise type
     const isCardio = dbExercise.bodyParts.includes('cardio');
-    updated[index].isCardio = isCardio;
-
     if (isCardio) {
-      // For cardio, set duration and distance defaults
-      updated[index].duration = '30';
-      updated[index].distance = '3';
-      updated[index].sets = '';
-      updated[index].reps = '';
+      updated[index].sets = '1';
+      updated[index].reps = '20 min';
       updated[index].weight = '';
+      updated[index].isCardio = true;
     } else {
-      // For strength, set sets/reps/weight defaults
       updated[index].sets = '3';
       updated[index].reps = '10';
-      updated[index].weight = '';
-      updated[index].duration = undefined;
-      updated[index].distance = undefined;
+      updated[index].isCardio = false;
     }
 
     setExercises(updated);
@@ -373,15 +405,9 @@ export default function QuickWorkoutPage() {
         workoutName: workoutName || 'Custom Workout',
         exercises: validExercises.map(ex => ({
           exerciseName: ex.name,
-          isCardio: ex.isCardio,
-          ...(ex.isCardio ? {
-            duration: ex.duration || 'N/A',
-            distance: ex.distance || 'N/A',
-          } : {
-            sets: ex.sets || 'N/A',
-            reps: ex.reps || 'N/A',
-            weight: ex.weight || 'N/A',
-          }),
+          sets: ex.sets || 'N/A',
+          reps: ex.reps || 'N/A',
+          weight: ex.weight || 'N/A',
           notes: ex.notes || '',
         })),
         completedAt: serverTimestamp(),
@@ -448,13 +474,22 @@ export default function QuickWorkoutPage() {
               {/* Template Selection */}
               <div className="space-y-3">
                 <h3 className="font-semibold">Choose a Template</h3>
+                {isLoadingTemplate && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading exercise data...</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {workoutTemplates.map((template) => {
                     const IconComponent = template.icon;
                     return (
                       <Card
                         key={template.id}
-                        className="cursor-pointer hover:border-primary transition-colors"
+                        className={cn(
+                          "cursor-pointer hover:border-primary transition-colors",
+                          isLoadingTemplate && "opacity-50 pointer-events-none"
+                        )}
                         onClick={() => handleLoadTemplate(template)}
                       >
                         <CardContent className="pt-6 pb-4">
@@ -493,6 +528,7 @@ export default function QuickWorkoutPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleStartCustom}
+                disabled={isLoadingTemplate}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Build Custom Workout
@@ -607,74 +643,60 @@ export default function QuickWorkoutPage() {
                       onChange={(e) => handleExerciseChange(index, 'name', e.target.value)}
                       className="mt-1"
                     />
-                    <div className="flex items-center space-x-2 mt-2">
-                      <input
-                        type="checkbox"
-                        id={`exercise-cardio-${index}`}
-                        checked={exercise.isCardio}
-                        onChange={(e) => handleExerciseChange(index, 'isCardio', e.target.checked)}
-                        className="h-4 w-4"
-                      />
-                      <Label htmlFor={`exercise-cardio-${index}`} className="text-sm font-normal cursor-pointer">
-                        This is a cardio exercise
-                      </Label>
-                    </div>
                   </div>
 
-                  {exercise.isCardio ? (
-                    // Cardio fields: Duration and Distance
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="space-y-2">
-                        <Label htmlFor={`exercise-duration-${index}`}>Duration (min)</Label>
-                        <Input
-                          id={`exercise-duration-${index}`}
-                          placeholder="30"
-                          value={exercise.duration || ''}
-                          onChange={(e) => handleExerciseChange(index, 'duration', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`exercise-distance-${index}`}>Distance (mi)</Label>
-                        <Input
-                          id={`exercise-distance-${index}`}
-                          placeholder="3"
-                          value={exercise.distance || ''}
-                          onChange={(e) => handleExerciseChange(index, 'distance', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    // Strength fields: Sets, Reps, Weight
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="space-y-2">
-                        <Label htmlFor={`exercise-sets-${index}`}>Sets</Label>
-                        <Input
-                          id={`exercise-sets-${index}`}
-                          placeholder="3"
-                          value={exercise.sets}
-                          onChange={(e) => handleExerciseChange(index, 'sets', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`exercise-reps-${index}`}>Reps</Label>
-                        <Input
-                          id={`exercise-reps-${index}`}
-                          placeholder="10"
-                          value={exercise.reps}
-                          onChange={(e) => handleExerciseChange(index, 'reps', e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`exercise-weight-${index}`}>Weight (lbs)</Label>
-                        <Input
-                          id={`exercise-weight-${index}`}
-                          placeholder="135"
-                          value={exercise.weight}
-                          onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
-                        />
-                      </div>
+                  {/* Exercise GIF and Instructions */}
+                  {exercise.gifUrl && (
+                    <div className="space-y-2">
+                      <img
+                        src={exercise.gifUrl}
+                        alt={exercise.name}
+                        className="w-full max-w-xs mx-auto rounded-lg"
+                        loading="lazy"
+                      />
                     </div>
                   )}
+
+                  {exercise.instructions && exercise.instructions.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">How to perform:</Label>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                        {exercise.instructions.map((instruction, idx) => (
+                          <li key={idx} className="leading-relaxed">{instruction}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor={`exercise-sets-${index}`}>Sets</Label>
+                      <Input
+                        id={`exercise-sets-${index}`}
+                        placeholder="3"
+                        value={exercise.sets}
+                        onChange={(e) => handleExerciseChange(index, 'sets', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`exercise-reps-${index}`}>Reps/Time</Label>
+                      <Input
+                        id={`exercise-reps-${index}`}
+                        placeholder="10"
+                        value={exercise.reps}
+                        onChange={(e) => handleExerciseChange(index, 'reps', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`exercise-weight-${index}`}>Weight</Label>
+                      <Input
+                        id={`exercise-weight-${index}`}
+                        placeholder="135"
+                        value={exercise.weight}
+                        onChange={(e) => handleExerciseChange(index, 'weight', e.target.value)}
+                      />
+                    </div>
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor={`exercise-notes-${index}`}>Notes</Label>
