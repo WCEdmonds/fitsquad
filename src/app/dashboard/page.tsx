@@ -99,9 +99,9 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    // Only fetch team statistics if user is a Commander
-    // Regular soldiers don't have permission to read other team members' data
-    if (teamMembers && firestore && account?.accountType === 'Commander') {
+    // Fetch team statistics for all team members
+    // Security rules allow team members to read each other's data
+    if (teamMembers && firestore) {
         const fetchSoldierData = async () => {
             const soldierPromises = teamMembers.map(async (member) => {
                 const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
@@ -188,7 +188,7 @@ export default function DashboardPage() {
          setAvgPlk('--');
          setAvgRunTime('--');
     }
-}, [teamMembers, firestore, account]);
+}, [teamMembers, firestore]);
 
   const handleCopyTeamCode = () => {
     if (teamData?.teamCode) {

@@ -11,12 +11,12 @@ import { haptics } from '@/lib/haptics';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-  { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
   { href: '/dashboard/plan', label: 'Plan', icon: CalendarDays },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
 
-const supervisorAdminNavItems = [
+const supervisorCommanderAdminNavItems = [
+  { href: '/dashboard/soldiers', label: 'Soldiers', icon: Users },
   { href: '/dashboard/plan-editor', label: 'Plan Builder', icon: Edit },
 ];
 
@@ -47,9 +47,9 @@ export function DashboardNav({ isMobile = false, onLinkClick }: DashboardNavProp
 
   const allNavItems = [...navItems];
 
-  // Add Plan Builder for Supervisor/Admin only
-  if (userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') {
-    allNavItems.push(...supervisorAdminNavItems);
+  // Add Soldiers and Plan Builder for Supervisor/Commander/Admin only
+  if (userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Commander' || userAccount?.accountType === 'Admin') {
+    allNavItems.push(...supervisorCommanderAdminNavItems);
   }
 
   // Add Manage Teams for Commander

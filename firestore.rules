@@ -36,7 +36,7 @@ service cloud.firestore {
      * Supports both claimed accounts (owned by Firebase users) and unclaimed profiles.
      */
     match /accounts/{accountId} {
-      allow get: if isOwner(accountId) || isAdmin() || isUnclaimedProfile();
+      allow get: if isOwner(accountId) || isAdmin() || isUnclaimedProfile() || isSameTeam(accountId);
       allow list: if isAdmin() || isSignedIn(); // Allow listing for team management
       allow create: if isSelfCreate(accountId) || canCreateUnclaimedProfile();
       allow update: if (isExistingOwner(accountId) && isAccountIdNotChanged()) || isAdmin() || canClaimProfile();
@@ -82,10 +82,11 @@ service cloud.firestore {
     /**
      * @description Controls access to soldier fitness data.
      * Allows supervisors/commanders to add data to unclaimed profiles.
+     * Team members can read each other's fitness data for dashboard statistics.
      */
     match /accounts/{accountId}/soldierData/{soldierDataId} {
-      allow get: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId);
-      allow list: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId);
+      allow get: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId);
+      allow list: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId);
       allow create: if (isSignedIn() && request.resource.data.accountId == accountId) || canManageUnclaimedProfile(accountId);
       allow update: if (isExistingOwner(accountId) && resource.data.accountId == accountId) || canManageUnclaimedProfile(accountId);
       allow delete: if isExistingOwner(accountId) || canManageUnclaimedProfile(accountId);
@@ -211,6 +212,15 @@ service cloud.firestore {
 
     function isClaimingProfile() {
       return resource != null && resource.data.claimed == false;
+    }
+
+    function isSameTeam(accountId) {
+      let requestingUserAccount = get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data;
+      let targetUserAccount = get(/databases/$(database)/documents/accounts/$(accountId)).data;
+      return isSignedIn() &&
+             requestingUserAccount.teamId != null &&
+             targetUserAccount.teamId != null &&
+             requestingUserAccount.teamId == targetUserAccount.teamId;
     }
   }
 }
