@@ -99,13 +99,15 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    if (teamMembers && firestore) {
+    // Only fetch team statistics if user is a Commander
+    // Regular soldiers don't have permission to read other team members' data
+    if (teamMembers && firestore && account?.accountType === 'Commander') {
         const fetchSoldierData = async () => {
             const soldierPromises = teamMembers.map(async (member) => {
                 const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
                 const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
                 const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-                
+
                 const accountRef = doc(firestore, 'accounts', member.id);
                 const accData = await getDocNonBlocking<any>(accountRef);
 
@@ -162,10 +164,10 @@ export default function DashboardPage() {
 
               const totalSdc = soldiersWithData.reduce((acc, s) => acc + s.sdc, 0);
               setAvgSdc(Math.round(totalSdc / soldiersWithData.length));
-              
+
               const totalPlk = soldiersWithData.reduce((acc, s) => acc + s.plk, 0);
               setAvgPlk(Math.round(totalPlk / soldiersWithData.length));
-              
+
               const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
               setAvgRunTime(`${Math.round(totalRunTime / soldiersWithData.length)}`);
             } else {
@@ -186,7 +188,7 @@ export default function DashboardPage() {
          setAvgPlk('--');
          setAvgRunTime('--');
     }
-}, [teamMembers, firestore]);
+}, [teamMembers, firestore, account]);
 
   const handleCopyTeamCode = () => {
     if (teamData?.teamCode) {
