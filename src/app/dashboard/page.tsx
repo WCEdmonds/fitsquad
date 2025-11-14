@@ -39,7 +39,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { ProfileMenu } from '@/components/profile-menu';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -361,7 +360,6 @@ export default function DashboardPage() {
                     </Select>
               </div>
           )}
-          <ProfileMenu />
         </div>
       </div>
 
