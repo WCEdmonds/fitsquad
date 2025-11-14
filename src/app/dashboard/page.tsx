@@ -99,13 +99,15 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
+    // Fetch team statistics for all team members
+    // Security rules allow team members to read each other's data
     if (teamMembers && firestore) {
         const fetchSoldierData = async () => {
             const soldierPromises = teamMembers.map(async (member) => {
                 const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
                 const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
                 const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-                
+
                 const accountRef = doc(firestore, 'accounts', member.id);
                 const accData = await getDocNonBlocking<any>(accountRef);
 
@@ -162,10 +164,10 @@ export default function DashboardPage() {
 
               const totalSdc = soldiersWithData.reduce((acc, s) => acc + s.sdc, 0);
               setAvgSdc(Math.round(totalSdc / soldiersWithData.length));
-              
+
               const totalPlk = soldiersWithData.reduce((acc, s) => acc + s.plk, 0);
               setAvgPlk(Math.round(totalPlk / soldiersWithData.length));
-              
+
               const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
               setAvgRunTime(`${Math.round(totalRunTime / soldiersWithData.length)}`);
             } else {

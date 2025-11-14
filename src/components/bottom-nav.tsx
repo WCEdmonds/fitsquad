@@ -7,18 +7,30 @@ import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useState } from 'react';
+import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
-const bottomNavItems = [
+const baseBottomNavItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/dashboard/soldiers', label: 'Team', icon: Users },
   { href: '/dashboard/plan', label: 'Plan', icon: Calendar },
   { href: '/dashboard/workout', label: 'Workout', icon: Dumbbell },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
 
+const teamNavItem = { href: '/dashboard/soldiers', label: 'Team', icon: Users };
+
 export function BottomNav() {
   const pathname = usePathname();
   const [isNative, setIsNative] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userAccountRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, 'accounts', user.uid);
+  }, [firestore, user]);
+
+  const { data: userAccount } = useDoc(userAccountRef);
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
@@ -27,6 +39,14 @@ export function BottomNav() {
   // Only show on native platforms
   if (!isNative) {
     return null;
+  }
+
+  // Build nav items based on user role
+  const bottomNavItems = [...baseBottomNavItems];
+
+  // Insert Team nav item for Supervisors, Commanders, and Admins only
+  if (userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Commander' || userAccount?.accountType === 'Admin') {
+    bottomNavItems.splice(1, 0, teamNavItem); // Insert at position 1 (after Home)
   }
 
   const handleNavClick = () => {

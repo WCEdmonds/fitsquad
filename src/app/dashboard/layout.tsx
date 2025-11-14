@@ -82,6 +82,12 @@ export default function DashboardLayout({
             <div className="hidden md:flex ml-8">
               <DashboardNav />
             </div>
+            <Button asChild className="hidden md:flex ml-4 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-md">
+              <Link href="/dashboard/workout">
+                <Dumbbell className="mr-2 h-4 w-4" />
+                Quick Workout
+              </Link>
+            </Button>
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -94,7 +100,7 @@ export default function DashboardLayout({
                 </Button>
               </SheetTrigger>
               <SheetContent side="left">
-                 <nav className="grid gap-6 text-lg font-medium">
+                 <nav className="grid gap-6 text-lg font-medium h-full">
                    <Link
                       href="/dashboard"
                       onClick={handleLinkClick}
@@ -103,7 +109,15 @@ export default function DashboardLayout({
                       <Dumbbell className="h-7 w-7" />
                       <span className="">FitSquad</span>
                   </Link>
-                  <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
+                  <div className="flex-1">
+                    <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
+                  </div>
+                  <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-md" size="lg" onClick={handleLinkClick}>
+                    <Link href="/dashboard/workout">
+                      <Dumbbell className="mr-2 h-5 w-5" />
+                      Quick Workout
+                    </Link>
+                  </Button>
                  </nav>
               </SheetContent>
             </Sheet>
