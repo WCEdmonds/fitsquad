@@ -440,7 +440,7 @@ export default function QuickWorkoutPage() {
   };
 
   return (
-    <div className="space-y-4 pb-24 md:pb-4">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
