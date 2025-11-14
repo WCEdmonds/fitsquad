@@ -63,8 +63,13 @@ export default function PlannerPage() {
   }, [teamMembers, firestore]);
 
   async function handleFormSubmit(values: PlannerFormValues) {
-    if (!user || !userAccount) return;
-    
+    console.log('🚀 Form submitted with values:', values);
+
+    if (!user || !userAccount) {
+      console.error('❌ No user or account:', { user: !!user, userAccount: !!userAccount });
+      return;
+    }
+
     let fitnessData;
     let isUnitPlan = false;
     let isIndividualPlan = false;
@@ -72,6 +77,7 @@ export default function PlannerPage() {
     if (userAccount.accountType === 'Soldier') {
         const soldierData = allSoldierData.find(s => s.accountId === user.uid);
         if (!soldierData) {
+            console.error('❌ No soldier data found for user');
             toast({
                 title: "No Fitness Data",
                 description: "You must log your benchmark fitness data before generating a plan.",
@@ -83,6 +89,7 @@ export default function PlannerPage() {
         isIndividualPlan = true;
     } else {
         if (!allSoldierData || allSoldierData.length === 0) {
+            console.error('❌ No soldier data available for unit');
             toast({
                 title: "No Soldier Data",
                 description: "Cannot generate a plan without soldier fitness data in your unit.",
@@ -96,6 +103,8 @@ export default function PlannerPage() {
         isUnitPlan = true;
     }
 
+    console.log('📊 Fitness data prepared:', { isUnitPlan, isIndividualPlan, dataLength: fitnessData.length });
+
     setIsGenerating(true);
     setWorkoutPlan(null);
     setGeneratedPlanId(null);
@@ -105,8 +114,12 @@ export default function PlannerPage() {
       if (!user) {
         throw new Error('You must be logged in to generate a workout plan');
       }
-      const idToken = await user.getIdToken();
 
+      console.log('🔑 Getting ID token...');
+      const idToken = await user.getIdToken();
+      console.log('✅ ID token obtained');
+
+      console.log('📡 Calling generatePlan API...');
       const result = await callGeneratePlan({
         fitnessData,
         trainingGoals: values.trainingGoals,
@@ -117,17 +130,29 @@ export default function PlannerPage() {
         isIndividualPlan,
       }, idToken);
 
+      console.log('✅ Plan generated successfully:', result);
       setWorkoutPlan(result);
       setGeneratedPlanId(`temp-${Date.now()}`);
 
+      toast({
+        title: "Success!",
+        description: "Workout plan generated successfully.",
+      });
+
     } catch (error: any) {
-      console.error('Workout plan generation failed:', error);
+      console.error('❌ Workout plan generation failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       toast({
         title: "Error",
         description: error.message || "Failed to generate workout plan. Please try again.",
         variant: "destructive",
       });
     } finally {
+      console.log('🏁 Generation complete, setting isGenerating to false');
       setIsGenerating(false);
     }
   }

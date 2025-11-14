@@ -73,7 +73,13 @@ export async function callGeneratePlan(
   input: GenerateTailoredWorkoutPlanInput,
   idToken: string
 ): Promise<GenerateTailoredWorkoutPlanOutput> {
-  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/generatePlanV2`, {
+  console.log('📞 Calling generatePlanV2 Cloud Function');
+  console.log('Input:', { ...input, fitnessData: `${input.fitnessData.substring(0, 100)}...` });
+
+  const url = `${CLOUD_FUNCTIONS_BASE_URL}/generatePlanV2`;
+  console.log('URL:', url);
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -82,11 +88,14 @@ export async function callGeneratePlan(
     body: JSON.stringify({ data: input }),
   });
 
+  console.log('Response status:', response.status);
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
   if (!response.ok) {
     let errorMessage = `Cloud Function request failed: ${response.status}`;
     try {
       const errorData = await response.json();
-      console.error('Cloud Function error details:', errorData);
+      console.error('❌ Cloud Function error details:', errorData);
 
       // Try to extract meaningful error message
       if (errorData.error) {
@@ -101,13 +110,14 @@ export async function callGeneratePlan(
         errorMessage = errorData.message;
       }
     } catch (e) {
-      console.error('Failed to parse error response:', e);
+      console.error('❌ Failed to parse error response:', e);
     }
 
     throw new Error(errorMessage);
   }
 
   const result = await response.json();
+  console.log('✅ Cloud Function response received:', { hasResult: !!result.result });
   return result.result;
 }
 
