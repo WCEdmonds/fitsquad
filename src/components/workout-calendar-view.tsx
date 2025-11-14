@@ -139,9 +139,24 @@ const DailyWorkoutDisplay = ({ dailyWorkouts, workoutPlanId }: DailyWorkoutDispl
 export function WorkoutCalendarView({ plan, planId }: { plan: GenerateTailoredWorkoutPlanOutput, planId: string }) {
   const isIndividualPlan = !!plan.individual_plan;
 
+  useEffect(() => {
+    console.log('📅 WorkoutCalendarView rendered with:', {
+      planId,
+      isIndividualPlan,
+      hasCommonWeaknesses: !!plan.common_weaknesses,
+      weaknessesCount: plan.common_weaknesses?.length,
+      hasIndividualPlan: !!plan.individual_plan,
+      individualPlanLength: plan.individual_plan?.length,
+      hasStrengthPlan: !!plan.strength_focus_plan,
+      strengthPlanLength: plan.strength_focus_plan?.length,
+      hasRunningPlan: !!plan.running_focus_plan,
+      runningPlanLength: plan.running_focus_plan?.length
+    });
+  }, [plan, planId]);
+
   return (
     <div className="space-y-6">
-      
+
       <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
