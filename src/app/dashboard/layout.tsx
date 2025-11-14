@@ -21,6 +21,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { DashboardErrorBoundary } from '@/components/DashboardErrorBoundary';
 import { Capacitor } from '@capacitor/core';
+import { initializeDemoData, checkDemoDataExists } from '@/lib/init-demo-data';
+import { isDemoAccount } from '@/lib/demo-data';
 
 export default function DashboardLayout({
   children,
@@ -55,6 +57,29 @@ export default function DashboardLayout({
     }
   }, [user, userAccount, isUserLoading, isAccountLoading]);
 
+  // Initialize demo data for App Store review account
+  React.useEffect(() => {
+    if (!user || !firestore || !isDemoAccount(user.email)) return;
+
+    const initDemo = async () => {
+      try {
+        const exists = await checkDemoDataExists(firestore, user.uid);
+        if (!exists) {
+          console.log('Initializing demo data for review account...');
+          const result = await initializeDemoData(firestore, user.uid, user.email || '');
+          if (result.success) {
+            console.log('✅ Demo data initialized:', result.data);
+          } else {
+            console.error('❌ Failed to initialize demo data:', result.error);
+          }
+        }
+      } catch (error) {
+        console.error('Error during demo data initialization:', error);
+      }
+    };
+
+    initDemo();
+  }, [user, firestore]);
 
   const handleLogout = () => {
     auth.signOut();
