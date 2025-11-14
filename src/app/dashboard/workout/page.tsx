@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dumbbell, Plus, X, Check, Search, Loader2 } from 'lucide-react';
+import { Dumbbell, Plus, X, Check, Search, Loader2, Zap, Weight, PersonStanding, Timer, ArrowUp, ArrowDown, Mountain, Waves, Backpack, Flame, Activity } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
@@ -32,6 +32,211 @@ interface Exercise {
   distance?: string; // For cardio: e.g., "5 miles"
 }
 
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: any;
+  exercises: Exercise[];
+}
+
+const workoutTemplates: WorkoutTemplate[] = [
+  {
+    id: 'gym-strength',
+    name: 'Full Body Strength',
+    description: 'Complete strength training with compound lifts',
+    icon: Weight,
+    exercises: [
+      { name: 'Barbell Squat', sets: '4', reps: '8', weight: '185', notes: '', isCardio: false },
+      { name: 'Bench Press', sets: '4', reps: '8', weight: '135', notes: '', isCardio: false },
+      { name: 'Deadlift', sets: '3', reps: '6', weight: '225', notes: '', isCardio: false },
+      { name: 'Overhead Press', sets: '3', reps: '10', weight: '95', notes: '', isCardio: false },
+      { name: 'Barbell Row', sets: '3', reps: '10', weight: '115', notes: '', isCardio: false },
+    ],
+  },
+  {
+    id: 'upper-push',
+    name: 'Upper Body Push',
+    description: 'Chest, shoulders, and triceps workout',
+    icon: ArrowUp,
+    exercises: [
+      { name: 'Bench Press', sets: '4', reps: '8', weight: '135', notes: '', isCardio: false },
+      { name: 'Incline Dumbbell Press', sets: '3', reps: '10', weight: '60', notes: 'Per dumbbell', isCardio: false },
+      { name: 'Overhead Press', sets: '4', reps: '8', weight: '95', notes: '', isCardio: false },
+      { name: 'Dips', sets: '3', reps: '12', weight: '', notes: 'Bodyweight or weighted', isCardio: false },
+      { name: 'Lateral Raises', sets: '3', reps: '15', weight: '20', notes: '', isCardio: false },
+      { name: 'Tricep Pushdowns', sets: '3', reps: '12', weight: '60', notes: '', isCardio: false },
+    ],
+  },
+  {
+    id: 'upper-pull',
+    name: 'Upper Body Pull',
+    description: 'Back and biceps focused workout',
+    icon: ArrowDown,
+    exercises: [
+      { name: 'Pull-ups', sets: '4', reps: '8', weight: '', notes: 'Add weight if needed', isCardio: false },
+      { name: 'Barbell Row', sets: '4', reps: '8', weight: '135', notes: '', isCardio: false },
+      { name: 'Lat Pulldown', sets: '3', reps: '10', weight: '120', notes: '', isCardio: false },
+      { name: 'Dumbbell Row', sets: '3', reps: '10', weight: '60', notes: 'Per arm', isCardio: false },
+      { name: 'Face Pulls', sets: '3', reps: '15', weight: '50', notes: '', isCardio: false },
+      { name: 'Barbell Curl', sets: '3', reps: '12', weight: '65', notes: '', isCardio: false },
+    ],
+  },
+  {
+    id: 'leg-day',
+    name: 'Leg Day',
+    description: 'Complete lower body workout',
+    icon: Mountain,
+    exercises: [
+      { name: 'Barbell Squat', sets: '5', reps: '6', weight: '225', notes: '', isCardio: false },
+      { name: 'Romanian Deadlift', sets: '4', reps: '8', weight: '185', notes: '', isCardio: false },
+      { name: 'Leg Press', sets: '4', reps: '12', weight: '360', notes: '', isCardio: false },
+      { name: 'Walking Lunges', sets: '3', reps: '20', weight: '40', notes: 'Per leg', isCardio: false },
+      { name: 'Leg Curl', sets: '3', reps: '12', weight: '90', notes: '', isCardio: false },
+      { name: 'Calf Raises', sets: '4', reps: '15', weight: '135', notes: '', isCardio: false },
+    ],
+  },
+  {
+    id: 'bodyweight',
+    name: 'Bodyweight',
+    description: 'No equipment needed, anywhere workout',
+    icon: PersonStanding,
+    exercises: [
+      { name: 'Push-ups', sets: '4', reps: '15', weight: '', notes: '', isCardio: false },
+      { name: 'Pull-ups', sets: '4', reps: '8', weight: '', notes: '', isCardio: false },
+      { name: 'Air Squats', sets: '4', reps: '20', weight: '', notes: '', isCardio: false },
+      { name: 'Plank', sets: '3', reps: '60 sec', weight: '', notes: '', isCardio: false },
+      { name: 'Burpees', sets: '3', reps: '15', weight: '', notes: '', isCardio: true },
+    ],
+  },
+  {
+    id: 'core-abs',
+    name: 'Core & Abs',
+    description: 'Targeted core strengthening workout',
+    icon: Activity,
+    exercises: [
+      { name: 'Plank', sets: '4', reps: '60 sec', weight: '', notes: '', isCardio: false },
+      { name: 'Russian Twists', sets: '4', reps: '30', weight: '25', notes: 'With plate or dumbbell', isCardio: false },
+      { name: 'Hanging Leg Raises', sets: '4', reps: '12', weight: '', notes: '', isCardio: false },
+      { name: 'Ab Wheel Rollouts', sets: '3', reps: '15', weight: '', notes: '', isCardio: false },
+      { name: 'Side Plank', sets: '3', reps: '45 sec', weight: '', notes: 'Each side', isCardio: false },
+      { name: 'Mountain Climbers', sets: '3', reps: '30', weight: '', notes: '', isCardio: true },
+    ],
+  },
+  {
+    id: 'hiit',
+    name: 'HIIT Circuit',
+    description: 'High-intensity interval training',
+    icon: Zap,
+    exercises: [
+      { name: 'Jump Squats', sets: '4', reps: '15', weight: '', notes: '30 sec rest', isCardio: true },
+      { name: 'Mountain Climbers', sets: '4', reps: '20', weight: '', notes: '30 sec rest', isCardio: true },
+      { name: 'Burpees', sets: '4', reps: '12', weight: '', notes: '30 sec rest', isCardio: true },
+      { name: 'High Knees', sets: '4', reps: '30 sec', weight: '', notes: '30 sec rest', isCardio: true },
+      { name: 'Jump Rope', sets: '4', reps: '1 min', weight: '', notes: '30 sec rest', isCardio: true },
+    ],
+  },
+  {
+    id: 'easy-run',
+    name: 'Easy Recovery Run',
+    description: 'Low-intensity aerobic base building',
+    icon: Timer,
+    exercises: [
+      { name: 'Warm-up Walk', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: 'Easy Run', sets: '1', reps: '30 min', weight: '', notes: 'Conversational pace, Zone 2', isCardio: true },
+      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace', isCardio: true },
+      { name: 'Stretching', sets: '1', reps: '10 min', weight: '', notes: 'Focus on legs', isCardio: false },
+    ],
+  },
+  {
+    id: 'tempo-run',
+    name: 'Tempo Run',
+    description: 'Sustained threshold pace training',
+    icon: Flame,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: 'Tempo Run', sets: '1', reps: '20 min', weight: '', notes: 'Comfortably hard, 80-85% effort', isCardio: true },
+      { name: 'Cool-down Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: 'Dynamic Stretching', sets: '1', reps: '5 min', weight: '', notes: '', isCardio: false },
+    ],
+  },
+  {
+    id: 'interval-run',
+    name: 'Interval Sprints',
+    description: 'Speed and power development',
+    icon: Zap,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: '400m Intervals', sets: '6', reps: '400m', weight: '', notes: '90-95% effort, 2 min rest', isCardio: true },
+      { name: 'Cool-down Jog', sets: '1', reps: '10 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: 'Walking', sets: '1', reps: '5 min', weight: '', notes: 'Recovery', isCardio: true },
+    ],
+  },
+  {
+    id: 'long-run',
+    name: 'Long Distance Run',
+    description: 'Endurance building for 2-mile test prep',
+    icon: Timer,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace', isCardio: true },
+      { name: 'Long Run', sets: '1', reps: '60 min', weight: '', notes: 'Steady, sustainable pace', isCardio: true },
+      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace', isCardio: true },
+      { name: 'Stretching & Foam Rolling', sets: '1', reps: '15 min', weight: '', notes: 'Full body recovery', isCardio: false },
+    ],
+  },
+  {
+    id: 'ruck-march',
+    name: 'Ruck March',
+    description: 'Military load-bearing conditioning',
+    icon: Backpack,
+    exercises: [
+      { name: 'Ruck March', sets: '1', reps: '60 min', weight: '35', notes: '35-45 lbs, maintain 15 min/mile pace', isCardio: true },
+      { name: 'Farmer Carries', sets: '3', reps: '100m', weight: '50', notes: '2-3 min rest', isCardio: false },
+      { name: 'Overhead Ruck Hold', sets: '3', reps: '30 sec', weight: '35', notes: 'Ruck overhead', isCardio: false },
+      { name: 'Cool-down Walk', sets: '1', reps: '10 min', weight: '', notes: 'No ruck', isCardio: true },
+    ],
+  },
+  {
+    id: 'swim',
+    name: 'Swim Workout',
+    description: 'Low-impact cardio and conditioning',
+    icon: Waves,
+    exercises: [
+      { name: 'Warm-up Swim', sets: '1', reps: '200m', weight: '', notes: 'Easy freestyle', isCardio: true },
+      { name: 'Freestyle Intervals', sets: '8', reps: '50m', weight: '', notes: '30 sec rest between', isCardio: true },
+      { name: 'Kickboard Drills', sets: '4', reps: '100m', weight: '', notes: 'Flutter kick', isCardio: true },
+      { name: 'Cool-down Swim', sets: '1', reps: '200m', weight: '', notes: 'Easy pace', isCardio: true },
+    ],
+  },
+  {
+    id: 'crossfit-wod',
+    name: 'CrossFit Style WOD',
+    description: 'Varied functional fitness workout',
+    icon: Flame,
+    exercises: [
+      { name: 'Thrusters', sets: '21-15-9', reps: '', weight: '95', notes: 'For time', isCardio: false },
+      { name: 'Pull-ups', sets: '21-15-9', reps: '', weight: '', notes: 'For time with thrusters', isCardio: false },
+      { name: 'Box Jumps', sets: '3', reps: '20', weight: '', notes: '24" box, 1 min rest', isCardio: true },
+      { name: 'Kettlebell Swings', sets: '3', reps: '25', weight: '53', notes: 'American style', isCardio: true },
+      { name: 'Burpees', sets: '3', reps: '15', weight: '', notes: '1 min rest', isCardio: true },
+    ],
+  },
+  {
+    id: 'mobility',
+    name: 'Mobility & Recovery',
+    description: 'Flexibility and injury prevention',
+    icon: Activity,
+    exercises: [
+      { name: 'Foam Rolling', sets: '1', reps: '10 min', weight: '', notes: 'Full body', isCardio: false },
+      { name: 'Leg Swings', sets: '2', reps: '20', weight: '', notes: 'Front/back and side to side', isCardio: false },
+      { name: 'Hip 90/90 Stretch', sets: '3', reps: '60 sec', weight: '', notes: 'Each side', isCardio: false },
+      { name: 'Shoulder Dislocations', sets: '3', reps: '15', weight: '', notes: 'With band or PVC', isCardio: false },
+      { name: 'Cat-Cow Stretch', sets: '3', reps: '15', weight: '', notes: '', isCardio: false },
+      { name: 'Deep Squat Hold', sets: '3', reps: '90 sec', weight: '', notes: '', isCardio: false },
+    ],
+  },
+];
+
 export default function QuickWorkoutPage() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -45,6 +250,7 @@ export default function QuickWorkoutPage() {
   const [isLoadingExercises, setIsLoadingExercises] = useState(false);
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTemplates, setShowTemplates] = useState(true);
 
   // Debounced search function
   const performSearch = useCallback(async (query: string) => {
@@ -73,6 +279,20 @@ export default function QuickWorkoutPage() {
 
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
+
+  const handleLoadTemplate = (template: WorkoutTemplate) => {
+    setWorkoutName(template.name);
+    setExercises([...template.exercises]);
+    setShowTemplates(false);
+    toast({
+      title: "Template Loaded!",
+      description: `${template.name} workout loaded. Customize as needed.`,
+    });
+  };
+
+  const handleStartCustom = () => {
+    setShowTemplates(false);
+  };
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }]);
@@ -179,6 +399,7 @@ export default function QuickWorkoutPage() {
       // Reset form
       setWorkoutName('');
       setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }]);
+      setShowTemplates(true);
 
     } catch (error: any) {
       console.error('Error saving workout:', error);
@@ -196,15 +417,89 @@ export default function QuickWorkoutPage() {
     <div className="space-y-4 pb-24 md:pb-4">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Dumbbell className="h-6 w-6" />
-            <CardTitle>Quick Workout Builder</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Dumbbell className="h-6 w-6" />
+                <CardTitle>Quick Workout</CardTitle>
+              </div>
+              <CardDescription>
+                {showTemplates ? 'Choose a template or build your own' : 'Create and log your workout'}
+              </CardDescription>
+            </div>
+            {!showTemplates && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowTemplates(true);
+                  setWorkoutName('');
+                  setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '', isCardio: false }]);
+                }}
+              >
+                ← Templates
+              </Button>
+            )}
           </div>
-          <CardDescription>
-            Create and log your own workout
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showTemplates ? (
+            <>
+              {/* Template Selection */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">Choose a Template</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {workoutTemplates.map((template) => {
+                    const IconComponent = template.icon;
+                    return (
+                      <Card
+                        key={template.id}
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => handleLoadTemplate(template)}
+                      >
+                        <CardContent className="pt-6 pb-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <IconComponent className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{template.name}</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {template.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {template.exercises.length} exercises
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Or Build Custom */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleStartCustom}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Build Custom Workout
+              </Button>
+            </>
+          ) : (
+            <>
           {/* Workout Name */}
           <div className="space-y-2">
             <Label htmlFor="workout-name">Workout Name (optional)</Label>
@@ -406,6 +701,8 @@ export default function QuickWorkoutPage() {
             <Check className="h-5 w-5 mr-2" />
             {isSaving ? 'Saving...' : 'Save Workout'}
           </Button>
+          </>
+          )}
         </CardContent>
       </Card>
     </div>
