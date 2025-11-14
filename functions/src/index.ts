@@ -5,6 +5,7 @@ import * as logger from "firebase-functions/logger";
 
 // Added 'defineSecret' for parameterized secret management
 import { defineSecret } from "firebase-functions/params";
+import { config } from "firebase-functions";
 
 // --- Genkit and AI Imports ---
 import { genkit } from "genkit";
@@ -26,8 +27,7 @@ const mailgunFromEmail = defineSecret("MAILGUN_FROM_EMAIL");
 function getAppBaseUrl(): string {
   try {
     // Try to get from runtime config first
-    const functions = require('firebase-functions');
-    const baseUrl = functions.config()?.app?.base_url;
+    const baseUrl = config()?.app?.base_url;
     if (baseUrl) {
       return baseUrl;
     }
