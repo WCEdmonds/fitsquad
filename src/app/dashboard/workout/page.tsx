@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Dumbbell, Plus, X, Check, Search, Loader2 } from 'lucide-react';
+import { Dumbbell, Plus, X, Check, Search, Loader2, Zap, Weight, PersonStanding, Timer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useUser } from '@/firebase';
@@ -29,6 +29,68 @@ interface Exercise {
   notes: string;
 }
 
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: any;
+  exercises: Exercise[];
+}
+
+const workoutTemplates: WorkoutTemplate[] = [
+  {
+    id: 'gym-strength',
+    name: 'Gym Strength',
+    description: 'Full body strength training with weights',
+    icon: Weight,
+    exercises: [
+      { name: 'Barbell Squat', sets: '4', reps: '8', weight: '185', notes: '' },
+      { name: 'Bench Press', sets: '4', reps: '8', weight: '135', notes: '' },
+      { name: 'Deadlift', sets: '3', reps: '6', weight: '225', notes: '' },
+      { name: 'Overhead Press', sets: '3', reps: '10', weight: '95', notes: '' },
+      { name: 'Barbell Row', sets: '3', reps: '10', weight: '115', notes: '' },
+    ],
+  },
+  {
+    id: 'bodyweight',
+    name: 'Bodyweight',
+    description: 'No equipment needed, anywhere workout',
+    icon: PersonStanding,
+    exercises: [
+      { name: 'Push-ups', sets: '4', reps: '15', weight: '', notes: '' },
+      { name: 'Pull-ups', sets: '4', reps: '8', weight: '', notes: '' },
+      { name: 'Air Squats', sets: '4', reps: '20', weight: '', notes: '' },
+      { name: 'Plank', sets: '3', reps: '60 sec', weight: '', notes: '' },
+      { name: 'Burpees', sets: '3', reps: '15', weight: '', notes: '' },
+    ],
+  },
+  {
+    id: 'cardio-run',
+    name: 'Cardio Run',
+    description: 'Running-focused cardio workout',
+    icon: Timer,
+    exercises: [
+      { name: 'Warm-up Jog', sets: '1', reps: '5 min', weight: '', notes: 'Easy pace' },
+      { name: 'Interval Sprints', sets: '8', reps: '30 sec', weight: '', notes: '90 sec rest between' },
+      { name: 'Steady Run', sets: '1', reps: '20 min', weight: '', notes: 'Moderate pace' },
+      { name: 'Cool-down Walk', sets: '1', reps: '5 min', weight: '', notes: 'Slow pace' },
+    ],
+  },
+  {
+    id: 'hiit',
+    name: 'HIIT Circuit',
+    description: 'High-intensity interval training',
+    icon: Zap,
+    exercises: [
+      { name: 'Jump Squats', sets: '4', reps: '15', weight: '', notes: '30 sec rest' },
+      { name: 'Mountain Climbers', sets: '4', reps: '20', weight: '', notes: '30 sec rest' },
+      { name: 'Burpees', sets: '4', reps: '12', weight: '', notes: '30 sec rest' },
+      { name: 'High Knees', sets: '4', reps: '30 sec', weight: '', notes: '30 sec rest' },
+      { name: 'Jump Rope', sets: '4', reps: '1 min', weight: '', notes: '30 sec rest' },
+    ],
+  },
+];
+
 export default function QuickWorkoutPage() {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -42,6 +104,7 @@ export default function QuickWorkoutPage() {
   const [isLoadingExercises, setIsLoadingExercises] = useState(false);
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTemplates, setShowTemplates] = useState(true);
 
   // Debounced search function
   const performSearch = useCallback(async (query: string) => {
@@ -70,6 +133,20 @@ export default function QuickWorkoutPage() {
 
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
+
+  const handleLoadTemplate = (template: WorkoutTemplate) => {
+    setWorkoutName(template.name);
+    setExercises([...template.exercises]);
+    setShowTemplates(false);
+    toast({
+      title: "Template Loaded!",
+      description: `${template.name} workout loaded. Customize as needed.`,
+    });
+  };
+
+  const handleStartCustom = () => {
+    setShowTemplates(false);
+  };
 
   const handleAddExercise = () => {
     setExercises([...exercises, { name: '', sets: '', reps: '', weight: '', notes: '' }]);
@@ -161,6 +238,7 @@ export default function QuickWorkoutPage() {
       // Reset form
       setWorkoutName('');
       setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '' }]);
+      setShowTemplates(true);
 
     } catch (error: any) {
       console.error('Error saving workout:', error);
@@ -178,15 +256,89 @@ export default function QuickWorkoutPage() {
     <div className="space-y-4 pb-24 md:pb-4">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Dumbbell className="h-6 w-6" />
-            <CardTitle>Quick Workout Builder</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <Dumbbell className="h-6 w-6" />
+                <CardTitle>Quick Workout</CardTitle>
+              </div>
+              <CardDescription>
+                {showTemplates ? 'Choose a template or build your own' : 'Create and log your workout'}
+              </CardDescription>
+            </div>
+            {!showTemplates && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setShowTemplates(true);
+                  setWorkoutName('');
+                  setExercises([{ name: '', sets: '', reps: '', weight: '', notes: '' }]);
+                }}
+              >
+                ← Templates
+              </Button>
+            )}
           </div>
-          <CardDescription>
-            Create and log your own workout
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {showTemplates ? (
+            <>
+              {/* Template Selection */}
+              <div className="space-y-3">
+                <h3 className="font-semibold">Choose a Template</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {workoutTemplates.map((template) => {
+                    const IconComponent = template.icon;
+                    return (
+                      <Card
+                        key={template.id}
+                        className="cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => handleLoadTemplate(template)}
+                      >
+                        <CardContent className="pt-6 pb-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <IconComponent className="h-6 w-6 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{template.name}</h4>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {template.description}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {template.exercises.length} exercises
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Or Build Custom */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleStartCustom}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Build Custom Workout
+              </Button>
+            </>
+          ) : (
+            <>
           {/* Workout Name */}
           <div className="space-y-2">
             <Label htmlFor="workout-name">Workout Name (optional)</Label>
@@ -351,6 +503,8 @@ export default function QuickWorkoutPage() {
             <Check className="h-5 w-5 mr-2" />
             {isSaving ? 'Saving...' : 'Save Workout'}
           </Button>
+          </>
+          )}
         </CardContent>
       </Card>
     </div>
