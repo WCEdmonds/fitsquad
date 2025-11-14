@@ -61,7 +61,9 @@ export default function DashboardPage() {
 
   // Check if running on native platform
   useEffect(() => {
-    setIsNative(Capacitor.isNativePlatform());
+    const isNativePlatform = Capacitor.isNativePlatform();
+    console.log('🔍 Platform check - isNative:', isNativePlatform);
+    setIsNative(isNativePlatform);
   }, []);
 
   const acftEventDescriptions: Record<string, { title: string; description: string }> = {
@@ -329,7 +331,7 @@ export default function DashboardPage() {
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           {/* Logo at top - Native only */}
-          {isNative && (
+          {isNative ? (
             <div className="flex justify-center mb-4">
               <Image
                 src="/fitsquad-logo.png"
@@ -339,6 +341,8 @@ export default function DashboardPage() {
                 className="rounded-lg"
               />
             </div>
+          ) : (
+            console.log('Logo hidden - isNative is false') || null
           )}
         </div>
         {/* Profile Menu - Top Right */}
