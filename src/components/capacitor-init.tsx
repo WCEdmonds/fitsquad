@@ -9,6 +9,9 @@ export function CapacitorInit() {
   useEffect(() => {
     // Only run on native platforms (iOS/Android)
     if (Capacitor.isNativePlatform()) {
+      // Add capacitor class to html element for CSS targeting
+      document.documentElement.classList.add('capacitor');
+
       const initCapacitor = async () => {
         try {
           // Configure Status Bar
@@ -21,8 +24,11 @@ export function CapacitorInit() {
           await Keyboard.setScroll({ isDisabled: false });
           await Keyboard.setResizeMode({ mode: KeyboardResize.Native });
 
-          // Prevent pull-to-refresh gesture (common in native apps)
+          // Prevent pull-to-refresh gesture at body level
           document.body.style.overscrollBehavior = 'none';
+
+          // Prevent scroll chaining to prevent body scroll
+          document.body.style.overscrollBehaviorY = 'contain';
 
         } catch (error) {
           console.error('Error initializing Capacitor:', error);
