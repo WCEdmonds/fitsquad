@@ -10,6 +10,11 @@ export type Account = {
   claimCode?: string; // Unique code to claim this profile
   createdBy?: string; // UID of supervisor/commander who created unclaimed profile
   createdAt?: string; // ISO timestamp
+  emailVerified?: boolean; // Email verification status
+  verificationCode?: string; // Code for email verification
+  verificationCodeExpires?: string; // Expiration timestamp for verification code
+  aiGenerationsThisWeek?: number; // Count of AI generations this week
+  aiGenerationsWeekStart?: string; // ISO timestamp of when the current week started
 };
 
 export type Soldier = {

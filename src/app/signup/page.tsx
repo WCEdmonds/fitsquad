@@ -9,7 +9,8 @@ import {
 } from 'firebase/firestore';
 import { claimProfile, findUnclaimedProfile } from '@/lib/unclaimed-profiles';
 import { Account } from '@/lib/types';
-import { callSendInvite } from '@/lib/cloudFunctions';
+import { callSendInvite, callSendVerificationEmail, callVerifyEmail } from '@/lib/cloudFunctions';
+import { sendSignInLinkToEmail } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -44,6 +45,10 @@ function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingCode, setIsCheckingCode] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Use useFirebase instead of useAuth/useFirestore to handle initialization state
   let firebaseContext;
@@ -65,6 +70,39 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
+
+  const generateVerificationCode = (): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsVerifying(true);
+
+    try {
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      const result = await callVerifyEmail({
+        userId,
+        code: verificationCode,
+      });
+
+      if (result.success) {
+        // Navigate to dashboard
+        router.push(redirectUrl || '/dashboard');
+      } else {
+        setError(result.error || 'Verification failed');
+      }
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      setError(err.message || 'Invalid or expired verification code');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
 
   const sendWelcomeEmail = async (email: string, firstName: string, isClaimed: boolean) => {
     try {
@@ -229,7 +267,10 @@ function SignupForm() {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 6) {
+    const isCommander = accountType === 'Commander';
+
+    // Password validation - skip for commanders
+    if (!isCommander && password.length < 6) {
       setError('Password should be at least 6 characters.');
       return;
     }
@@ -259,15 +300,28 @@ function SignupForm() {
     setIsLoading(true);
 
     try {
-      // Wait for user creation to complete
-      const userCredential = await initiateEmailSignUp(auth, email, password);
+      let user;
 
-      // userCredential should contain the new user
-      const user = userCredential.user;
+      // For commanders, use email link authentication (passwordless)
+      if (isCommander) {
+        // Generate a random password for Firebase Auth (won't be shared with user)
+        const randomPassword = Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
+        const userCredential = await initiateEmailSignUp(auth, email, randomPassword);
+        user = userCredential.user;
+      } else {
+        // Regular password-based signup for non-commanders
+        const userCredential = await initiateEmailSignUp(auth, email, password);
+        user = userCredential.user;
+      }
 
       if (!user) {
         throw new Error('Failed to create user account');
       }
+
+      // Generate verification code
+      const code = generateVerificationCode();
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour expiration
 
       // If claiming a profile, use the claim mechanism
       if (unclaimedProfile && claimCode) {
@@ -282,11 +336,26 @@ function SignupForm() {
           throw new Error('Failed to claim profile. The claim code may have expired.');
         }
 
-        // Send welcome email (async, don't block navigation)
-        sendWelcomeEmail(user.email || email, firstName, true);
+        // Update with verification info
+        const accountRef = doc(firestore, 'accounts', user.uid);
+        await setDoc(accountRef, {
+          verificationCode: code,
+          verificationCodeExpires: expiresAt.toISOString(),
+          emailVerified: false,
+        }, { merge: true });
 
-        // Profile claimed successfully - data has been migrated
-        router.push(redirectUrl || '/dashboard');
+        // Send verification email
+        await callSendVerificationEmail({
+          userId: user.uid,
+          email: user.email || email,
+          firstName,
+          code,
+        });
+
+        // Show verification form
+        setUserId(user.uid);
+        setShowVerification(true);
+        setIsLoading(false);
         return;
       }
 
@@ -300,18 +369,29 @@ function SignupForm() {
         teamId: null, // User will create or join a team later
         gender,
         claimed: true, // Mark as claimed since it's a regular signup
+        emailVerified: false,
+        verificationCode: code,
+        verificationCodeExpires: expiresAt.toISOString(),
+        aiGenerationsThisWeek: 0,
+        aiGenerationsWeekStart: new Date().toISOString(),
       };
 
       const accountRef = doc(firestore, 'accounts', user.uid);
       // Wait for the Firestore document to be created before navigating
       await setDoc(accountRef, accountData, { merge: true });
 
-      // Send welcome email (async, don't block navigation)
-      sendWelcomeEmail(user.email || email, firstName, false);
+      // Send verification email
+      await callSendVerificationEmail({
+        userId: user.uid,
+        email: user.email || email,
+        firstName,
+        code,
+      });
 
-      // Navigate to redirect URL if provided, otherwise go to dashboard
-      router.push(redirectUrl || '/dashboard');
-      // Keep isLoading true during navigation to prevent double-submission
+      // Show verification form instead of navigating
+      setUserId(user.uid);
+      setShowVerification(true);
+      setIsLoading(false);
 
     } catch (err: any) {
       console.error('Signup error:', err);
@@ -320,6 +400,55 @@ function SignupForm() {
     }
   };
 
+
+  // Show verification form if email was sent
+  if (showVerification) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="w-full max-w-md space-y-4">
+          <Card className="w-full shadow-lg">
+            <CardHeader className="text-center space-y-2">
+              <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-lg mb-2 w-fit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
+              <CardDescription className="text-base">
+                We've sent a 6-digit code to {email}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleVerifyEmail} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="verificationCode">Verification Code</Label>
+                  <Input
+                    id="verificationCode"
+                    type="text"
+                    placeholder="Enter 6-digit code"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    maxLength={6}
+                    required
+                    className="text-center text-2xl tracking-widest"
+                  />
+                </div>
+                {error && (
+                  <p className="text-sm text-destructive font-medium">{error}</p>
+                )}
+                <Button type="submit" className="w-full" disabled={isVerifying || verificationCode.length !== 6}>
+                  {isVerifying ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</> : 'Verify Email'}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Didn't receive the code? Check your spam folder or contact support.
+                </p>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -408,17 +537,27 @@ function SignupForm() {
                     onChange={(e) => setEmail(e.target.value)}
                 />
                 </div>
-                <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                </div>
+                {accountType !== 'Commander' && (
+                  <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                      id="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                  />
+                  </div>
+                )}
             </div>
+
+            {accountType === 'Commander' && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Note:</strong> Commander accounts do not require a password. You will verify your email to complete registration.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

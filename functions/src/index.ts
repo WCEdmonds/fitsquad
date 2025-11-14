@@ -92,6 +92,11 @@ const SendInviteEmailInputSchema = z.object({
   body: z.string().describe("The HTML or text body of the email."),
 });
 
+const VerifyEmailInputSchema = z.object({
+  userId: z.string().describe("The user's Firebase UID."),
+  code: z.string().describe("The 6-digit verification code."),
+});
+
 // ============================================================================
 //   AI FLOW DEFINITION (CORRECTED)
 // ============================================================================
@@ -194,16 +199,76 @@ const prompt = `
 
 // ============================================================================
 //
-//   FUNCTION 1: generatePlan (HTTP Endpoint)
+//   FUNCTION 1: generatePlan (HTTP Endpoint with Rate Limiting)
 //
 // ============================================================================
+
+import * as admin from "firebase-admin";
+admin.initializeApp();
 
 export const generatePlan = onCallGenkit(
   {
     cors: true,
     secrets: [googleAIapiKey],
   },
-  generatePlanFlow,
+  async (req) => {
+    // Rate limiting: Check user's AI generation count
+    const userId = req.auth?.uid;
+
+    if (!userId) {
+      throw new Error("Authentication required");
+    }
+
+    const db = admin.firestore();
+    const accountRef = db.collection("accounts").doc(userId);
+    const accountSnap = await accountRef.get();
+
+    if (!accountSnap.exists) {
+      throw new Error("Account not found");
+    }
+
+    const accountData = accountSnap.data();
+    const now = new Date();
+    const weekStart = accountData?.aiGenerationsWeekStart
+      ? new Date(accountData.aiGenerationsWeekStart)
+      : null;
+
+    // Check if we need to reset the weekly counter
+    let aiGenerationsThisWeek = accountData?.aiGenerationsThisWeek || 0;
+    let needsReset = false;
+
+    if (!weekStart || (now.getTime() - weekStart.getTime()) > 7 * 24 * 60 * 60 * 1000) {
+      // More than a week has passed, reset counter
+      needsReset = true;
+      aiGenerationsThisWeek = 0;
+    }
+
+    // Check if user has exceeded limit (5 per week)
+    if (aiGenerationsThisWeek >= 5) {
+      throw new Error(
+        "AI generation limit reached. You can generate up to 5 workout plans per week. Your limit will reset next week.",
+      );
+    }
+
+    // Increment counter
+    const newCount = aiGenerationsThisWeek + 1;
+    const updateData: any = {
+      aiGenerationsThisWeek: newCount,
+    };
+
+    if (needsReset) {
+      updateData.aiGenerationsWeekStart = now.toISOString();
+    }
+
+    await accountRef.update(updateData);
+
+    logger.info(
+      `User ${userId} has used ${newCount}/5 AI generations this week`,
+    );
+
+    // Call the actual generation flow
+    return await generatePlanFlow(req.data);
+  },
 );
 
 // ============================================================================
@@ -273,6 +338,212 @@ export const sendInvite = onRequest(
       response.status(200).json({ success: true });
     } catch (err) {
       logger.error("Mailgun send error:", err);
+      if (err instanceof z.ZodError) {
+        response.status(400).json({
+          success: false,
+          error: "Invalid input",
+          details: err.errors,
+        });
+      } else {
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        response.status(500).json({ success: false, error: errorMessage });
+      }
+    }
+  },
+);
+
+// ============================================================================
+//
+//   FUNCTION 3: sendVerificationEmail (HTTP Endpoint)
+//
+// ============================================================================
+
+export const sendVerificationEmail = onRequest(
+  {
+    cors: true,
+    secrets: [mailgunApiKey, mailgunDomain, mailgunFromEmail],
+  },
+  async (request, response) => {
+    logger.info("Function received request for sendVerificationEmail", request.body);
+
+    try {
+      const { userId, email, firstName, code } = request.body;
+
+      if (!userId || !email || !code) {
+        response.status(400).json({
+          success: false,
+          error: "Missing required fields",
+        });
+        return;
+      }
+
+      // Get secrets
+      const apiKey = process.env.MAILGUN_API_KEY;
+      const domain = process.env.MAILGUN_DOMAIN;
+      const fromEmail = process.env.MAILGUN_FROM_EMAIL;
+
+      if (!apiKey || !domain || !fromEmail) {
+        logger.error("Mailgun environment variables are not configured.");
+        response.status(500).json({
+          success: false,
+          error: "Email server is not configured.",
+        });
+        return;
+      }
+
+      // Create verification email HTML
+      const emailBody = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .code { background: white; border: 2px dashed #667eea; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #667eea; margin: 20px 0; border-radius: 5px; }
+            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Verify Your Email</h1>
+            </div>
+            <div class="content">
+              <p>Hi ${firstName || "there"},</p>
+              <p>Welcome to <strong>FitSquad</strong>! Please verify your email address to complete your account setup.</p>
+              <p>Your verification code is:</p>
+              <div class="code">${code}</div>
+              <p>This code will expire in 24 hours.</p>
+              <p>If you didn't create a FitSquad account, you can safely ignore this email.</p>
+            </div>
+            <div class="footer">
+              <p>© ${new Date().getFullYear()} FitSquad by Quandary Development</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Prepare form
+      const form = new FormData();
+      form.append("from", `FitSquad <${fromEmail}>`);
+      form.append("to", email);
+      form.append("subject", "Verify your FitSquad email");
+      form.append("html", emailBody);
+
+      // Send
+      const mailgunResponse = await fetch(
+        `https://api.mailgun.net/v3/${domain}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization:
+              "Basic " + Buffer.from(`api:${apiKey}`).toString("base64"),
+          },
+          body: form,
+        },
+      );
+
+      if (!mailgunResponse.ok) {
+        const errorBody = await mailgunResponse.text();
+        logger.error("Mailgun API Error:", errorBody);
+        throw new Error(
+          `Mailgun API Error: ${mailgunResponse.status} ${mailgunResponse.statusText}`,
+        );
+      }
+
+      const result = await mailgunResponse.json();
+      logger.info("Mailgun verification email sent:", result);
+
+      response.status(200).json({ success: true });
+    } catch (err) {
+      logger.error("Error sending verification email:", err);
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+      response.status(500).json({ success: false, error: errorMessage });
+    }
+  },
+);
+
+// ============================================================================
+//
+//   FUNCTION 4: verifyEmail (HTTP Endpoint)
+//
+// ============================================================================
+
+export const verifyEmail = onRequest(
+  {
+    cors: true,
+  },
+  async (request, response) => {
+    logger.info("Function received request for verifyEmail", request.body);
+
+    try {
+      const input = VerifyEmailInputSchema.parse(request.body);
+      const db = admin.firestore();
+
+      // Get user account
+      const accountRef = db.collection("accounts").doc(input.userId);
+      const accountSnap = await accountRef.get();
+
+      if (!accountSnap.exists) {
+        response.status(404).json({
+          success: false,
+          error: "Account not found",
+        });
+        return;
+      }
+
+      const accountData = accountSnap.data();
+
+      // Check if already verified
+      if (accountData?.emailVerified) {
+        response.status(200).json({
+          success: true,
+          message: "Email already verified",
+        });
+        return;
+      }
+
+      // Check verification code
+      if (accountData?.verificationCode !== input.code) {
+        response.status(400).json({
+          success: false,
+          error: "Invalid verification code",
+        });
+        return;
+      }
+
+      // Check if code expired (24 hours)
+      const expiresAt = accountData?.verificationCodeExpires
+        ? new Date(accountData.verificationCodeExpires)
+        : null;
+
+      if (!expiresAt || new Date() > expiresAt) {
+        response.status(400).json({
+          success: false,
+          error: "Verification code has expired",
+        });
+        return;
+      }
+
+      // Mark email as verified
+      await accountRef.update({
+        emailVerified: true,
+        verificationCode: admin.firestore.FieldValue.delete(),
+        verificationCodeExpires: admin.firestore.FieldValue.delete(),
+      });
+
+      logger.info(`Email verified for user ${input.userId}`);
+
+      response.status(200).json({
+        success: true,
+        message: "Email verified successfully",
+      });
+    } catch (err) {
+      logger.error("Error verifying email:", err);
       if (err instanceof z.ZodError) {
         response.status(400).json({
           success: false,
