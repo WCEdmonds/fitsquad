@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,15 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import type { TeamInvitation } from '@/lib/types';
 
 export default function InvitationPage() {
-  const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  const teamId = params.teamId as string;
-  const invitationId = params.id as string;
+  const teamId = searchParams.get('teamId') as string;
+  const invitationId = searchParams.get('invitationId') as string;
   const action = searchParams.get('action') as 'accept' | 'decline' | null;
 
   const [invitation, setInvitation] = useState<TeamInvitation | null>(null);
@@ -29,7 +28,11 @@ export default function InvitationPage() {
 
   // Load invitation details
   useEffect(() => {
-    if (!firestore || !teamId || !invitationId) return;
+    if (!firestore || !teamId || !invitationId) {
+      setStatus('error');
+      setLoading(false);
+      return;
+    }
 
     const loadInvitation = async () => {
       try {

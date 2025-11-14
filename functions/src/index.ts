@@ -673,8 +673,8 @@ export const sendTeamInvitation = onRequest(
 
       // 3. Create invitation email HTML
       const baseUrl = getAppBaseUrl();
-      const acceptLink = `${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}?action=accept`;
-      const declineLink = `${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}?action=decline`;
+      const acceptLink = `${baseUrl}/dashboard/invitations?teamId=${input.teamId}&invitationId=${input.invitationId}&action=accept`;
+      const declineLink = `${baseUrl}/dashboard/invitations?teamId=${input.teamId}&invitationId=${input.invitationId}&action=decline`;
 
       const emailBody = `
         <!DOCTYPE html>
@@ -738,7 +738,7 @@ export const sendTeamInvitation = onRequest(
 
               <p style="font-size: 14px; color: #666;">
                 If the buttons above don't work, you can also visit: <br>
-                <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}</code>
+                <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">${baseUrl}/dashboard/invitations?teamId=${input.teamId}&invitationId=${input.invitationId}</code>
               </p>
             </div>
             <div class="footer">
