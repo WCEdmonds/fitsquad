@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
+import { ProfileMenu } from '@/components/profile-menu';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -324,18 +325,25 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      {/* Logo at top - Native only */}
-      {isNative && (
-        <div className="flex justify-center">
-          <Image
-            src="/fitsquad-logo.png"
-            alt="FitSquad Logo"
-            width={48}
-            height={48}
-            className="rounded-lg"
-          />
+      {/* Top bar with logo and profile menu */}
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1">
+          {/* Logo at top - Native only */}
+          {isNative && (
+            <div className="flex justify-center mb-4">
+              <Image
+                src="/fitsquad-logo.png"
+                alt="FitSquad Logo"
+                width={48}
+                height={48}
+                className="rounded-lg"
+              />
+            </div>
+          )}
         </div>
-      )}
+        {/* Profile Menu - Top Right */}
+        <ProfileMenu />
+      </div>
 
       <div className="flex justify-between items-start flex-wrap gap-4">
        <div className="flex items-center gap-4">
