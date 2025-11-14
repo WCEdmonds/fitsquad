@@ -117,7 +117,18 @@ export async function callGeneratePlan(
   }
 
   const result = await response.json();
-  console.log('✅ Cloud Function response received:', { hasResult: !!result.result });
+  console.log('✅ Cloud Function response received:', {
+    hasResult: !!result.result,
+    resultKeys: Object.keys(result),
+    resultType: typeof result.result
+  });
+  console.log('Full API response:', result);
+
+  if (!result.result) {
+    console.error('❌ No result.result in response!');
+    throw new Error('Invalid response from server: missing workout plan data');
+  }
+
   return result.result;
 }
 
