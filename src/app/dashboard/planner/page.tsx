@@ -62,6 +62,22 @@ export default function PlannerPage() {
     }
   }, [teamMembers, firestore]);
 
+  // Debug: Log when workout plan changes
+  useEffect(() => {
+    if (workoutPlan) {
+      console.log('📋 Workout plan updated:', {
+        hasTitle: !!workoutPlan.title,
+        hasCommonWeaknesses: !!workoutPlan.common_weaknesses,
+        weaknessesCount: workoutPlan.common_weaknesses?.length,
+        hasIndividualPlan: !!workoutPlan.individual_plan,
+        hasStrengthPlan: !!workoutPlan.strength_focus_plan,
+        hasRunningPlan: !!workoutPlan.running_focus_plan,
+        planId: generatedPlanId
+      });
+      console.log('Full plan object:', workoutPlan);
+    }
+  }, [workoutPlan, generatedPlanId]);
+
   async function handleFormSubmit(values: PlannerFormValues) {
     console.log('🚀 Form submitted with values:', values);
 
@@ -292,15 +308,19 @@ export default function PlannerPage() {
             </CardHeader>
             <CardContent>
               {isGenerating && (
-                <div className="space-y-4">
-                  <Skeleton className="h-8 w-1/2" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <br />
-                  <Skeleton className="h-8 w-1/3" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
+                <div className="flex flex-col items-center justify-center text-center p-8 min-h-[400px] space-y-6">
+                  <div className="relative">
+                    <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold">Generating Your Workout Plan</h3>
+                    <p className="text-muted-foreground">This may take 15-30 seconds as AI analyzes your fitness data...</p>
+                  </div>
+                  <div className="space-y-2 w-full max-w-md">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6 mx-auto" />
+                    <Skeleton className="h-4 w-4/6 mx-auto" />
+                  </div>
                 </div>
               )}
               {!isGenerating && !workoutPlan && (
@@ -310,7 +330,11 @@ export default function PlannerPage() {
                   <p className="text-muted-foreground">Fill out the form on the left to get started.</p>
                 </div>
               )}
-              {workoutPlan && generatedPlanId && <WorkoutCalendarView plan={workoutPlan} planId={generatedPlanId} />}
+              {!isGenerating && workoutPlan && generatedPlanId && (
+                <div className="animate-fade-in">
+                  <WorkoutCalendarView plan={workoutPlan} planId={generatedPlanId} />
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
