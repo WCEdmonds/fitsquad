@@ -251,7 +251,7 @@ export const generatePlanV2 = onRequest(
       const accountData = accountSnap.data();
 
       // Admins have unlimited AI generations - skip rate limiting
-      const isAdmin = accountData?.accountType === 'Admin';
+      const isAdmin = accountData?.accountType === "Admin";
 
       if (!isAdmin) {
         // Rate limiting for non-admin users
