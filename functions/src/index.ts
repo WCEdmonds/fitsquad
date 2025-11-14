@@ -1,6 +1,5 @@
 // FIX: 'onCallGenkit' is in 'firebase-functions/https' (requires firebase-functions v6+)
 // 'onRequest' is in 'firebase-functions/v2/https'
-import { onCallGenkit } from "firebase-functions/https";
 import { onRequest } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 
@@ -221,7 +220,7 @@ export const generatePlan = onRequest(
       // For rate limiting, we need the user ID from the Authorization header
       // The frontend should send the Firebase ID token
       const authHeader = request.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
         response.status(401).json({
           error: {
             message: "Authentication required. Please provide a valid Firebase ID token.",
@@ -231,7 +230,7 @@ export const generatePlan = onRequest(
       }
 
       // Verify the Firebase ID token
-      const idToken = authHeader.split('Bearer ')[1];
+      const idToken = authHeader.split("Bearer ")[1];
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const userId = decodedToken.uid;
 
