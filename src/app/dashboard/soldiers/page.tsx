@@ -18,7 +18,6 @@ import { AddSoldierDialog } from '@/components/add-soldier-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { InviteDialog } from '@/components/invite-dialog';
 import { callSendInvite } from '@/lib/cloudFunctions';
-import { AddMemberDialog } from '@/components/add-member-dialog';
 
 const hasBenchmark = (soldier: Soldier) => {
     return soldier.mdl > 0 || soldier.hrp > 0 || soldier.twoMileRun > 0;
@@ -335,19 +334,6 @@ try {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             {/* Only show Create Profile for Supervisors/Commanders/Admins with a team */}
-            {userAccount &&
-             (userAccount.accountType === 'Supervisor' ||
-              userAccount.accountType === 'Commander' ||
-              userAccount.accountType === 'Admin') &&
-             userAccount.teamId && (
-              <AddMemberDialog
-                teamId={userAccount.teamId}
-                onMemberAdded={() => {
-                  // Refresh the soldier list
-                  window.location.reload();
-                }}
-              />
-            )}
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(true)} className="w-full sm:w-auto">
               <Mail className="mr-2 h-4 w-4" /> Invite Members
             </Button>

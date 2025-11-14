@@ -39,7 +39,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Capacitor } from '@capacitor/core';
 import { ProfileMenu } from '@/components/profile-menu';
 
 export default function DashboardPage() {
@@ -57,14 +56,6 @@ export default function DashboardPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
-  const [isNative, setIsNative] = useState(false);
-
-  // Check if running on native platform
-  useEffect(() => {
-    const isNativePlatform = Capacitor.isNativePlatform();
-    console.log('🔍 Platform check - isNative:', isNativePlatform);
-    setIsNative(isNativePlatform);
-  }, []);
 
   const acftEventDescriptions: Record<string, { title: string; description: string }> = {
     MDL: {
@@ -327,28 +318,6 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      {/* Top bar with logo and profile menu */}
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          {/* Logo at top - Native only */}
-          {isNative ? (
-            <div className="flex justify-center mb-4">
-              <Image
-                src="/fitsquad-logo.png"
-                alt="FitSquad Logo"
-                width={48}
-                height={48}
-                className="rounded-lg"
-              />
-            </div>
-          ) : (
-            console.log('Logo hidden - isNative is false') || null
-          )}
-        </div>
-        {/* Profile Menu - Top Right */}
-        <ProfileMenu />
-      </div>
-
       <div className="flex justify-between items-start flex-wrap gap-4">
        <div className="flex items-center gap-4">
           <h1 className="text-2xl md:text-3xl font-bold">
@@ -377,20 +346,23 @@ export default function DashboardPage() {
             </DropdownMenu>
           )}
        </div>
-        {account?.accountType === 'Commander' && (
-            <div className="w-full md:w-auto md:min-w-[250px]">
-                 <Select onValueChange={setSelectedTeamId} value={selectedTeamId ?? ""}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a team to view..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {managedTeams?.map((team) => (
-                            <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-        )}
+        <div className="flex items-center gap-4">
+          {account?.accountType === 'Commander' && (
+              <div className="w-full md:w-auto md:min-w-[250px]">
+                   <Select onValueChange={setSelectedTeamId} value={selectedTeamId ?? ""}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select a team to view..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {managedTeams?.map((team) => (
+                              <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+              </div>
+          )}
+          <ProfileMenu />
+        </div>
       </div>
 
        {!teamId && account?.accountType === 'Commander' && (

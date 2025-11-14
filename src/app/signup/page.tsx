@@ -7,7 +7,6 @@ import {
   doc,
   setDoc,
 } from 'firebase/firestore';
-import { claimProfile, findUnclaimedProfile } from '@/lib/unclaimed-profiles';
 import { Account } from '@/lib/types';
 import { callSendInvite, callSendVerificationEmail, callVerifyEmail } from '@/lib/cloudFunctions';
 import { Button } from '@/components/ui/button';
@@ -39,11 +38,8 @@ function SignupForm() {
   const [accountType, setAccountType] = useState('');
   const [gender, setGender] = useState('');
   const [passcode, setPasscode] = useState('');
-  const [claimCode, setClaimCode] = useState('');
-  const [unclaimedProfile, setUnclaimedProfile] = useState<Account | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingCode, setIsCheckingCode] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -230,38 +226,6 @@ function SignupForm() {
     }
   };
 
-  const handleCheckClaimCode = async () => {
-    if (!claimCode.trim()) {
-      setUnclaimedProfile(null);
-      return;
-    }
-
-    setIsCheckingCode(true);
-    setError(null);
-
-    try {
-      const profile = await findUnclaimedProfile(firestore, claimCode.trim().toUpperCase());
-      if (profile) {
-        setUnclaimedProfile(profile);
-        // Pre-fill form with profile data
-        setFirstName(profile.firstName);
-        setLastName(profile.lastName);
-        setGender(profile.gender);
-        setAccountType(profile.accountType);
-        setError(null);
-      } else {
-        setUnclaimedProfile(null);
-        setError('Invalid claim code. Please check and try again.');
-      }
-    } catch (err: any) {
-      console.error('Error checking claim code:', err);
-      setError('Failed to verify claim code. Please try again.');
-      setUnclaimedProfile(null);
-    } finally {
-      setIsCheckingCode(false);
-    }
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -305,42 +269,6 @@ function SignupForm() {
       const code = generateVerificationCode();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24); // 24 hour expiration
-
-      // If claiming a profile, use the claim mechanism
-      if (unclaimedProfile && claimCode) {
-        const claimed = await claimProfile(
-          firestore,
-          claimCode.trim().toUpperCase(),
-          user.uid,
-          user.email || email
-        );
-
-        if (!claimed) {
-          throw new Error('Failed to claim profile. The claim code may have expired.');
-        }
-
-        // Update with verification info
-        const accountRef = doc(firestore, 'accounts', user.uid);
-        await setDoc(accountRef, {
-          verificationCode: code,
-          verificationCodeExpires: expiresAt.toISOString(),
-          emailVerified: false,
-        }, { merge: true });
-
-        // Send verification email
-        await callSendVerificationEmail({
-          userId: user.uid,
-          email: user.email || email,
-          firstName,
-          code,
-        });
-
-        // Show verification form
-        setUserId(user.uid);
-        setShowVerification(true);
-        setIsLoading(false);
-        return;
-      }
 
       // Regular signup flow (no claim code)
       const accountData = {
@@ -455,39 +383,6 @@ function SignupForm() {
           </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
-            {/* Claim Code Section */}
-            <div className="space-y-2 p-4 bg-muted rounded-lg">
-              <Label htmlFor="claimCode">
-                Have a Claim Code? (Optional)
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                If your supervisor created a profile for you, enter the claim code to adopt it.
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  id="claimCode"
-                  value={claimCode}
-                  onChange={(e) => setClaimCode(e.target.value.toUpperCase())}
-                  placeholder="Enter 8-character code"
-                  maxLength={8}
-                  disabled={!!unclaimedProfile}
-                />
-                <Button
-                  type="button"
-                  onClick={handleCheckClaimCode}
-                  disabled={isCheckingCode || !claimCode.trim() || !!unclaimedProfile}
-                  variant="outline"
-                >
-                  {isCheckingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Check'}
-                </Button>
-              </div>
-              {unclaimedProfile && (
-                <p className="text-sm text-green-600 font-medium">
-                  Profile found! Your information has been pre-filled below.
-                </p>
-              )}
-            </div>
-
              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
@@ -496,7 +391,6 @@ function SignupForm() {
                       required
                       value={firstName}
                       onChange={e => setFirstName(e.target.value)}
-                      disabled={!!unclaimedProfile}
                     />
                 </div>
                 <div className="space-y-2">
@@ -506,7 +400,6 @@ function SignupForm() {
                       required
                       value={lastName}
                       onChange={e => setLastName(e.target.value)}
-                      disabled={!!unclaimedProfile}
                     />
                 </div>
                 <div className="space-y-2">
@@ -535,7 +428,7 @@ function SignupForm() {
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="gender">Gender</Label>
-                    <Select onValueChange={setGender} value={gender} disabled={!!unclaimedProfile}>
+                    <Select onValueChange={setGender} value={gender}>
                         <SelectTrigger id="gender">
                             <SelectValue placeholder="Select..." />
                         </SelectTrigger>
@@ -548,7 +441,7 @@ function SignupForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="accountType">Account Type</Label>
-                    <Select onValueChange={setAccountType} value={accountType} disabled={!!unclaimedProfile}>
+                    <Select onValueChange={setAccountType} value={accountType}>
                         <SelectTrigger id="accountType">
                             <SelectValue placeholder="Select account type" />
                         </SelectTrigger>
