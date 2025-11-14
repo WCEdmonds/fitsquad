@@ -10,7 +10,6 @@ import {
 import { claimProfile, findUnclaimedProfile } from '@/lib/unclaimed-profiles';
 import { Account } from '@/lib/types';
 import { callSendInvite, callSendVerificationEmail, callVerifyEmail } from '@/lib/cloudFunctions';
-import { sendSignInLinkToEmail } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -267,10 +266,8 @@ function SignupForm() {
     e.preventDefault();
     setError(null);
 
-    const isCommander = accountType === 'Commander';
-
-    // Password validation - skip for commanders
-    if (!isCommander && password.length < 6) {
+    // Password validation for all users
+    if (password.length < 6) {
       setError('Password should be at least 6 characters.');
       return;
     }
@@ -287,11 +284,7 @@ function SignupForm() {
       return;
     }
 
-    if (accountType === 'Commander' && passcode !== 'thunder') {
-      setError('Invalid Commander passcode.');
-      return;
-    }
-
+    // Only Admin requires passcode now
     if (accountType === 'Admin' && passcode !== 'scientiaestpotestas') {
       setError('Invalid Admin passcode.');
       return;
@@ -300,19 +293,9 @@ function SignupForm() {
     setIsLoading(true);
 
     try {
-      let user;
-
-      // For commanders, use email link authentication (passwordless)
-      if (isCommander) {
-        // Generate a random password for Firebase Auth (won't be shared with user)
-        const randomPassword = Math.random().toString(36).slice(-16) + Math.random().toString(36).slice(-16);
-        const userCredential = await initiateEmailSignUp(auth, email, randomPassword);
-        user = userCredential.user;
-      } else {
-        // Regular password-based signup for non-commanders
-        const userCredential = await initiateEmailSignUp(auth, email, password);
-        user = userCredential.user;
-      }
+      // All users (including commanders) use password-based signup
+      const userCredential = await initiateEmailSignUp(auth, email, password);
+      const user = userCredential.user;
 
       if (!user) {
         throw new Error('Failed to create user account');
@@ -537,27 +520,17 @@ function SignupForm() {
                     onChange={(e) => setEmail(e.target.value)}
                 />
                 </div>
-                {accountType !== 'Commander' && (
-                  <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                      id="password"
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                  />
-                  </div>
-                )}
+                <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                </div>
             </div>
-
-            {accountType === 'Commander' && (
-              <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Note:</strong> Commander accounts do not require a password. You will verify your email to complete registration.
-                </p>
-              </div>
-            )}
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -587,10 +560,10 @@ function SignupForm() {
                     </Select>
                 </div>
             </div>
-            
-            {accountType === 'Commander' && (
+
+            {accountType === 'Admin' && (
                 <div className="space-y-2">
-                    <Label htmlFor="passcode">Commander Passcode</Label>
+                    <Label htmlFor="passcode">Admin Passcode</Label>
                     <Input
                         id="passcode"
                         type="password"
