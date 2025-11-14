@@ -254,6 +254,12 @@ export function SmartPlanDialog({
     setGeneratedPlan(null);
 
     try {
+      // Get Firebase ID token for authentication
+      if (!user) {
+        throw new Error('You must be logged in to generate a workout plan');
+      }
+      const idToken = await user.getIdToken();
+
       const result = await callGeneratePlan({
         fitnessData,
         trainingGoals: values.trainingGoals,
@@ -262,7 +268,7 @@ export function SmartPlanDialog({
         equipmentAccess: values.equipmentAccess ?? undefined,
         isUnitPlan,
         isIndividualPlan,
-      });
+      }, idToken);
 
       setGeneratedPlan(result);
 

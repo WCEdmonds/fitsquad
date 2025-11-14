@@ -206,68 +206,119 @@ const prompt = `
 import * as admin from "firebase-admin";
 admin.initializeApp();
 
-export const generatePlan = onCallGenkit(
+export const generatePlan = onRequest(
   {
     cors: true,
     secrets: [googleAIapiKey],
   },
-  async (req) => {
-    // Rate limiting: Check user's AI generation count
-    const userId = req.auth?.uid;
+  async (request, response) => {
+    logger.info("Function received request for generatePlan", request.body);
 
-    if (!userId) {
-      throw new Error("Authentication required");
-    }
+    try {
+      // Parse input data
+      const inputData = GenerateTailoredWorkoutPlanInputSchema.parse(request.body.data);
 
-    const db = admin.firestore();
-    const accountRef = db.collection("accounts").doc(userId);
-    const accountSnap = await accountRef.get();
+      // For rate limiting, we need the user ID from the Authorization header
+      // The frontend should send the Firebase ID token
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        response.status(401).json({
+          error: {
+            message: "Authentication required. Please provide a valid Firebase ID token.",
+          },
+        });
+        return;
+      }
 
-    if (!accountSnap.exists) {
-      throw new Error("Account not found");
-    }
+      // Verify the Firebase ID token
+      const idToken = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const userId = decodedToken.uid;
 
-    const accountData = accountSnap.data();
-    const now = new Date();
-    const weekStart = accountData?.aiGenerationsWeekStart
-      ? new Date(accountData.aiGenerationsWeekStart)
-      : null;
+      // Rate limiting: Check user's AI generation count
+      const db = admin.firestore();
+      const accountRef = db.collection("accounts").doc(userId);
+      const accountSnap = await accountRef.get();
 
-    // Check if we need to reset the weekly counter
-    let aiGenerationsThisWeek = accountData?.aiGenerationsThisWeek || 0;
-    let needsReset = false;
+      if (!accountSnap.exists) {
+        response.status(404).json({
+          error: {
+            message: "Account not found",
+          },
+        });
+        return;
+      }
 
-    if (!weekStart || (now.getTime() - weekStart.getTime()) > 7 * 24 * 60 * 60 * 1000) {
-      // More than a week has passed, reset counter
-      needsReset = true;
-      aiGenerationsThisWeek = 0;
-    }
+      const accountData = accountSnap.data();
+      const now = new Date();
+      const weekStart = accountData?.aiGenerationsWeekStart
+        ? new Date(accountData.aiGenerationsWeekStart)
+        : null;
 
-    // Check if user has exceeded limit (5 per week)
-    if (aiGenerationsThisWeek >= 5) {
-      throw new Error(
-        "AI generation limit reached. You can generate up to 5 workout plans per week. Your limit will reset next week.",
+      // Check if we need to reset the weekly counter
+      let aiGenerationsThisWeek = accountData?.aiGenerationsThisWeek || 0;
+      let needsReset = false;
+
+      if (!weekStart || (now.getTime() - weekStart.getTime()) > 7 * 24 * 60 * 60 * 1000) {
+        // More than a week has passed, reset counter
+        needsReset = true;
+        aiGenerationsThisWeek = 0;
+      }
+
+      // Check if user has exceeded limit (5 per week)
+      if (aiGenerationsThisWeek >= 5) {
+        response.status(429).json({
+          error: {
+            message: "AI generation limit reached. You can generate up to 5 workout plans per week. Your limit will reset next week.",
+          },
+        });
+        return;
+      }
+
+      // Increment counter
+      const newCount = aiGenerationsThisWeek + 1;
+      const updateData: any = {
+        aiGenerationsThisWeek: newCount,
+      };
+
+      if (needsReset) {
+        updateData.aiGenerationsWeekStart = now.toISOString();
+      }
+
+      await accountRef.update(updateData);
+
+      logger.info(
+        `User ${userId} has used ${newCount}/5 AI generations this week`,
       );
+
+      // Call the actual generation flow
+      const result = await generatePlanFlow(inputData);
+
+      // Return the result
+      response.status(200).json({ result });
+    } catch (err) {
+      logger.error("Error in generatePlan:", err);
+      if (err instanceof z.ZodError) {
+        response.status(400).json({
+          error: {
+            message: "Invalid input",
+            details: err.errors,
+          },
+        });
+      } else if (err instanceof Error) {
+        response.status(500).json({
+          error: {
+            message: err.message,
+          },
+        });
+      } else {
+        response.status(500).json({
+          error: {
+            message: "An unknown error occurred",
+          },
+        });
+      }
     }
-
-    // Increment counter
-    const newCount = aiGenerationsThisWeek + 1;
-    const updateData: any = {
-      aiGenerationsThisWeek: newCount,
-    };
-
-    if (needsReset) {
-      updateData.aiGenerationsWeekStart = now.toISOString();
-    }
-
-    await accountRef.update(updateData);
-
-    logger.info(
-      `User ${userId} has used ${newCount}/5 AI generations this week`,
-    );
-
-    // Call the actual generation flow
-    return await generatePlanFlow(req.data);
   },
 );
 

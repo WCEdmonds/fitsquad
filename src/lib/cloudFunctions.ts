@@ -70,12 +70,14 @@ export interface VerifyEmailInput {
  * Call the generatePlan Cloud Function
  */
 export async function callGeneratePlan(
-  input: GenerateTailoredWorkoutPlanInput
+  input: GenerateTailoredWorkoutPlanInput,
+  idToken: string
 ): Promise<GenerateTailoredWorkoutPlanOutput> {
   const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/generatePlan`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`,
     },
     body: JSON.stringify({ data: input }),
   });
