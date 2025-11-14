@@ -199,20 +199,20 @@ const prompt = `
 
 // ============================================================================
 //
-//   FUNCTION 1: generatePlan (HTTP Endpoint with Rate Limiting)
+//   FUNCTION 1: generatePlanV2 (HTTP Endpoint with Rate Limiting)
 //
 // ============================================================================
 
 import * as admin from "firebase-admin";
 admin.initializeApp();
 
-export const generatePlan = onRequest(
+export const generatePlanV2 = onRequest(
   {
     cors: true,
     secrets: [googleAIapiKey],
   },
   async (request, response) => {
-    logger.info("Function received request for generatePlan", request.body);
+    logger.info("Function received request for generatePlanV2", request.body);
 
     try {
       // Parse input data
@@ -297,7 +297,7 @@ export const generatePlan = onRequest(
       // Return the result
       response.status(200).json({ result });
     } catch (err) {
-      logger.error("Error in generatePlan:", err);
+      logger.error("Error in generatePlanV2:", err);
       if (err instanceof z.ZodError) {
         response.status(400).json({
           error: {

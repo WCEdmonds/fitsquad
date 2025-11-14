@@ -67,13 +67,13 @@ export interface VerifyEmailInput {
 // ============================================================================
 
 /**
- * Call the generatePlan Cloud Function
+ * Call the generatePlanV2 Cloud Function (with rate limiting)
  */
 export async function callGeneratePlan(
   input: GenerateTailoredWorkoutPlanInput,
   idToken: string
 ): Promise<GenerateTailoredWorkoutPlanOutput> {
-  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/generatePlan`, {
+  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/generatePlanV2`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
