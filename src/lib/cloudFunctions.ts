@@ -50,6 +50,18 @@ export interface SendInviteInput {
   body: string;
 }
 
+export interface SendVerificationEmailInput {
+  userId: string;
+  email: string;
+  firstName: string;
+  code: string;
+}
+
+export interface VerifyEmailInput {
+  userId: string;
+  code: string;
+}
+
 // ============================================================================
 // Cloud Functions API calls
 // ============================================================================
@@ -102,6 +114,48 @@ export async function callGeneratePlan(
  */
 export async function callSendInvite(input: SendInviteInput): Promise<{ success: boolean }> {
   const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/sendInvite`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `Cloud Function request failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result;
+}
+
+/**
+ * Call the sendVerificationEmail Cloud Function
+ */
+export async function callSendVerificationEmail(input: SendVerificationEmailInput): Promise<{ success: boolean }> {
+  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/sendVerificationEmail`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(errorData.error || `Cloud Function request failed: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result;
+}
+
+/**
+ * Call the verifyEmail Cloud Function
+ */
+export async function callVerifyEmail(input: VerifyEmailInput): Promise<{ success: boolean; message?: string; error?: string }> {
+  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/verifyEmail`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
