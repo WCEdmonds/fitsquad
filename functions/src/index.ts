@@ -19,6 +19,25 @@ const mailgunApiKey = defineSecret("MAILGUN_API_KEY");
 const mailgunDomain = defineSecret("MAILGUN_DOMAIN");
 const mailgunFromEmail = defineSecret("MAILGUN_FROM_EMAIL");
 
+// Base URL for invitation links - configurable for different environments
+// Set via: firebase functions:config:set app.base_url="https://yourdomain.com"
+// For local development, use: firebase functions:config:set app.base_url="http://localhost:3000"
+// Default to production domain
+function getAppBaseUrl(): string {
+  try {
+    // Try to get from runtime config first
+    const functions = require('firebase-functions');
+    const baseUrl = functions.config()?.app?.base_url;
+    if (baseUrl) {
+      return baseUrl;
+    }
+  } catch (e) {
+    logger.warn('Could not read Firebase config, using default', e);
+  }
+  // Fall back to environment variable or default
+  return process.env.APP_BASE_URL || "https://mysquad.fit";
+}
+
 // --- Initialize Genkit (CORRECTED for v1.0+) ---
 // Don't export the ai instance to avoid circular references
 const ai = genkit({
@@ -653,8 +672,9 @@ export const sendTeamInvitation = onRequest(
       }
 
       // 3. Create invitation email HTML
-      const acceptLink = `https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}?action=accept`;
-      const declineLink = `https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}?action=decline`;
+      const baseUrl = getAppBaseUrl();
+      const acceptLink = `${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}?action=accept`;
+      const declineLink = `${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}?action=decline`;
 
       const emailBody = `
         <!DOCTYPE html>
@@ -718,7 +738,7 @@ export const sendTeamInvitation = onRequest(
 
               <p style="font-size: 14px; color: #666;">
                 If the buttons above don't work, you can also visit: <br>
-                <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">https://mysquad.fit/dashboard/invitations/${input.teamId}/${input.invitationId}</code>
+                <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 3px;">${baseUrl}/dashboard/invitations/${input.teamId}/${input.invitationId}</code>
               </p>
             </div>
             <div class="footer">
