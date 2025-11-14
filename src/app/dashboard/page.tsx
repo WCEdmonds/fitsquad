@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -55,6 +56,12 @@ export default function DashboardPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const [isNative, setIsNative] = useState(false);
+
+  // Check if running on native platform
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+  }, []);
 
   const acftEventDescriptions: Record<string, { title: string; description: string }> = {
     MDL: {
@@ -317,16 +324,18 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      {/* Logo at top */}
-      <div className="flex justify-center">
-        <Image
-          src="/fitsquad-logo.png"
-          alt="FitSquad Logo"
-          width={48}
-          height={48}
-          className="rounded-lg"
-        />
-      </div>
+      {/* Logo at top - Native only */}
+      {isNative && (
+        <div className="flex justify-center">
+          <Image
+            src="/fitsquad-logo.png"
+            alt="FitSquad Logo"
+            width={48}
+            height={48}
+            className="rounded-lg"
+          />
+        </div>
+      )}
 
       <div className="flex justify-between items-start flex-wrap gap-4">
        <div className="flex items-center gap-4">
