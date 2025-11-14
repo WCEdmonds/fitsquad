@@ -251,6 +251,7 @@ export default function QuickWorkoutPage() {
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTemplates, setShowTemplates] = useState(true);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
 
   // Debounced search function
   const performSearch = useCallback(async (query: string) => {
@@ -280,14 +281,50 @@ export default function QuickWorkoutPage() {
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
 
-  const handleLoadTemplate = (template: WorkoutTemplate) => {
+  const handleLoadTemplate = async (template: WorkoutTemplate) => {
+    setIsLoadingTemplate(true);
     setWorkoutName(template.name);
-    setExercises([...template.exercises]);
-    setShowTemplates(false);
-    toast({
-      title: "Template Loaded!",
-      description: `${template.name} workout loaded. Customize as needed.`,
-    });
+
+    try {
+      // Try to match template exercises with ExerciseDB entries
+      const enrichedExercises = await Promise.all(
+        template.exercises.map(async (exercise) => {
+          try {
+            // Search for the exercise in the database
+            const results = await searchExercises({ q: exercise.name, limit: 1 });
+
+            if (results && results.length > 0) {
+              const dbExercise = results[0];
+              // Check if it's a good match (similar name)
+              const nameLower = exercise.name.toLowerCase();
+              const dbNameLower = dbExercise.name.toLowerCase();
+
+              if (dbNameLower.includes(nameLower) || nameLower.includes(dbNameLower)) {
+                return {
+                  ...exercise,
+                  gifUrl: dbExercise.gifUrl,
+                  instructions: dbExercise.instructions,
+                };
+              }
+            }
+          } catch (error) {
+            console.log(`Could not find exercise data for: ${exercise.name}`);
+          }
+
+          // Return original exercise if no match found
+          return exercise;
+        })
+      );
+
+      setExercises(enrichedExercises);
+      setShowTemplates(false);
+      toast({
+        title: "Template Loaded!",
+        description: `${template.name} workout loaded. Customize as needed.`,
+      });
+    } finally {
+      setIsLoadingTemplate(false);
+    }
   };
 
   const handleStartCustom = () => {
@@ -437,13 +474,22 @@ export default function QuickWorkoutPage() {
               {/* Template Selection */}
               <div className="space-y-3">
                 <h3 className="font-semibold">Choose a Template</h3>
+                {isLoadingTemplate && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading exercise data...</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {workoutTemplates.map((template) => {
                     const IconComponent = template.icon;
                     return (
                       <Card
                         key={template.id}
-                        className="cursor-pointer hover:border-primary transition-colors"
+                        className={cn(
+                          "cursor-pointer hover:border-primary transition-colors",
+                          isLoadingTemplate && "opacity-50 pointer-events-none"
+                        )}
                         onClick={() => handleLoadTemplate(template)}
                       >
                         <CardContent className="pt-6 pb-4">
@@ -482,6 +528,7 @@ export default function QuickWorkoutPage() {
                 variant="outline"
                 className="w-full"
                 onClick={handleStartCustom}
+                disabled={isLoadingTemplate}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Build Custom Workout
