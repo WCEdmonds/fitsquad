@@ -1,4 +1,6 @@
+/// <reference types="@capacitor/keyboard" />
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'fit.mysquad.app',
@@ -15,8 +17,8 @@ const config: CapacitorConfig = {
       splashImmersive: true,
     },
     Keyboard: {
-      resize: 'native',
-      style: 'dark',
+      resize: KeyboardResize.Native, // Changed from 'native'
+      style: KeyboardStyle.Dark,   // Changed from 'dark'
       resizeOnFullScreen: true,
     },
     StatusBar: {

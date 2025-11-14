@@ -341,9 +341,7 @@ export default function DashboardPage() {
                 className="rounded-lg"
               />
             </div>
-          ) : (
-            console.log('Logo hidden - isNative is false') || null
-          )}
+          ) : null}
         </div>
         {/* Profile Menu - Top Right */}
         <ProfileMenu />
