@@ -118,7 +118,7 @@ export default function DashboardLayout({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="shrink-0 md:hidden ml-auto"
+                  className="shrink-0 md:hidden"
                 >
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle navigation menu</span>
@@ -146,13 +146,10 @@ export default function DashboardLayout({
                  </nav>
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-4 md:gap-2 lg:gap-4 md:ml-auto">
-              <div className="flex-1 sm:flex-initial">
-                {/* Optional Search Bar */}
-              </div>
+            <div className="flex items-center gap-2 md:gap-4 ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="secondary" size="icon" className="rounded-full">
+                  <Button variant="secondary" size="icon" className="rounded-full shrink-0">
                     <Avatar>
                       <AvatarFallback>{fallback}</AvatarFallback>
 
