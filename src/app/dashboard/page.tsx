@@ -6,11 +6,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users, Calendar, Activity } from 'lucide-react';
-import { Barbell, SneakerMove, PersonSimpleRun, Shield, ShieldCheck, Sword, Timer } from '@phosphor-icons/react';
+import { Copy, Dumbbell, MoreHorizontal, UserPlus, Users, Calendar, Activity, LogOut, Settings, Sword, ShieldCheck } from 'lucide-react';
+import { Barbell, SneakerMove, PersonSimpleRun, Shield, Timer } from '@phosphor-icons/react';
 import { PerformanceChart } from '@/components/performance-chart';
 import { RecentActivity } from '@/components/recent-activity';
-import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
+import { useUser, useDoc, useCollection, useFirestore, useMemoFirebase, useAuth, getCollectionNonBlocking, getDocNonBlocking } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -39,11 +39,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Capacitor } from '@capacitor/core';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const auth = useAuth();
+  const router = useRouter();
   const [account, setAccount] = useState<any>(null);
   const [allSoldiers, setAllSoldiers] = useState<Soldier[]>([]);
   const [avgMdl, setAvgMdl] = useState<number | string>('--');
@@ -55,6 +60,9 @@ export default function DashboardPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+  const [isNative, setIsNative] = useState(false);
+  const [userAccount, setUserAccount] = useState<any>(null);
+  const [userInitials, setUserInitials] = useState('');
 
   const acftEventDescriptions: Record<string, { title: string; description: string }> = {
     MDL: {
@@ -94,6 +102,17 @@ export default function DashboardPage() {
       }
     }
   }, [accountData])
+
+  useEffect(() => {
+    setIsNative(Capacitor.isNativePlatform());
+    setUserAccount(accountData);
+    if (accountData || user) {
+      const firstInitial = accountData?.firstName?.charAt(0) ?? '';
+      const lastInitial = accountData?.lastName?.charAt(0) ?? '';
+      const emailInitial = user?.email?.charAt(0) ?? '';
+      setUserInitials((firstInitial + lastInitial).toUpperCase() || emailInitial.toUpperCase());
+    }
+  }, [accountData, user]);
 
   const managedTeamsRef = useMemoFirebase(() => {
     if (!user || account?.accountType !== 'Commander') return null;
@@ -232,6 +251,11 @@ export default function DashboardPage() {
     }
   }
 
+  const handleLogout = () => {
+    auth.signOut();
+    router.push('/login');
+  };
+
   const handleDataSaved = () => {
     setHasSoldierData(true);
     setRefetchTrigger(prev => prev + 1);
@@ -359,6 +383,47 @@ export default function DashboardPage() {
                       </SelectContent>
                     </Select>
               </div>
+          )}
+          {isNative && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="secondary" size="icon" className="rounded-full h-9 w-9">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">User menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem disabled>
+                  <span>{userAccount?.firstName} {userAccount?.lastName}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/teams/create">
+                    <Sword className="mr-2 h-4 w-4" />
+                    Create New Team
+                  </Link>
+                </DropdownMenuItem>
+                {userAccount?.accountType === 'Commander' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/manage-teams">
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Manage Teams
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
