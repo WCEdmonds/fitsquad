@@ -143,31 +143,10 @@ export default function DashboardLayout({
                       Quick Workout
                     </Link>
                   </Button>
-                  <div className="border-t pt-4 mt-auto space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground px-2">{userAccount?.firstName} {userAccount?.lastName}</p>
-                    <Link href="/dashboard/settings" onClick={handleLinkClick} className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted">
-                      <Settings className="h-4 w-4" />
-                      Settings
-                    </Link>
-                    <Link href="/teams/create" onClick={handleLinkClick} className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted">
-                      <Sword className="h-4 w-4" />
-                      Create New Team
-                    </Link>
-                    {userAccount?.accountType === 'Commander' && (
-                      <Link href="/dashboard/manage-teams" onClick={handleLinkClick} className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted">
-                        <ShieldCheck className="h-4 w-4" />
-                        Manage Teams
-                      </Link>
-                    )}
-                    <button onClick={() => { handleLogout(); handleLinkClick(); }} className="flex items-center gap-2 px-2 py-2 rounded-md hover:bg-muted text-red-600 w-full">
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
                  </nav>
               </SheetContent>
             </Sheet>
-            <div className="hidden md:flex items-center gap-2 md:gap-4 ml-auto">
+            <div className="flex items-center gap-2 md:gap-4 ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="icon" className="rounded-full shrink-0">
