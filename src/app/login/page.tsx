@@ -49,6 +49,14 @@ function LoginForm() {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+
+    // Defensive check: ensure auth is initialized
+    if (!auth) {
+      setError('Authentication service not initialized. Please refresh the page.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Wait for the sign-in to complete
       await initiateEmailSignIn(auth, email, password);
@@ -66,6 +74,12 @@ function LoginForm() {
         setError('Invalid email or password. Please try again.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Too many failed login attempts. Please try again later.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection and try again.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups for this site.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('Email/password authentication is not enabled.');
       } else {
         setError(err.message || 'An unexpected error occurred. Please try again.');
       }
