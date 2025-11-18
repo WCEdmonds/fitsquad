@@ -36,7 +36,7 @@ service cloud.firestore {
      * Supports both claimed accounts (owned by Firebase users) and unclaimed profiles.
      */
     match /accounts/{accountId} {
-      allow get: if isOwner(accountId) || isAdmin() || isUnclaimedProfile() || isSameTeam(accountId);
+      allow get: if isOwner(accountId) || isAdmin() || isUnclaimedProfile() || isSameTeam(accountId) || isSameTeamViaMembership(accountId);
       allow list: if isAdmin() || isSignedIn(); // Allow listing for team management
       allow create: if isSelfCreate(accountId) || canCreateUnclaimedProfile();
       allow update: if (isExistingOwner(accountId) && isAccountIdNotChanged()) || isAdmin() || canClaimProfile();
@@ -53,8 +53,8 @@ service cloud.firestore {
        * @description Controls access to exercise progress data for soldiers.
        */
       match /exercisesProgress/{progressId} {
-        allow get: if isOwner(accountId);
-        allow list: if isOwner(accountId);
+        allow get: if isOwner(accountId) || isAdmin() || isSameTeam(accountId) || isSameTeamViaMembership(accountId);
+        allow list: if isOwner(accountId) || isAdmin() || isSameTeam(accountId) || isSameTeamViaMembership(accountId);
         allow create: if isOwner(accountId) && request.resource.data.accountId == accountId;
         allow update: if isOwner(accountId) && resource.data.accountId == accountId;
         allow delete: if isOwner(accountId);
@@ -85,8 +85,8 @@ service cloud.firestore {
      * Team members can read each other's fitness data for dashboard statistics.
      */
     match /accounts/{accountId}/soldierData/{soldierDataId} {
-      allow get: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId);
-      allow list: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId);
+      allow get: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId) || isSameTeamViaMembership(accountId);
+      allow list: if isOwner(accountId) || isAdmin() || canManageUnclaimedProfile(accountId) || isSameTeam(accountId) || isSameTeamViaMembership(accountId);
       allow create: if (isSignedIn() && request.resource.data.accountId == accountId) || canManageUnclaimedProfile(accountId);
       allow update: if (isExistingOwner(accountId) && resource.data.accountId == accountId) || canManageUnclaimedProfile(accountId);
       allow delete: if isExistingOwner(accountId) || canManageUnclaimedProfile(accountId);
@@ -156,7 +156,7 @@ service cloud.firestore {
      * Users can read and write their own logs. Team members and supervisors can read.
      */
     match /users/{userId}/workoutLogs/{logId} {
-      allow read: if isOwner(userId) || isAdmin(); // User can read their own logs, admins can read all
+      allow read: if isOwner(userId) || isAdmin() || isSameTeamViaMembership(userId); // User can read their own logs, team members can read
       allow create: if isSignedIn() && request.resource.data.userId == userId; // User can create their own logs
       allow update: if isOwner(userId); // User can update their own logs
       allow delete: if isOwner(userId) || isAdmin(); // User can delete their own logs, admins can delete
@@ -247,6 +247,21 @@ service cloud.firestore {
     function isTeamMember(teamId) {
       let memberRef = /databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid);
       return exists(memberRef);
+    }
+
+    function isSameTeamViaMembership(accountId) {
+      // Check if both the requesting user and target user are members of the same team
+      // by looking at the account's teamId and checking the team members collection
+      let targetUserAccount = get(/databases/$(database)/documents/accounts/$(accountId)).data;
+
+      // If target user has no team, can't be same team
+      if (targetUserAccount.teamId == null) {
+        return false;
+      }
+
+      // Check if requesting user is a member of the target user's team
+      let requestingUserMemberRef = /databases/$(database)/documents/teams/$(targetUserAccount.teamId)/members/$(request.auth.uid);
+      return isSignedIn() && exists(requestingUserMemberRef);
     }
 
     function onlyStatusChanged() {
