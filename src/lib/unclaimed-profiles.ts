@@ -65,7 +65,7 @@ export async function createUnclaimedProfile(
   const accountRef = doc(firestore, 'accounts', profileId);
   await setDoc(accountRef, accountData);
 
-  // Add to team members
+
   if (profileData.teamId) {
     const memberRef = doc(
       firestore,
@@ -123,7 +123,7 @@ export async function claimProfile(
 
   const batch = writeBatch(firestore);
 
-  // Get all soldier data from unclaimed profile
+
   const soldierDataRef = collection(
     firestore,
     'accounts',
@@ -132,18 +132,18 @@ export async function claimProfile(
   );
   const soldierDataSnapshot = await getDocs(soldierDataRef);
 
-  // Create new account document with claimed user ID
+
   const newAccountRef = doc(firestore, 'accounts', newUserId);
   const newAccountData: Account = {
     ...unclaimedProfile,
     id: newUserId,
     email,
     claimed: true,
-    claimCode: undefined, // Remove claim code
+    claimCode: undefined,
   };
   batch.set(newAccountRef, newAccountData);
 
-  // Migrate soldier data to new account
+
   soldierDataSnapshot.forEach((docSnapshot) => {
     const data = docSnapshot.data() as SoldierData;
     const newDataRef = doc(
@@ -159,9 +159,9 @@ export async function claimProfile(
     });
   });
 
-  // Update team membership if exists
+
   if (unclaimedProfile.teamId) {
-    // Remove old member entry
+
     const oldMemberRef = doc(
       firestore,
       'teams',
@@ -171,7 +171,7 @@ export async function claimProfile(
     );
     batch.delete(oldMemberRef);
 
-    // Add new member entry
+
     const newMemberRef = doc(
       firestore,
       'teams',
@@ -185,15 +185,15 @@ export async function claimProfile(
       role: newAccountData.accountType,
     });
 
-    // Update user's teamId
+
     batch.update(newAccountRef, { teamId: unclaimedProfile.teamId });
   }
 
-  // Delete old unclaimed profile (after migrating data)
+
   const oldAccountRef = doc(firestore, 'accounts', unclaimedProfile.id);
   batch.delete(oldAccountRef);
 
-  // Delete old soldier data entries
+
   soldierDataSnapshot.forEach((docSnapshot) => {
     const oldDataRef = doc(
       firestore,

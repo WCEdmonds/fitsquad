@@ -19,8 +19,7 @@ function getHeaders(): HeadersInit {
   // Add API key if configured
   if (API_KEY) {
     headers['X-API-Key'] = API_KEY;
-    // Alternative for other auth methods:
-    // headers['Authorization'] = `Bearer ${API_KEY}`;
+
   }
 
   return headers;
@@ -38,7 +37,7 @@ async function fetchAPI(endpoint: string): Promise<ExerciseAPIResponse> {
   try {
     const response = await fetch(fullUrl, {
       headers: getHeaders(),
-      cache: 'force-cache', // Cache exercise data since it doesn't change often
+      cache: 'force-cache',
     });
 
     console.log('📡 API Response status:', response.status, response.statusText);
@@ -83,7 +82,7 @@ export async function getAllExercises(limit: number = 100, offset: number = 0): 
  */
 export async function getExerciseById(exerciseId: string): Promise<Exercise> {
   const response = await fetchAPI(`/exercises/${exerciseId}`);
-  return response.data[0]; // Assuming single exercise response
+  return response.data[0];
 }
 
 /**
@@ -92,7 +91,7 @@ export async function getExerciseById(exerciseId: string): Promise<Exercise> {
 export async function searchExercises(params: ExerciseSearchParams): Promise<Exercise[]> {
   const queryParams = new URLSearchParams();
 
-  if (params.q) queryParams.append('q', params.q); // Use 'q' parameter
+  if (params.q) queryParams.append('q', params.q);
   if (params.limit) queryParams.append('limit', params.limit.toString());
   if (params.offset) queryParams.append('offset', params.offset.toString());
 
