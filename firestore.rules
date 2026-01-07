@@ -236,8 +236,16 @@ service cloud.firestore {
     }
 
     function isSameTeam(accountId) {
+      // Prevent circular dependency: if checking own account, isOwner() already handles it
+      if (accountId == request.auth.uid) {
+        return false;
+      }
+
+      // For other users, check team membership
+      // Note: This requires the requesting user's account to exist and be readable via isOwner()
       let requestingUserAccount = get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data;
-      let targetUserAccount = get(/databases/$(database)/documents/accounts/$(accountId)).data;
+      let targetUserAccount = resource.data;  // Use resource to avoid redundant get()
+
       return isSignedIn() &&
              requestingUserAccount.teamId != null &&
              targetUserAccount.teamId != null &&
