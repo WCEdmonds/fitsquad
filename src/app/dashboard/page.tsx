@@ -330,7 +330,7 @@ export default function DashboardPage() {
               soldierId={user!.uid} 
               onSave={handleDataSaved}
               defaultValues={{
-                  gender: account.gender
+                  gender: account?.gender
               }}
             />
           </CardContent>

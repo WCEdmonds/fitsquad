@@ -19,6 +19,7 @@ import { DailyWorkoutView } from '@/components/daily-workout-view';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { PlanPrintView } from '@/components/plan-print-view';
+import { WeekSelector } from '@/components/week-selector';
 import { Capacitor } from '@capacitor/core';
 
 export default function PlanPage() {
@@ -120,6 +121,15 @@ export default function PlanPage() {
       </div>
 
       <div className="container mx-auto p-6 space-y-6 no-print pb-24 md:pb-4">
+        {/* Week Selector for Native Only */}
+        {isNative && (
+          <WeekSelector
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            className="-mx-6 -mt-6 mb-6 border-b border-border/40"
+          />
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">

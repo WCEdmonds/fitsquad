@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Calendar, Dumbbell, LineChart } from 'lucide-react';
+import { Users, Dumbbell, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -11,10 +11,9 @@ import { useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 
 const baseBottomNavItems = [
-  { href: '/dashboard', label: 'Home', icon: Home },
-  { href: '/dashboard/plan', label: 'Plan', icon: Calendar },
+  { href: '/dashboard/plan', label: 'Training', icon: Dumbbell },
   { href: '/dashboard/workout', label: 'Workout', icon: Dumbbell },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/dashboard', label: 'Analytics', icon: LineChart },
 ];
 
 const teamNavItem = { href: '/dashboard/soldiers', label: 'Team', icon: Users };
