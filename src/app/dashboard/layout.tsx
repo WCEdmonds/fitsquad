@@ -101,8 +101,8 @@ export default function DashboardLayout({
                 href="/dashboard"
                 className="flex items-center gap-2 font-semibold text-lg hover:opacity-80 transition-opacity"
               >
-                <Dumbbell className="h-7 w-7 text-primary drop-shadow-[0_0_10px_rgba(75,83,32,0.8)]" />
-                <span className="text-primary drop-shadow-[0_0_10px_rgba(75,83,32,0.6)]">FitSquad</span>
+                <Dumbbell className="h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(75,83,32,0.8)]" />
+                <span className="text-white drop-shadow-[0_0_10px_rgba(75,83,32,0.6)]">FitSquad</span>
             </Link>
             <div className="hidden md:flex ml-8">
               <DashboardNav />
