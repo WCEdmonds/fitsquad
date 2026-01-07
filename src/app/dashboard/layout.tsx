@@ -101,13 +101,13 @@ export default function DashboardLayout({
                 href="/dashboard"
                 className="flex items-center gap-2 font-semibold text-lg hover:opacity-80 transition-opacity"
               >
-                <Dumbbell className="h-7 w-7 text-primary" />
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">FitSquad</span>
+                <Dumbbell className="h-7 w-7 text-primary drop-shadow-[0_0_10px_rgba(75,83,32,0.8)]" />
+                <span className="text-primary drop-shadow-[0_0_10px_rgba(75,83,32,0.6)]">FitSquad</span>
             </Link>
             <div className="hidden md:flex ml-8">
               <DashboardNav />
             </div>
-            <Button asChild className="hidden md:flex ml-4 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-md">
+            <Button asChild className="hidden md:flex ml-4 bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(75,83,32,0.5)] hover:shadow-[0_0_25px_rgba(75,83,32,0.7)] transition-shadow">
               <Link href="/dashboard/workout">
                 <Dumbbell className="mr-2 h-4 w-4" />
                 Quick Workout
@@ -137,7 +137,7 @@ export default function DashboardLayout({
                   <div className="flex-1">
                     <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
                   </div>
-                  <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-md" size="lg" onClick={handleLinkClick}>
+                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(75,83,32,0.5)] hover:shadow-[0_0_25px_rgba(75,83,32,0.7)] transition-shadow" size="lg" onClick={handleLinkClick}>
                     <Link href="/dashboard/workout">
                       <Dumbbell className="mr-2 h-5 w-5" />
                       Quick Workout
