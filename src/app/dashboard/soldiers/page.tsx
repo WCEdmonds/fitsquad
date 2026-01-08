@@ -380,10 +380,8 @@ try {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="all">{userAccount?.accountType === 'Admin' ? 'All Users' : 'All Soldiers'}</TabsTrigger>
-            <TabsTrigger value="running">Running Focus</TabsTrigger>
-            <TabsTrigger value="strength">Strength Focus</TabsTrigger>
           </TabsList>
           <TabsContent value="all" className="mt-4">
             <SoldierTable 
@@ -393,24 +391,6 @@ try {
                 onRemoveSoldier={handleRemoveSoldier}
                 onDeleteUser={handleDeleteUser}
             />
-          </TabsContent>
-          <TabsContent value="running" className="mt-4">
-             <SoldierTable 
-                soldiers={runningFocusGroup} 
-                isLoading={isLoading} 
-                accountType={userAccount?.accountType}
-                onRemoveSoldier={handleRemoveSoldier}
-                onDeleteUser={handleDeleteUser}
-            />
-          </TabsContent>
-          <TabsContent value="strength" className="mt-4">
-             <SoldierTable 
-                soldiers={strengthFocusGroup} 
-                isLoading={isLoading} 
-                accountType={userAccount?.accountType}
-                onRemoveSoldier={handleRemoveSoldier}
-                onDeleteUser={handleDeleteUser}
-             />
           </TabsContent>
         </Tabs>
       </CardContent>

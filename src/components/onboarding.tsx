@@ -98,7 +98,7 @@ export function Onboarding() {
   const isLastSlide = currentSlide === slides.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-between p-8 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(3rem+env(safe-area-inset-bottom))]">
+    <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-between p-8 pt-[calc(4rem+env(safe-area-inset-top))] pb-[calc(3rem+env(safe-area-inset-bottom))]">
       {/* Skip button */}
       {!isLastSlide && (
         <div className="w-full flex justify-end">

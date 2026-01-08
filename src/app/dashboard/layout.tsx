@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, ShieldCheck, Sword, Menu, Dumbbell } from 'lucide-react';
+import { LogOut, Settings, ShieldCheck, Sword, Menu, Dumbbell, History } from 'lucide-react';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { BottomNav } from '@/components/bottom-nav';
 import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
@@ -98,16 +98,16 @@ export default function DashboardLayout({
         {!isNative && (
           <header className="sticky top-0 flex h-20 items-center gap-4 border-b bg-background/80 backdrop-blur-lg px-4 md:px-6 z-50 shrink-0 shadow-sm">
              <Link
-                href="/dashboard"
+                href="/dashboard/plan"
                 className="flex items-center gap-2 font-semibold text-lg hover:opacity-80 transition-opacity"
               >
-                <Dumbbell className="h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(75,83,32,0.8)]" />
-                <span className="text-white drop-shadow-[0_0_10px_rgba(75,83,32,0.6)]">FitSquad</span>
+                <Dumbbell className="h-7 w-7 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
+                <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">FitSquad</span>
             </Link>
             <div className="hidden md:flex ml-8">
               <DashboardNav />
             </div>
-            <Button asChild className="hidden md:flex ml-4 bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(75,83,32,0.5)] hover:shadow-[0_0_25px_rgba(75,83,32,0.7)] transition-shadow">
+            <Button asChild className="hidden md:flex ml-4 bg-transparent border border-white/30 text-white hover:bg-white/10 hover:border-white/50 shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all">
               <Link href="/dashboard/workout">
                 <Dumbbell className="mr-2 h-4 w-4" />
                 Quick Workout
@@ -127,7 +127,7 @@ export default function DashboardLayout({
               <SheetContent side="left">
                  <nav className="grid gap-6 text-lg font-medium h-full">
                    <Link
-                      href="/dashboard"
+                      href="/dashboard/plan"
                       onClick={handleLinkClick}
                       className="flex items-center gap-2 font-semibold text-lg mb-4"
                     >
@@ -137,7 +137,7 @@ export default function DashboardLayout({
                   <div className="flex-1">
                     <DashboardNav isMobile={true} onLinkClick={handleLinkClick} />
                   </div>
-                  <Button asChild className="w-full bg-primary hover:bg-primary/90 text-white shadow-[0_0_20px_rgba(75,83,32,0.5)] hover:shadow-[0_0_25px_rgba(75,83,32,0.7)] transition-shadow" size="lg" onClick={handleLinkClick}>
+                  <Button asChild className="w-full bg-transparent border border-white/30 text-white hover:bg-white/10 hover:border-white/50 shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all" size="lg" onClick={handleLinkClick}>
                     <Link href="/dashboard/workout">
                       <Dumbbell className="mr-2 h-5 w-5" />
                       Quick Workout
@@ -161,7 +161,13 @@ export default function DashboardLayout({
                   <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard/settings">
+                  <Link href="/dashboard/history">
+                    <History className="mr-2 h-4 w-4" />
+                    Completed Workouts
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings">
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </Link>

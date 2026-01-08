@@ -1,36 +1,50 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Eye, CalendarDays, ListTodo, FileText } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useDoc, useFirestore, useMemoFirebase, useUser, useCollection } from '@/firebase';
+import { doc, getDoc, addDoc, setDoc, collection, query, orderBy, limit, arrayUnion } from 'firebase/firestore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PlanCalendarView } from '@/components/plan-calendar-view';
-import { DailyWorkoutView } from '@/components/daily-workout-view';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { PlanPrintView } from '@/components/plan-print-view';
 import { WeekSelector } from '@/components/week-selector';
+import { CompactExerciseList } from '@/components/compact-exercise-list';
+import { FiveDayCalendar } from '@/components/five-day-calendar';
+import { WorkoutSummary } from '@/components/workout-summary';
+
 import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LogOut, Settings, ShieldCheck, Sword, Calendar as CalendarIcon, History } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PlanPage() {
   const [teamPlan, setTeamPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'weekly' | 'daily'>('daily'); // Default to daily
+
   const [isNative, setIsNative] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [workoutStats, setWorkoutStats] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useUser();
   const firestore = useFirestore();
+
+  const [userInitials, setUserInitials] = useState('');
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
@@ -42,7 +56,32 @@ export default function PlanPage() {
   }, [firestore, user]);
   const { data: userAccount, isLoading: isAccountLoading } = useDoc(userAccountRef);
 
-  // Load the team plan (view-only)
+  // Fetch completed workouts for calendar indicators
+  const workoutsRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(
+      collection(firestore, 'users', user.uid, 'workouts'),
+      orderBy('date', 'desc'),
+      limit(50)
+    );
+  }, [firestore, user]);
+  
+  const { data: recentWorkouts } = useCollection(workoutsRef);
+  
+  const completedDates = useMemo(() => {
+    const dates = new Set<string>();
+    if (recentWorkouts) {
+      recentWorkouts.forEach(w => {
+        if (w.date) {
+            const d = w.date.toDate ? w.date.toDate() : new Date(w.date);
+            dates.add(d.toISOString().split('T')[0]);
+        }
+      });
+    }
+    return dates;
+  }, [recentWorkouts]);
+
+  // Load the team plan
   useEffect(() => {
     async function loadTeamPlan() {
       if (!userAccount?.teamId || !firestore) return;
@@ -55,42 +94,160 @@ export default function PlanPage() {
         if (planSnap.exists()) {
           setTeamPlan(planSnap.data());
         } else {
-          // No plan exists yet
           setTeamPlan(null);
         }
       } catch (error: any) {
         console.error('❌ Error loading team plan:', error);
-
-        let errorMessage = "Could not load the team plan.";
-
-        if (error.code === 'permission-denied') {
-          errorMessage = "Permission denied. You may not have access to this team's plan.";
-        } else if (error.code === 'not-found') {
-          errorMessage = "Team not found.";
-        } else if (!userAccount?.teamId) {
-          errorMessage = "No team assigned to your account.";
-        }
-
         toast({
           title: "Error Loading Plan",
-          description: errorMessage,
+          description: "Could not load the team plan.",
           variant: "destructive",
         });
-
         setTeamPlan(null);
       } finally {
         setIsLoading(false);
       }
     }
 
+
     if (userAccount) {
       loadTeamPlan();
+      const firstInitial = userAccount.firstName?.charAt(0) ?? '';
+      const lastInitial = userAccount.lastName?.charAt(0) ?? '';
+      const emailInitial = user?.email?.charAt(0) ?? '';
+      setUserInitials((firstInitial + lastInitial).toUpperCase() || emailInitial.toUpperCase());
     }
-  }, [userAccount, firestore, toast]);
+  }, [userAccount, firestore, toast, user]);
 
-  const handleDownloadPdf = () => {
-    window.print();
+  // Check for plan changes
+  useEffect(() => {
+    if (!teamPlan) return;
+
+    // Logic: Compare plan's last updated timestamp with local storage
+    const lastViewed = localStorage.getItem('lastViewedPlan');
+    // Using updatedAt from plan or default to now if missing (mocking behavior if field doesn't exist yet)
+    const planUpdated = teamPlan.updatedAt?.toDate()?.toISOString() || new Date().toISOString(); 
+    
+    // If no last viewed, or plan is newer
+    if (!lastViewed || new Date(planUpdated) > new Date(lastViewed)) {
+      setHasChanges(true); // Lighting up the bell
+    }
+  }, [teamPlan]);
+
+  // Handle acknowledging changes
+  const handleAcknowledgeChanges = () => {
+    setHasChanges(false);
+    localStorage.setItem('lastViewedPlan', new Date().toISOString());
+    toast({
+      title: "Changes Acknowledged",
+      description: "You're up to date with the latest schedule.",
+    });
   };
+
+  const handleFinishWorkout = async (stats: any) => {
+    setWorkoutStats(stats);
+    setShowSummary(true);
+
+    if (user && firestore) {
+      try {
+        await addDoc(collection(firestore, 'users', user.uid, 'workouts'), {
+          ...stats,
+          planId: teamPlan?.id || 'unknown',
+          teamId: userAccount?.teamId || 'unknown',
+          date: new Date(),
+          workoutName: todaysWorkout?.name || 'Quick Workout'
+        });
+      } catch (e) {
+        console.error("Error saving workout log", e);
+      }
+    }
+  };
+
+  // Register for Push Notifications
+  useEffect(() => {
+    if (!isNative) return;
+
+    const registerPush = async () => {
+      try {
+        let permStatus = await PushNotifications.checkPermissions();
+
+        if (permStatus.receive === 'prompt') {
+          permStatus = await PushNotifications.requestPermissions();
+        }
+
+        if (permStatus.receive !== 'granted') {
+          console.log('User denied push notifications');
+          return;
+        }
+
+        await PushNotifications.register();
+
+        PushNotifications.addListener('registration', async (token) => {
+          console.log('Push registration success, token: ' + token.value);
+          // Save token to user account in Firestore
+          if (user) {
+            try {
+              await setDoc(doc(firestore, 'accounts', user.uid), {
+                fcmTokens: arrayUnion(token.value),
+                lastActive: new Date().toISOString()
+              }, { merge: true });
+            } catch (e) {
+              console.error("Error saving FCM token:", e);
+            }
+          }
+        });
+
+        PushNotifications.addListener('registrationError', (error: any) => {
+          console.log('Error on registration: ' + JSON.stringify(error));
+        });
+
+        PushNotifications.addListener('pushNotificationReceived', (notification: any) => {
+          console.log('Push received: ' + JSON.stringify(notification));
+          // If notification payload indicates a schedule update, show indicator
+          if (notification.data.type === 'schedule_update') {
+            setHasChanges(true);
+            haptics.notification();
+          }
+        });
+
+      } catch (e) {
+        console.error('Error registering push notifications', e);
+      }
+    };
+
+    registerPush();
+    
+    // Cleanup listeners
+    return () => {
+      if (isNative) {
+        PushNotifications.removeAllListeners();
+      }
+    };
+  }, [isNative, toast]);
+
+  // Calculate current week in cycle for selected date
+  const getCurrentWeekInCycle = () => {
+    if (!teamPlan?.cycleStartDate) {
+      const startOfYear = new Date(selectedDate.getFullYear(), 0, 1);
+      const weekOfYear = Math.floor((selectedDate.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      return weekOfYear % 8;
+    }
+
+    const cycleStart = new Date(teamPlan.cycleStartDate);
+    const startMonday = new Date(cycleStart);
+    startMonday.setDate(cycleStart.getDate() - cycleStart.getDay() + (cycleStart.getDay() === 0 ? -6 : 1));
+    const diffTime = selectedDate.getTime() - startMonday.getTime();
+    const diffDays = Math.floor(diffTime / (24 * 60 * 60 * 1000));
+    const weeksSinceStart = Math.floor(diffDays / 7);
+    return Math.max(0, weeksSinceStart % 8);
+  };
+
+  const currentWeekInCycle = getCurrentWeekInCycle();
+  const dayOfWeek = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+  const todaysWorkout = teamPlan?.weeks?.[currentWeekInCycle]?.days?.find(
+    (day: any) => day.dayOfWeek === dayOfWeek
+  )?.workout || null;
 
   if (isAccountLoading || isLoading) {
     return (
@@ -113,113 +270,132 @@ export default function PlanPage() {
     );
   }
 
-  return (
-    <>
-      {/* Hidden print view */}
-      <div className="hidden print-only">
-        {teamPlan && <PlanPrintView plan={teamPlan} viewMode={viewMode} selectedDate={selectedDate} />}
-      </div>
-
-      <div className="container mx-auto p-6 space-y-6 no-print pb-24 md:pb-4">
-        {/* Week Selector for Native Only */}
-        {isNative && (
-          <WeekSelector
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            className="-mx-6 -mt-6 mb-6 border-b border-border/40"
-          />
-        )}
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Calendar className="h-8 w-8" />
-              Team Workout Plan
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              View your team's 8-week workout schedule
-            </p>
-          </div>
-          {teamPlan && !isNative && (
-            <Button variant="outline" onClick={handleDownloadPdf}>
-              <FileText className="h-4 w-4 mr-2" />
-              Download PDF
-            </Button>
-          )}
+  // NATIVE LAYOUT: Compact calendar-first view
+  if (isNative) {
+    return (
+      <>
+        <div className="hidden print-only">
+          {teamPlan && <PlanPrintView plan={teamPlan} viewMode="daily" selectedDate={selectedDate} />}
         </div>
 
-      {/* View Mode Tabs */}
-      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'weekly' | 'daily')}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="daily" className="flex items-center gap-2">
-            <ListTodo className="h-4 w-4" />
-            Today's Workout
-          </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" />
-            8-Week Plan
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Daily View */}
-        <TabsContent value="daily" className="mt-6">
-          {teamPlan ? (
-            <DailyWorkoutView
-              plan={teamPlan}
-              userId={user?.uid || ''}
-              teamId={userAccount?.teamId || ''}
-              onDateChange={setSelectedDate}
-            />
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
-                <p className="text-muted-foreground text-center">
-                  Your team's workout plan hasn't been created yet.
-                </p>
-                {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') && (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Visit the Plan Builder to create your first plan.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Weekly Calendar View */}
-        <TabsContent value="weekly" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>8-Week Workout Calendar</CardTitle>
-              <CardDescription>
-                Click on any day to view workout details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {teamPlan ? (
-                <PlanCalendarView
-                  plan={teamPlan}
-                  onUpdateWorkout={() => {}} // No-op for view-only
-                  canEdit={false}
-                  teamId={userAccount?.teamId}
-                  userId={user?.uid}
+        <div className="flex flex-col h-full bg-background">
+          {/* Native Header with WeekSelector and Profile */}
+          <div className="flex items-center justify-between border-b border-border/40 bg-background sticky top-0 z-10">
+             <div className="flex-1 overflow-hidden">
+                <WeekSelector
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
+                    className="flex-shrink-0"
+                    isNative={true}
+                    hasChanges={hasChanges}
+                    onAcknowledgeChanges={handleAcknowledgeChanges}
+                    completedDates={completedDates}
                 />
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
-                  <p>Your team's workout plan hasn't been created yet.</p>
-                  {(userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Admin') && (
-                    <p className="mt-2 text-sm">Visit the Plan Builder to create your first plan.</p>
-                  )}
-                </div>
-              )}
+             </div>
+             <div className="pr-2 pl-1 flex-shrink-0 self-center">
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center cursor-pointer">
+                        <Avatar className="h-9 w-9">
+                            <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+                        </Avatar>
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/history">
+                        <History className="mr-2 h-4 w-4" />
+                        Completed Workouts
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/teams/create">
+                        <Sword className="mr-2 h-4 w-4" />
+                        Create New Team
+                      </Link>
+                    </DropdownMenuItem>
+                    {userAccount?.accountType === 'Commander' && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/dashboard/manage-teams">
+                          <ShieldCheck className="mr-2 h-4 w-4" />
+                          Manage Teams
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                     <DropdownMenuItem onClick={() => {
+                        // Handle logout if needed, passed from props or context?
+                        // For now just redirect to login if auth context available, but we are inside component.
+                        // Ideally pass a handler. Using simple href for now or just standard signout.
+                         import('@/firebase').then(({ auth }) => {
+                             auth.signOut();
+                             // Router replace is handled by auth listener usually, or we can force it
+                             window.location.href = '/login';
+                         });
+                    }}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+             </div>
+          </div>
+
+          {/* Compact Exercise List */}
+          <CompactExerciseList
+            workout={todaysWorkout}
+            dayOfWeek={dayOfWeek}
+            weekNumber={currentWeekInCycle + 1}
+            onFinishWorkout={handleFinishWorkout}
+          />
+        </div>
+
+        {showSummary && workoutStats && (
+          <WorkoutSummary
+            duration={workoutStats.duration}
+            volume={workoutStats.volume}
+            sets={workoutStats.sets}
+            onClose={() => setShowSummary(false)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // WEB LAYOUT: 5-Day Calendar
+  return (
+    <>
+      <div className="hidden print-only">
+        {teamPlan && <PlanPrintView plan={teamPlan} viewMode="daily" selectedDate={selectedDate} />}
+      </div>
+
+      <div className="container mx-auto p-6 no-print pb-24 md:pb-4">
+        {teamPlan ? (
+          <FiveDayCalendar
+            plan={teamPlan}
+            userId={user?.uid || ''}
+            teamId={userAccount?.teamId || ''}
+            daysToShow={10}
+          />
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Calendar className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Workout Plan Yet</h3>
+              <p className="text-muted-foreground text-center">
+                Your team's workout plan hasn't been created yet.
+              </p>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        )}
       </div>
     </>
   );

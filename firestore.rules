@@ -162,6 +162,13 @@ service cloud.firestore {
       allow delete: if isOwner(userId) || isAdmin(); // User can delete their own logs, admins can delete
     }
 
+    /**
+     * @description Controls access to user saved workouts.
+     */
+    match /users/{userId}/workouts/{workoutId} {
+      allow read, write: if isOwner(userId);
+    }
+
     // Helper functions
     function isSignedIn() {
       return request.auth != null;
@@ -236,39 +243,16 @@ service cloud.firestore {
     }
 
     function isSameTeam(accountId) {
-      // Prevent circular dependency: if checking own account, isOwner() already handles it
-      if (accountId == request.auth.uid) {
-        return false;
-      }
-
-      // For other users, check team membership
-      // Note: This requires the requesting user's account to exist and be readable via isOwner()
-      let requestingUserAccount = get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data;
-      let targetUserAccount = resource.data;  // Use resource to avoid redundant get()
-
-      return isSignedIn() &&
-             requestingUserAccount.teamId != null &&
-             targetUserAccount.teamId != null &&
-             requestingUserAccount.teamId == targetUserAccount.teamId;
+      return accountId != request.auth.uid &&
+             get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.teamId == get(/databases/$(database)/documents/accounts/$(accountId)).data.teamId;
     }
 
     function isTeamMember(teamId) {
-      let memberRef = /databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid);
-      return exists(memberRef);
+      return exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
     }
 
     function onlyStatusChanged() {
-      let newData = request.resource.data;
-      let oldData = resource.data;
-      let allowedChanges = ['status', 'acceptedAt', 'declinedAt'];
-
-      // Check that only allowed fields have changed
-      for (field in newData) {
-        if (field not in allowedChanges && newData[field] != oldData[field]) {
-          return false;
-        }
-      }
-      return true;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'declinedAt']);
     }
   }
 }

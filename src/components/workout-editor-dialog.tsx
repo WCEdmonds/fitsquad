@@ -543,7 +543,7 @@ export function WorkoutEditorDialog({
 
                           {/* Exercise Details */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold">{exercise.name}</h4>
+                            <h4 className="font-semibold capitalize">{exercise.name}</h4>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-sm">
                               <div>
                                 <span className="text-muted-foreground">Sets:</span> {exercise.sets}

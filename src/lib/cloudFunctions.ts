@@ -224,3 +224,34 @@ export async function callSendTeamInvitation(input: SendTeamInvitationInput): Pr
   const result = await response.json();
   return result;
 }
+
+/**
+ * Call the sendPushNotification Cloud Function
+ */
+export interface SendPushNotificationInput {
+  teamId: string;
+  type: string;
+  title?: string;
+  body?: string;
+}
+
+export async function callSendPushNotification(input: SendPushNotificationInput): Promise<{ success: boolean }> {
+  // Use generatePlanV2 base URL logic or similar if needed, but here we assume same base
+  const response = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/sendPushNotification`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    // Log but don't throw to avoid blocking UI flow mostly
+    console.error(`Push notification failed: ${response.status}`, errorData);
+    return { success: false };
+  }
+
+  const result = await response.json();
+  return result;
+}

@@ -43,6 +43,7 @@ interface DailyWorkoutViewProps {
   };
   userId: string;
   teamId: string;
+  selectedDate?: Date;
   onDateChange?: (date: Date) => void;
 }
 
@@ -55,13 +56,20 @@ interface ExerciseLog {
   completedAt: Date;
 }
 
-export function DailyWorkoutView({ plan, userId, teamId, onDateChange }: DailyWorkoutViewProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+export function DailyWorkoutView({ plan, userId, teamId, selectedDate: externalSelectedDate, onDateChange }: DailyWorkoutViewProps) {
+  const [selectedDate, setSelectedDate] = useState(externalSelectedDate || new Date());
   const [exerciseLogs, setExerciseLogs] = useState<Record<string, ExerciseLog>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const { toast } = useToast();
   const firestore = useFirestore();
+
+  // Sync with external selectedDate prop
+  useEffect(() => {
+    if (externalSelectedDate) {
+      setSelectedDate(externalSelectedDate);
+    }
+  }, [externalSelectedDate]);
 
   // Notify parent of date changes
   useEffect(() => {

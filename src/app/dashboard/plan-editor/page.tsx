@@ -12,10 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Calendar, Lock, Pencil, Eye, Save, Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
+import { callSendPushNotification } from '@/lib/cloudFunctions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PlanCalendarView } from '@/components/plan-calendar-view';
+import { PlanMonthView } from '@/components/plan-month-view';
 import { SmartPlanDialog } from '@/components/smart-plan-dialog';
 
 export default function PlanBuilderPage() {
@@ -48,18 +49,40 @@ export default function PlanBuilderPage() {
         const planSnap = await getDoc(planRef);
 
         if (planSnap.exists()) {
-          setTeamPlan(planSnap.data());
+          const loadedPlan = planSnap.data();
+          // Ensure plan has at least 52 weeks (auto-migration for existing 8-week plans)
+          if (loadedPlan.weeks && loadedPlan.weeks.length < 52) {
+            const currentLength = loadedPlan.weeks.length;
+            const extraWeeks = Array.from({ length: 52 - currentLength }, (_, i) => ({
+              weekNumber: currentLength + i + 1,
+              days: Array.from({ length: 7 }, (_, dIndex) => ({
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dIndex],
+                workout: null,
+              })),
+            }));
+            loadedPlan.weeks = [...loadedPlan.weeks, ...extraWeeks];
+          }
+          setTeamPlan(loadedPlan);
         } else {
           // Initialize empty plan structure (8 weeks)
           const emptyPlan = {
-            weeks: Array.from({ length: 8 }, (_, weekIndex) => ({
+            weeks: Array.from({ length: 52 }, (_, weekIndex) => ({
               weekNumber: weekIndex + 1,
               days: Array.from({ length: 7 }, (_, dayIndex) => ({
                 dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIndex],
                 workout: null,
               })),
             })),
-            cycleStartDate: new Date().toISOString(),
+
+            // Initialize to the Monday of the current week
+            cycleStartDate: (() => {
+               const d = new Date();
+               const day = d.getDay();
+               const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+               d.setDate(diff);
+               d.setHours(0, 0, 0, 0);
+               return d.toISOString();
+            })(),
             lastUpdated: new Date().toISOString(),
             updatedBy: user?.uid,
           };
@@ -106,7 +129,7 @@ export default function PlanBuilderPage() {
 
         // Still set an empty plan so user can see the interface
         const fallbackPlan = {
-          weeks: Array.from({ length: 8 }, (_, weekIndex) => ({
+          weeks: Array.from({ length: 52 }, (_, weekIndex) => ({
             weekNumber: weekIndex + 1,
             days: Array.from({ length: 7 }, (_, dayIndex) => ({
               dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIndex],
@@ -141,9 +164,18 @@ export default function PlanBuilderPage() {
       await setDoc(planRef, {
         ...teamPlan,
         cycleStartDate,
-        lastUpdated: new Date().toISOString(),
+        updatedAt: Timestamp.now(), // Use Timestamp for consistent ordering
+        lastUpdated: new Date().toISOString(), // Keep string for legacy/display compatibility
         updatedBy: user?.uid,
       });
+
+      // Trigger push notification
+      callSendPushNotification({
+        teamId: userAccount.teamId,
+        type: 'schedule_update',
+        title: 'Plan Updated',
+        body: 'Your supervisor has updated the workout plan.'
+      }).catch(err => console.error('Failed to trigger push:', err));
 
       console.log('✅ Plan saved successfully');
       toast({
@@ -272,16 +304,12 @@ export default function PlanBuilderPage() {
     <div className="container mx-auto p-6 space-y-6 pb-24 md:pb-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
-            Plan Builder
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {canEdit
-              ? "Create and edit your team's workout plan over 8 weeks"
-              : "View your team's workout plan"
-            }
-          </p>
+          <div className="flex flex-col">
+            <h2 className="text-3xl font-bold tracking-tight">Workout Calendar</h2>
+            <p className="text-muted-foreground">
+              Manage the comprehensive workout plan for your team.
+            </p>
+          </div>
         </div>
 
         {canEdit && (
@@ -307,19 +335,19 @@ export default function PlanBuilderPage() {
       </div>
 
       {/* Permission indicator */}
-      <Alert className={canEdit ? "border-green-500 bg-green-50" : "border-blue-500 bg-blue-50"}>
+      <Alert className={canEdit ? "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-300" : "border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-300"}>
         <div className="flex items-center gap-2">
           {canEdit ? (
             <>
               <Pencil className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-inherit">
                 <strong>Edit Mode:</strong> You can modify workouts for your team.
               </AlertDescription>
             </>
           ) : (
             <>
               <Eye className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-inherit">
                 <strong>View Mode:</strong> You can view the team plan but cannot make changes.
               </AlertDescription>
             </>
@@ -328,22 +356,22 @@ export default function PlanBuilderPage() {
       </Alert>
 
       {/* Calendar View */}
-      <Card>
-        <CardHeader>
-          <CardTitle>8-Week Workout Calendar</CardTitle>
+      <Card className="border-border/40 shadow-sm relative overflow-hidden">
+        <CardHeader className="hidden">
+          <CardTitle>Workout Calendar</CardTitle>
           <CardDescription>
             Click on any day to {canEdit ? 'add or edit' : 'view'} workouts
           </CardDescription>
         </CardHeader>
         <CardContent>
           {teamPlan ? (
-            <PlanCalendarView
-              plan={teamPlan}
-              onUpdateWorkout={handleUpdateWorkout}
-              canEdit={canEdit}
-              teamId={userAccount?.teamId}
-              userId={user?.uid}
-            />
+            <PlanMonthView
+        plan={teamPlan}
+        onUpdateWorkout={handleUpdateWorkout}
+        canEdit={canEdit}
+        teamId={userAccount?.teamId}
+        userId={user?.uid}
+      />
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               No plan data available

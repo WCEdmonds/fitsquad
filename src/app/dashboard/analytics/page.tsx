@@ -19,7 +19,10 @@ import { collection, doc, query, orderBy, getDoc, DocumentData, getDocs, updateD
 import { AnalyticsChart } from '@/components/analytics-chart';
 import { ExerciseStrengthChart } from '@/components/exercise-strength-chart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LineChart, Users, AreaChart, User, History, Pencil, Trash2 } from 'lucide-react';
+import { LineChart, Users, AreaChart, User, History, Pencil, Trash2, Activity } from 'lucide-react';
+import { Barbell, SneakerMove, PersonSimpleRun, Timer } from '@phosphor-icons/react';
+import { PerformanceChart } from '@/components/performance-chart';
+import { RecentActivity } from '@/components/recent-activity';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -94,36 +97,143 @@ export default function AnalyticsPage() {
     const { data: teamMembers, isLoading: teamMembersLoading } = useCollection(teamMembersRef);
 
 
-    // Effect to aggregate all soldiers for a commander
+    // State for dashboard metrics
+    const [avgMdl, setAvgMdl] = useState<number | string>('--');
+    const [avgSdc, setAvgSdc] = useState<number | string>('--');
+    const [avgPlk, setAvgPlk] = useState<number | string>('--');
+    const [avgHrp, setAvgHrp] = useState<number | string>('--');
+    const [avgRunTime, setAvgRunTime] = useState<string>('--');
+    const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+
+    const acftEventDescriptions: Record<string, { title: string; description: string }> = {
+        MDL: {
+          title: "Maximum Deadlift (MDL)",
+          description: "The 3-Repetition Maximum Deadlift measures lower body muscular strength, power, and balance. Soldiers perform three deadlifts using a hex bar with progressively heavier weights, starting at 140 lbs for males and 120 lbs for females. The maximum weight successfully lifted three times is your score."
+        },
+        HRP: {
+          title: "Hand Release Push-up (HRP)",
+          description: "The Hand Release Push-up – Arm Extension measures upper body muscular endurance. From the prone position, perform as many correct push-ups as possible in two minutes. At the bottom of each rep, lift your hands completely off the ground before pushing back up. This tests chest, shoulder, and tricep endurance."
+        },
+        SDC: {
+          title: "Sprint-Drag-Carry (SDC)",
+          description: "The Sprint-Drag-Carry measures anaerobic capacity and muscular strength/endurance. Complete five 50-meter shuttles: sprint, sled drag (90 lbs), lateral shuffle, kettlebell carry (40 lbs each hand), and sprint. This event simulates critical combat tasks like moving under fire and carrying casualties."
+        },
+        PLK: {
+          title: "Plank (PLK)",
+          description: "The Plank measures core muscular endurance in seconds. Maintain a proper forearm plank position for as long as possible, up to 4 minutes and 20 seconds. Your body should form a straight line from head to heels, with weight on forearms and toes. This tests the core strength needed for all military tasks."
+        },
+        "2MR": {
+          title: "2-Mile Run (2MR)",
+          description: "The 2-Mile Run measures aerobic endurance and cardiovascular fitness. Complete two miles on a measured course as fast as possible. This event tests your aerobic capacity - the foundation of military readiness and the ability to sustain operations over extended periods."
+        }
+      };
+
     useEffect(() => {
         if (account?.accountType === 'Commander' && managedTeams) {
             const fetchAllSoldiers = async () => {
                 setIsLoadingAllSoldiers(true);
                 const soldierList: SoldierSelectItem[] = [];
+                // Temp array for stats calculation
+                const fullSoldierData: any[] = [];
+
                 for (const team of managedTeams) {
                     const membersRef = collection(firestore, 'teams', team.id, 'members');
                     const membersSnap = await getCollectionNonBlocking(membersRef);
                     
                     for (const member of membersSnap) {
-                         const accountSnap = await getDocNonBlocking(doc(firestore, 'accounts', member.id));
-                         if (accountSnap) {
+                         const accountSnapDoc = await getDocNonBlocking(doc(firestore, 'accounts', member.id));
+                         // Need full soldier data for aggregations
+                         const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
+                         const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
+                         const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                         
+                         if (accountSnapDoc) {
+                             const accountSnap = accountSnapDoc as any; // Type assertion
+
                              soldierList.push({
                                  id: member.id,
                                  name: `${accountSnap.firstName} ${accountSnap.lastName}`,
                                  teamName: team.name,
                              });
+
+                             // Construct soldier object for stats
+                             const defaultSoldier = {
+                                id: member.id,
+                                email: accountSnap.email || 'Unknown',
+                                firstName: accountSnap.firstName || 'Unknown',
+                                lastName: accountSnap.lastName || 'Soldier',
+                                rank: accountSnap.accountType || 'Soldier',
+                                mdl: 0,
+                                hrp: 0,
+                                sdc: 0,
+                                plk: 0,
+                                twoMileRun: 0,
+                                gender: accountSnap.gender || 'Other',
+                            };
+
+                            if (sData) {
+                                fullSoldierData.push({
+                                    ...defaultSoldier,
+                                    mdl: sData.mdl || 0,
+                                    hrp: sData.hrp || 0,
+                                    sdc: sData.sdc || 0,
+                                    plk: sData.plk || 0,
+                                    twoMileRun: sData.twoMileRun || 0,
+                                });
+                            } else {
+                                fullSoldierData.push(defaultSoldier);
+                            }
                          }
                     }
                 }
                 setAllSoldiers(soldierList);
+                calculateStats(fullSoldierData);
                 setIsLoadingAllSoldiers(false);
             };
             fetchAllSoldiers();
         } else if (teamMembers) {
              const fetchSoldiers = async () => {
                 setIsLoadingAllSoldiers(true);
+                const fullSoldierData: any[] = [];
+                
                  const soldierList = await Promise.all(teamMembers.map(async member => {
-                     const accountSnap = await getDocNonBlocking(doc(firestore, 'accounts', member.id));
+                     const accountSnapDoc = await getDocNonBlocking(doc(firestore, 'accounts', member.id));
+                     const accountSnap = accountSnapDoc as any;
+
+                     // Fetch recent data for stats
+                     const soldierDataColRef = collection(firestore, 'accounts', member.id, 'soldierData');
+                     const soldierDataList = await getCollectionNonBlocking<any>(soldierDataColRef);
+                     const sData = soldierDataList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+                     
+                     if (accountSnap) {
+                        const defaultSoldier = {
+                            id: member.id,
+                            email: accountSnap.email || 'Unknown',
+                            firstName: accountSnap.firstName || 'Unknown',
+                            lastName: accountSnap.lastName || 'Soldier',
+                            rank: accountSnap.accountType || 'Soldier',
+                            mdl: 0,
+                            hrp: 0,
+                            sdc: 0,
+                            plk: 0,
+                            twoMileRun: 0,
+                            gender: accountSnap.gender || 'Other',
+                        };
+
+                        if (sData) {
+                            fullSoldierData.push({
+                                ...defaultSoldier,
+                                mdl: sData.mdl || 0,
+                                hrp: sData.hrp || 0,
+                                sdc: sData.sdc || 0,
+                                plk: sData.plk || 0,
+                                twoMileRun: sData.twoMileRun || 0,
+                            });
+                        } else {
+                            fullSoldierData.push(defaultSoldier);
+                        }
+                     }
+
                      return {
                          id: member.id,
                          name: `${accountSnap?.firstName} ${accountSnap?.lastName}`,
@@ -131,12 +241,46 @@ export default function AnalyticsPage() {
                      };
                  }));
                  setAllSoldiers(soldierList);
+                 calculateStats(fullSoldierData);
                  setIsLoadingAllSoldiers(false);
             };
             fetchSoldiers();
         }
 
     }, [account, managedTeams, teamMembers, firestore]);
+
+    const calculateStats = (soldiers: any[]) => {
+        const soldiersWithData = soldiers.filter(s => s.mdl > 0 || s.hrp > 0 || s.sdc > 0 || s.plk > 0 || s.twoMileRun > 0);
+        
+        // Pass complete data to PerformanceChart via prop if possible, but local state management is tricky without full refactor.
+        // For now, I'll store the full soldier list in a new state variable to pass to charts
+        setFullSoldierList(soldiers);
+
+        if (soldiersWithData.length > 0) {
+          const totalMdl = soldiersWithData.reduce((acc, s) => acc + s.mdl, 0);
+          setAvgMdl(Math.round(totalMdl / soldiersWithData.length));
+
+          const totalHrp = soldiersWithData.reduce((acc, s) => acc + s.hrp, 0);
+          setAvgHrp(Math.round(totalHrp / soldiersWithData.length));
+
+          const totalSdc = soldiersWithData.reduce((acc, s) => acc + s.sdc, 0);
+          setAvgSdc(Math.round(totalSdc / soldiersWithData.length));
+
+          const totalPlk = soldiersWithData.reduce((acc, s) => acc + s.plk, 0);
+          setAvgPlk(Math.round(totalPlk / soldiersWithData.length));
+
+          const totalRunTime = soldiersWithData.reduce((acc, s) => acc + s.twoMileRun, 0);
+          setAvgRunTime(`${Math.round(totalRunTime / soldiersWithData.length)}`);
+        } else {
+            setAvgMdl('--');
+            setAvgHrp('--');
+            setAvgSdc('--');
+            setAvgPlk('--');
+            setAvgRunTime('--');
+        }
+    }
+    
+    const [fullSoldierList, setFullSoldierList] = useState<any[]>([]);
     
     // Effect to fetch progress data for the selected soldier
     useEffect(() => {
@@ -396,7 +540,116 @@ export default function AnalyticsPage() {
 
 
     return (
-        <div className="pb-24 md:pb-4">
+        <div className="pb-24 md:pb-4 space-y-6">
+            {/* Dashboard Overview Section (Only for Commander/Supervisor/Admin?) - checking accountType for now */}
+            {/* Actually, user said migrate dashboard content. The original dashboard showed this for everyone, but data depends on permissions. */}
+            {(account?.accountType === 'Commander' || account?.accountType === 'Supervisor' || account?.accountType === 'Admin') && (
+            <>
+              <div className="grid gap-2 grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
+                <Card className="aspect-square flex flex-col bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800 hover:scale-105 transition-transform cursor-pointer">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">Total</CardTitle>
+                    <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-blue-700 dark:text-blue-300">{allSoldiers?.length ?? 0}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">soldiers</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => setSelectedEvent('MDL')}
+                  className="aspect-square flex flex-col bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">MDL</CardTitle>
+                    <Barbell weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-purple-600 dark:text-purple-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-purple-700 dark:text-purple-300">{avgMdl}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => setSelectedEvent('HRP')}
+                  className="aspect-square flex flex-col bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 border-orange-200 dark:border-orange-800 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">HRP</CardTitle>
+                    <Activity className="h-4 w-4 md:h-5 md:w-5 text-orange-600 dark:text-orange-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-orange-700 dark:text-orange-300">{avgHrp}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => setSelectedEvent('SDC')}
+                  className="aspect-square flex flex-col bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">SDC</CardTitle>
+                    <PersonSimpleRun weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-green-600 dark:text-green-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-green-700 dark:text-green-300">{avgSdc}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => setSelectedEvent('PLK')}
+                  className="aspect-square flex flex-col bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">PLK</CardTitle>
+                    <Timer weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-yellow-600 dark:text-yellow-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-yellow-700 dark:text-yellow-300">{avgPlk}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => setSelectedEvent('2MR')}
+                  className="aspect-square flex flex-col bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900 border-red-200 dark:border-red-800 hover:scale-105 transition-transform cursor-pointer"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 px-2 pt-2 md:px-4 md:pt-4 md:pb-2">
+                    <CardTitle className="text-xs md:text-sm font-semibold">2MR</CardTitle>
+                    <SneakerMove weight="bold" className="h-4 w-4 md:h-5 md:w-5 text-red-600 dark:text-red-400" />
+                  </CardHeader>
+                  <CardContent className="flex-1 flex flex-col justify-center px-2 pb-2 md:px-4 md:pb-4">
+                    <div className="text-xl md:text-3xl font-bold text-red-700 dark:text-red-300">{avgRunTime}</div>
+                    <p className="text-[10px] md:text-xs text-muted-foreground mt-1">avg score</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+                <Card className="lg:col-span-4">
+                  <CardHeader>
+                    <CardTitle>Performance Distribution</CardTitle>
+                    <CardDescription>
+                      Event breakdown across the unit.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pl-2">
+                    <PerformanceChart data={fullSoldierList} />
+                  </CardContent>
+                </Card>
+                <Card className="lg:col-span-3">
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>
+                      Updates on soldier performance and logs.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <RecentActivity data={fullSoldierList} />
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+            )}
+
             <Card>
                 <CardHeader>
                     <CardTitle>Soldier Analytics</CardTitle>
@@ -483,6 +736,18 @@ export default function AnalyticsPage() {
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+             {/* ACFT Event Description Dialog - Added from Dashboard */}
+             <Dialog open={selectedEvent !== null} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+                <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{selectedEvent && acftEventDescriptions[selectedEvent]?.title}</DialogTitle>
+                    <DialogDescription className="pt-4 text-base leading-relaxed">
+                    {selectedEvent && acftEventDescriptions[selectedEvent]?.description}
+                    </DialogDescription>
+                </DialogHeader>
                 </DialogContent>
             </Dialog>
 

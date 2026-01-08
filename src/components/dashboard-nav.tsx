@@ -10,7 +10,6 @@ import { haptics } from '@/lib/haptics';
 
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { href: '/dashboard/plan', label: 'Plan', icon: CalendarDays },
   { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
 ];
