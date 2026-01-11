@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users, Dumbbell, LineChart } from 'lucide-react';
+import { Users, Dumbbell, LineChart, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -13,7 +13,8 @@ import { doc } from 'firebase/firestore';
 const baseBottomNavItems = [
   { href: '/dashboard/plan', label: 'Training', icon: Dumbbell },
   { href: '/dashboard/workout', label: 'Workout', icon: Dumbbell },
-  { href: '/dashboard', label: 'Analytics', icon: LineChart },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: LineChart },
+  { href: '/dashboard/profile', label: 'Profile', icon: User },
 ];
 
 const teamNavItem = { href: '/dashboard/soldiers', label: 'Team', icon: Users };
@@ -53,7 +54,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 shrink-0 touch-none border-t border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 shrink-0 touch-none border-t border-border/50 bg-card/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.3)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around h-16">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;

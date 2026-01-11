@@ -1,12 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar, Plus, ChevronDown, ChevronUp, Check, Timer, MoreVertical } from 'lucide-react';
+import { Calendar, Plus, ChevronDown, ChevronUp, Check, Timer, MoreVertical, X, Trash2, Keyboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { haptics } from '@/lib/haptics';
 import { RestTimer } from '@/components/rest-timer';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Capacitor } from '@capacitor/core';
 
 interface Exercise {
   name: string;
@@ -32,6 +45,8 @@ interface CompactExerciseListProps {
   weekNumber: number;
   onStartWorkout?: () => void;
   onFinishWorkout?: (stats: any) => void;
+  onCancel?: () => void;
+  onRemoveExercise?: (exerciseIndex: number) => void;
 }
 
 interface ExerciseSet {
@@ -45,7 +60,6 @@ interface ExerciseSet {
 interface ExerciseState {
   sets: ExerciseSet[];
   notes: string;
-  expanded: boolean;
 }
 
 export function CompactExerciseList({
@@ -54,11 +68,60 @@ export function CompactExerciseList({
   weekNumber,
   onStartWorkout,
   onFinishWorkout,
+  onCancel,
+  onRemoveExercise,
 }: CompactExerciseListProps) {
   const [exerciseStates, setExerciseStates] = useState<Record<number, ExerciseState>>({});
   const [restTimerOpen, setRestTimerOpen] = useState(false);
   const [restTimerDuration, setRestTimerDuration] = useState(60);
   const [startTime] = useState<number>(Date.now());
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [swipingSet, setSwipingSet] = useState<{exerciseIndex: number, setIndex: number} | null>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const touchStartX = useRef(0);
+
+  // Listen for keyboard show/hide on native
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const showListener = () => setIsKeyboardVisible(true);
+    const hideListener = () => setIsKeyboardVisible(false);
+
+    // Try to import Capacitor Keyboard plugin dynamically
+    import('@capacitor/keyboard').then(({ Keyboard }) => {
+      Keyboard.addListener('keyboardWillShow', showListener);
+      Keyboard.addListener('keyboardWillHide', hideListener);
+    }).catch(() => {
+      // Keyboard plugin not available
+    });
+
+    return () => {
+      import('@capacitor/keyboard').then(({ Keyboard }) => {
+        Keyboard.removeAllListeners();
+      }).catch(() => {});
+    };
+  }, []);
+
+  const hideKeyboard = () => {
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/keyboard').then(({ Keyboard }) => {
+        Keyboard.hide();
+      }).catch(() => {
+        // Fallback: blur active element
+        (document.activeElement as HTMLElement)?.blur();
+      });
+    } else {
+      (document.activeElement as HTMLElement)?.blur();
+    }
+    setIsKeyboardVisible(false);
+  };
+
+  // Parse reps - extract just the first number if it's a range
+  const parseReps = (reps: string): string => {
+    const match = reps.match(/(\d+)/);
+    return match ? match[1] : reps;
+  };
 
   // Initialize exercise state if not exists
   const getExerciseState = (index: number, exercise: Exercise): ExerciseState => {
@@ -66,7 +129,7 @@ export function CompactExerciseList({
       return exerciseStates[index];
     }
     const setsCount = parseInt(exercise.sets) || 3;
-    const repsValue = exercise.reps || '10';
+    const repsValue = parseReps(exercise.reps || '10');
     return {
       sets: Array.from({ length: setsCount }, () => ({
         previous: '',
@@ -76,7 +139,6 @@ export function CompactExerciseList({
         completed: false,
       })),
       notes: '',
-      expanded: false,
     };
   };
 
@@ -127,10 +189,40 @@ export function CompactExerciseList({
     });
   };
 
-  const toggleExpanded = (exerciseIndex: number) => {
-    haptics.light();
+  const handleDeleteSet = (exerciseIndex: number, setIndex: number) => {
+    haptics.medium();
     const currentState = getExerciseState(exerciseIndex, workout!.exercises[exerciseIndex]);
-    updateExerciseState(exerciseIndex, { expanded: !currentState.expanded });
+    if (currentState.sets.length <= 1) return; // Don't delete last set
+    
+    const updatedSets = currentState.sets.filter((_, i) => i !== setIndex);
+    updateExerciseState(exerciseIndex, { sets: updatedSets });
+    setSwipingSet(null);
+    setSwipeOffset(0);
+  };
+
+  // Swipe gesture handlers
+  const handleSwipeStart = (e: React.TouchEvent, exerciseIndex: number, setIndex: number) => {
+    touchStartX.current = e.touches[0].clientX;
+    setSwipingSet({ exerciseIndex, setIndex });
+  };
+
+  const handleSwipeMove = (e: React.TouchEvent) => {
+    if (!swipingSet) return;
+    const delta = e.touches[0].clientX - touchStartX.current;
+    // Only allow left swipe (negative delta)
+    setSwipeOffset(Math.min(0, delta));
+  };
+
+  const handleSwipeEnd = () => {
+    if (!swipingSet) return;
+    
+    // If swiped more than 80px, delete the set
+    if (swipeOffset < -80) {
+      handleDeleteSet(swipingSet.exerciseIndex, swipingSet.setIndex);
+    } else {
+      setSwipeOffset(0);
+      setSwipingSet(null);
+    }
   };
 
   const handleFinish = () => {
@@ -181,26 +273,27 @@ export function CompactExerciseList({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-4">
         {/* Header Stats */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
-          <div className="flex items-center gap-6 text-sm">
-            <div>
-              <span className="text-muted-foreground">Duration</span>
-              <div className="font-semibold text-primary">--</div> 
-            </div>
-            <div>
-              <span className="text-muted-foreground">Volume</span>
-              <div className="font-semibold">--</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Sets</span>
-              <div className="font-semibold">--</div>
-            </div>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 bg-secondary/10">
+          <div className="flex items-center gap-2">
+            {onCancel && (
+                <Button variant="ghost" size="sm" onClick={onCancel} className="text-destructive hover:bg-destructive/10 -ml-2">
+                    Cancel
+                </Button>
+            )}
           </div>
-          <Button size="sm" onClick={handleFinish} className="bg-primary text-primary-foreground">
-            Finish
-          </Button>
+          <div className="flex items-center gap-2">
+            {isKeyboardVisible && (
+              <Button variant="outline" size="sm" onClick={hideKeyboard} className="gap-1">
+                <Keyboard className="h-4 w-4" />
+                Done
+              </Button>
+            )}
+            <Button size="sm" onClick={handleFinish} className="bg-primary text-primary-foreground">
+              Finish
+            </Button>
+          </div>
         </div>
 
         {/* Exercise List */}
@@ -212,59 +305,37 @@ export function CompactExerciseList({
             <div key={exerciseIndex} className="border-b border-border/40">
               {/* Exercise Header */}
               <div className="flex items-center gap-3 px-4 py-3">
-                {/* Thumbnail or placeholder */}
-                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {(exercise.gifUrl || exercise.imageUrl) ? (
-                    <img 
-                      src={exercise.gifUrl || exercise.imageUrl} 
-                      alt={exercise.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-muted-foreground text-xs">🏋️</div>
-                  )}
-                </div>
-                
-                {/* Exercise name - tappable to expand */}
+                {/* Exercise name - tappable to show details */}
                 <button 
                   className="flex-1 text-left"
-                  onClick={() => hasGifOrInstructions && toggleExpanded(exerciseIndex)}
+                  onClick={() => hasGifOrInstructions && setSelectedExercise(exercise)}
                 >
                   <div className="font-semibold text-primary flex items-center gap-1 capitalize">
                     {exercise.name}
                     {hasGifOrInstructions && (
-                      state.expanded ? 
-                        <ChevronUp className="h-4 w-4" /> : 
-                        <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4 opacity-50" />
                     )}
                   </div>
                 </button>
                 
-                {/* More options */}
-                <button className="p-1 text-muted-foreground">
-                  <MoreVertical className="h-5 w-5" />
-                </button>
+                {/* More options dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="p-1 text-muted-foreground hover:bg-muted rounded">
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => onRemoveExercise?.(exerciseIndex)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove from today
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-
-              {/* Expanded gif/instructions */}
-              {state.expanded && hasGifOrInstructions && (
-                <div className="px-4 pb-3 space-y-3">
-                  {(exercise.gifUrl || exercise.imageUrl) && (
-                    <img 
-                      src={exercise.gifUrl || exercise.imageUrl}
-                      alt={exercise.name}
-                      className="w-full max-w-xs mx-auto rounded-lg"
-                    />
-                  )}
-                  {exercise.instructions && exercise.instructions.length > 0 && (
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
-                      {exercise.instructions.map((instruction, idx) => (
-                        <li key={idx} className="leading-relaxed">{instruction}</li>
-                      ))}
-                    </ol>
-                  )}
-                </div>
-              )}
 
               {/* Notes placeholder */}
               <div className="px-4 pb-2">
@@ -286,58 +357,76 @@ export function CompactExerciseList({
               {/* Set tracking table */}
               <div className="px-4 pb-3">
                 {/* Table header */}
-                <div className="grid grid-cols-[40px_1fr_1fr_1fr_50px_40px] gap-1 text-xs font-medium text-muted-foreground uppercase mb-2">
+                <div className="grid grid-cols-[40px_1fr_1fr_1fr_40px] gap-1 text-xs font-medium text-muted-foreground uppercase mb-2">
                   <div>Set</div>
                   <div>Previous</div>
                   <div className="text-center">Lbs</div>
                   <div className="text-center">Reps</div>
-                  <div className="text-center">RPE</div>
                   <div></div>
                 </div>
 
                 {/* Set rows */}
-                {state.sets.map((set, setIndex) => (
-                  <div 
-                    key={setIndex} 
-                    className={cn(
-                      "grid grid-cols-[40px_1fr_1fr_1fr_50px_40px] gap-1 items-center py-1",
-                      set.completed && "bg-primary/5 -mx-4 px-4 rounded"
-                    )}
-                  >
-                    <div className="font-semibold text-foreground">{setIndex + 1}</div>
-                    <div className="text-sm text-muted-foreground">{set.previous || '-'}</div>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      value={set.weight}
-                      onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
-                      className="h-8 text-center text-sm px-1"
-                      placeholder="-"
-                    />
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      value={set.reps}
-                      onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
-                      className="h-8 text-center text-sm px-1"
-                      placeholder="-"
-                    />
-                    <button className="h-8 px-2 text-xs border rounded text-muted-foreground hover:bg-muted">
-                      RPE
-                    </button>
-                    <button
-                      onClick={() => handleToggleSet(exerciseIndex, setIndex)}
-                      className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-                        set.completed
-                          ? "bg-primary text-primary-foreground"
-                          : "border-2 border-muted-foreground/30 hover:border-primary"
-                      )}
-                    >
-                      {set.completed && <Check className="h-4 w-4" />}
-                    </button>
-                  </div>
-                ))}
+                {state.sets.map((set, setIndex) => {
+                  const isSwipingThis = swipingSet?.exerciseIndex === exerciseIndex && swipingSet?.setIndex === setIndex;
+                  const offset = isSwipingThis ? swipeOffset : 0;
+                  
+                  return (
+                    <div key={setIndex} className="relative overflow-hidden">
+                      {/* Delete background revealed on swipe */}
+                      <div className="absolute inset-y-0 right-0 w-20 bg-destructive flex items-center justify-center">
+                        <Trash2 className="h-5 w-5 text-destructive-foreground" />
+                      </div>
+                      
+                      {/* Swipeable row */}
+                      <div 
+                        className={cn(
+                          "grid grid-cols-[40px_1fr_1fr_1fr_40px] gap-1 items-center py-1 bg-background relative transition-transform",
+                          set.completed && "bg-primary/5"
+                        )}
+                        style={{ 
+                          transform: `translateX(${offset}px)`,
+                          transition: isSwipingThis ? 'none' : 'transform 0.2s ease-out'
+                        }}
+                        onTouchStart={(e) => handleSwipeStart(e, exerciseIndex, setIndex)}
+                        onTouchMove={handleSwipeMove}
+                        onTouchEnd={handleSwipeEnd}
+                      >
+                        <div className="font-semibold text-foreground">{setIndex + 1}</div>
+                        <div className="text-sm text-muted-foreground">{set.previous || '-'}</div>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={set.weight}
+                          onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'weight', e.target.value)}
+                          className="h-8 text-center text-sm px-1"
+                          placeholder="-"
+                        />
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          value={set.reps}
+                          onChange={(e) => handleSetChange(exerciseIndex, setIndex, 'reps', e.target.value)}
+                          className="h-8 text-center text-sm px-1"
+                          placeholder="-"
+                        />
+                        <button
+                          onClick={() => handleToggleSet(exerciseIndex, setIndex)}
+                          className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+                            set.completed
+                              ? "bg-primary text-primary-foreground"
+                              : "border-2 border-muted-foreground/30 hover:border-primary"
+                          )}
+                        >
+                          <Check className={cn(
+                            "h-4 w-4",
+                            !set.completed && "text-muted-foreground/30"
+                          )} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
 
                 {/* Add Set button */}
                 <button
@@ -352,6 +441,37 @@ export function CompactExerciseList({
           );
         })}
       </div>
+
+      {/* Exercise Details Sheet */}
+      <Sheet open={!!selectedExercise} onOpenChange={(open) => !open && setSelectedExercise(null)}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[80vh] overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="capitalize">{selectedExercise?.name}</SheetTitle>
+          </SheetHeader>
+          
+          {selectedExercise && (
+            <div className="space-y-4 pb-6">
+              {(selectedExercise.gifUrl || selectedExercise.imageUrl) && (
+                <img 
+                  src={selectedExercise.gifUrl || selectedExercise.imageUrl}
+                  alt={selectedExercise.name}
+                  className="w-full max-w-sm mx-auto rounded-lg"
+                />
+              )}
+              {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Instructions</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                    {selectedExercise.instructions.map((instruction, idx) => (
+                      <li key={idx} className="leading-relaxed">{instruction}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Rest Timer Modal */}
       <RestTimer

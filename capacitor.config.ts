@@ -8,18 +8,18 @@ const config: CapacitorConfig = {
   webDir: 'out',
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 2000,
       launchAutoHide: false,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#111827', /* Dark navy matching app theme */
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
     },
     Keyboard: {
-      resize: KeyboardResize.Native, // Changed from 'native'
-      style: KeyboardStyle.Dark,   // Changed from 'dark'
-      resizeOnFullScreen: true,
+      resize: KeyboardResize.None, // Keep viewport fixed, keyboard overlays content
+      style: KeyboardStyle.Dark,
+      resizeOnFullScreen: false, // Don't resize in fullscreen mode either
     },
     StatusBar: {
       style: 'light',

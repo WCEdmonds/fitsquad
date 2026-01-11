@@ -86,8 +86,8 @@ function SignupForm() {
       });
 
       if (result.success) {
-        // Navigate to dashboard
-        router.push(redirectUrl || '/dashboard');
+        // Navigate to onboarding dashboard
+        router.push('/dashboard/onboarding');
       } else {
         setError(result.error || 'Verification failed');
       }
@@ -253,6 +253,8 @@ function SignupForm() {
       setError('Invalid Admin passcode.');
       return;
     }
+
+
 
     setIsLoading(true);
 
@@ -453,7 +455,6 @@ function SignupForm() {
                     </Select>
                 </div>
             </div>
-
             {accountType === 'Admin' && (
                 <div className="space-y-2">
                     <Label htmlFor="passcode">Admin Passcode</Label>

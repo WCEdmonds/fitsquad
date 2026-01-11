@@ -348,7 +348,14 @@ try {
 
 
   return (
-    <div className="pb-24 md:pb-4">
+    <div className="flex flex-col h-full">
+      {/* Fixed Header */}
+      <div className="shrink-0 pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 pb-3 bg-card/80 border-b border-border/50 shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight">Team</h1>
+      </div>
+      
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] px-4 pt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
     <AddSoldierDialog
         isOpen={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
@@ -362,7 +369,7 @@ try {
     />
     <Card>
       <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
+        <div className="hidden md:block">
           <CardTitle>Soldier Roster</CardTitle>
           <CardDescription>
             {userAccount?.accountType === 'Admin' ? 'View all users in the system and manage team assignments.' : 'Manage and track individual soldier performance.'}
@@ -395,6 +402,7 @@ try {
         </Tabs>
       </CardContent>
     </Card>
+      </div>
     </div>
   );
 }

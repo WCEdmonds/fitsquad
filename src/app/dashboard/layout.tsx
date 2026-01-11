@@ -199,12 +199,8 @@ export default function DashboardLayout({
         <main
           className={cn(
             "md:gap-8 md:p-8",
-            isNative ? "flex-1 overflow-y-auto gap-3 p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(4rem+env(safe-area-inset-bottom))]" : "flex flex-1 flex-col gap-4 p-4"
+            isNative ? "flex-1 flex flex-col overflow-hidden" : "flex flex-1 flex-col gap-4 p-4"
           )}
-          style={isNative ? {
-            overscrollBehavior: 'contain',
-            WebkitOverflowScrolling: 'touch'
-          } : undefined}
         >
           <DashboardErrorBoundary>
             {children}

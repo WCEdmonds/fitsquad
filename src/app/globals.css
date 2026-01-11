@@ -89,38 +89,38 @@ input, textarea, [contenteditable] {
     --sidebar-ring: 26 100% 60%;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 20% 8%; /* Slightly warmer dark background */
     --foreground: 60 9.1% 97.8%;
-    --card: 222.2 84% 4.9%;
+    --card: 224 18% 12%; /* Elevated surface - lighter than bg */
     --card-foreground: 60 9.1% 97.8%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 224 18% 14%; /* Popover slightly lighter */
     --popover-foreground: 60 9.1% 97.8%;
-    --primary: 75 29% 23%;
+    --primary: 142 50% 45%; /* Vibrant green for military theme */
     --primary-foreground: 60 9.1% 97.8%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 220 15% 18%; /* Subtle blue-gray for secondary surfaces */
     --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 26 100% 60%;
+    --muted: 220 15% 16%; /* Muted background elements */
+    --muted-foreground: 215 15% 55%; /* Slightly more visible muted text */
+    --accent: 26 90% 55%; /* Warm orange accent */
     --accent-foreground: 60 9.1% 97.8%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 65% 45%;
     --destructive-foreground: 60 9.1% 97.8%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 26 100% 60%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 222.2 84% 4.9%;
+    --border: 220 15% 22%; /* More visible borders */
+    --input: 220 15% 20%; /* Input field backgrounds */
+    --ring: 142 50% 45%; /* Match primary for focus rings */
+    --chart-1: 142 60% 50%; /* Green */
+    --chart-2: 200 70% 50%; /* Blue */
+    --chart-3: 26 90% 55%; /* Orange */
+    --chart-4: 280 60% 55%; /* Purple */
+    --chart-5: 340 70% 50%; /* Pink */
+    --sidebar-background: 224 18% 10%;
     --sidebar-foreground: 60 9.1% 97.8%;
-    --sidebar-primary: 75 29% 23%;
+    --sidebar-primary: 142 50% 45%;
     --sidebar-primary-foreground: 60 9.1% 97.8%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent: 220 15% 16%;
     --sidebar-accent-foreground: 60 9.1% 97.8%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 26 100% 60%;
+    --sidebar-border: 220 15% 22%;
+    --sidebar-ring: 26 90% 55%;
   }
 }
 

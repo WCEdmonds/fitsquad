@@ -52,6 +52,8 @@ export function WeekSelector({
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     startOfWeek(selectedDate, { weekStartsOn: 1 })
@@ -86,21 +88,31 @@ export function WeekSelector({
     setCurrentWeekStart((prev) => addWeeks(prev, 1));
   };
 
-  // Swipe gesture handlers
+  // Swipe gesture handlers with springy animation
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
-    touchEndX.current = e.touches[0].clientX; // Initialize end to start position
+    touchEndX.current = e.touches[0].clientX;
+    setIsTransitioning(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.touches[0].clientX;
+    const delta = touchEndX.current - touchStartX.current;
+    // Apply elastic resistance (diminishing returns as you drag further)
+    const elasticDelta = Math.sign(delta) * Math.pow(Math.abs(delta), 0.7);
+    setSwipeOffset(elasticDelta);
   };
 
   const handleTouchEnd = () => {
     const swipeDistance = touchStartX.current - touchEndX.current;
-    const minSwipeDistance = 50; // Minimum distance to trigger swipe
+    const minSwipeDistance = 50;
+
+    setIsTransitioning(true);
 
     if (Math.abs(swipeDistance) > minSwipeDistance) {
+      // Trigger haptic before changing week
+      haptics.medium();
+      
       if (swipeDistance > 0) {
         // Swiped left -> next week
         handleNextWeek();
@@ -109,9 +121,16 @@ export function WeekSelector({
         handlePrevWeek();
       }
     }
+    
+    // Spring back to center
+    setSwipeOffset(0);
+    
     // Reset
     touchStartX.current = 0;
     touchEndX.current = 0;
+    
+    // Clear transition flag after animation completes
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   // Month picker handlers
@@ -182,37 +201,28 @@ export function WeekSelector({
             >
               TODAY
             </Button>
-            <button
-              onClick={() => {
-                if (hasChanges && onAcknowledgeChanges) {
-                  haptics.light();
-                  handleTodayClick(); // Jump to Today/latest
-                  onAcknowledgeChanges();
-                }
-              }}
-              className="relative p-1"
-            >
-              <Bell className={cn(
-                "h-5 w-5 transition-colors",
-                hasChanges ? "text-yellow-500 fill-yellow-500 animate-pulse" : "text-muted-foreground"
-              )} />
-              {hasChanges && (
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-background" />
-              )}
-            </button>
+            {/* Bell icon removed */}
           </div>
         </div>
 
         {/* Week day selector - swipeable area */}
         <div 
           className="flex items-center justify-around px-2 pb-3"
-          style={{ touchAction: 'pan-y' }}
+          style={{ 
+            touchAction: 'pan-y',
+            transform: `translateX(${swipeOffset}px)`,
+            transition: isTransitioning ? 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+          }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {weekDays.map((day) => {
             const dayNumber = format(day, 'd');
+            const dayAbbrev = format(day, 'EEEEE'); // Single letter: M, T, W, T, F, S, S
+            const dayOfWeekNum = day.getDay(); // 0=Sun, 1=Mon, etc.
+            // Use 'Th' for Thursday and 'Su' for Sunday to differentiate
+            const displayAbbrev = dayOfWeekNum === 4 ? 'Th' : dayOfWeekNum === 0 ? 'Su' : dayAbbrev;
             const dayString = format(day, 'yyyy-MM-dd');
             const isSelected = isSameDay(day, selectedDate);
             const isTodayDate = isToday(day);
@@ -223,7 +233,7 @@ export function WeekSelector({
                 key={day.toISOString()}
                 onClick={() => handleDayClick(day)}
                 className={cn(
-                  'flex flex-col items-center justify-center w-10 h-10 rounded-lg transition-all relative',
+                  'flex flex-col items-center justify-center w-10 h-14 rounded-lg transition-all relative',
                   isSelected
                     ? 'bg-primary text-primary-foreground font-bold'
                     : isTodayDate
@@ -231,6 +241,10 @@ export function WeekSelector({
                     : 'text-muted-foreground hover:bg-muted'
                 )}
               >
+                <span className={cn(
+                  "text-[10px] uppercase font-medium mb-0.5",
+                  isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                )}>{displayAbbrev}</span>
                 <span className="text-base">{dayNumber}</span>
                 {/* Completion Indicator */}
                 {isCompleted && (

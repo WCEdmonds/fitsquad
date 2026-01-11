@@ -16,6 +16,9 @@ import { WeekSelector } from '@/components/week-selector';
 import { CompactExerciseList } from '@/components/compact-exercise-list';
 import { FiveDayCalendar } from '@/components/five-day-calendar';
 import { WorkoutSummary } from '@/components/workout-summary';
+import { WorkoutOverview } from '@/components/workout-overview';
+import { AddWorkoutDialog } from '@/components/add-workout-dialog';
+import { cn } from '@/lib/utils';
 
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -30,6 +33,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, Settings, ShieldCheck, Sword, Calendar as CalendarIcon, History } from 'lucide-react';
 import Link from 'next/link';
+import { haptics } from '@/lib/haptics';
 
 export default function PlanPage() {
   const [teamPlan, setTeamPlan] = useState<any>(null);
@@ -45,6 +49,29 @@ export default function PlanPage() {
   const firestore = useFirestore();
 
   const [userInitials, setUserInitials] = useState('');
+  const [isWorkoutInProgress, setIsWorkoutInProgress] = useState(false);
+  const [isAddWorkoutOpen, setIsAddWorkoutOpen] = useState(false);
+  const [personalWorkouts, setPersonalWorkouts] = useState<Record<string, any>>({});
+
+  // Initialize persistence
+  useEffect(() => {
+    const persisted = localStorage.getItem('isWorkoutInProgress');
+    if (persisted === 'true') {
+        setIsWorkoutInProgress(true);
+    }
+  }, []);
+
+  const handleStartWorkout = () => {
+    setIsWorkoutInProgress(true);
+    localStorage.setItem('isWorkoutInProgress', 'true');
+  };
+
+  const handleCancelWorkout = () => {
+     if (confirm("Are you sure you want to cancel this workout? Progress will be lost.")) {
+        setIsWorkoutInProgress(false);
+        localStorage.removeItem('isWorkoutInProgress');
+     }
+  };
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
@@ -119,6 +146,29 @@ export default function PlanPage() {
     }
   }, [userAccount, firestore, toast, user]);
 
+  // Load personal workout overrides
+  useEffect(() => {
+    async function loadPersonalWorkouts() {
+      if (!user || !firestore) return;
+
+      try {
+        const { getDocs } = await import('firebase/firestore');
+        const personalPlanRef = collection(firestore, 'users', user.uid, 'personalPlan');
+        const snapshot = await getDocs(personalPlanRef);
+        
+        const workouts: Record<string, any> = {};
+        snapshot.forEach(doc => {
+          workouts[doc.id] = doc.data();
+        });
+        setPersonalWorkouts(workouts);
+      } catch (e) {
+        console.error("Error loading personal workouts", e);
+      }
+    }
+
+    loadPersonalWorkouts();
+  }, [user, firestore]);
+
   // Check for plan changes
   useEffect(() => {
     if (!teamPlan) return;
@@ -147,6 +197,8 @@ export default function PlanPage() {
   const handleFinishWorkout = async (stats: any) => {
     setWorkoutStats(stats);
     setShowSummary(true);
+    setIsWorkoutInProgress(false);
+    localStorage.removeItem('isWorkoutInProgress');
 
     if (user && firestore) {
       try {
@@ -161,6 +213,56 @@ export default function PlanPage() {
         console.error("Error saving workout log", e);
       }
     }
+  };
+
+  // Add workout to personal calendar
+  const handleAddWorkoutToPersonal = async (workout: any) => {
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    
+    // Save to local state immediately
+    setPersonalWorkouts(prev => ({
+      ...prev,
+      [dateKey]: workout
+    }));
+
+    // Persist to Firestore
+    if (user && firestore) {
+      try {
+        await setDoc(
+          doc(firestore, 'users', user.uid, 'personalPlan', dateKey),
+          {
+            ...workout,
+            date: dateKey,
+            addedAt: new Date().toISOString(),
+          }
+        );
+        toast({
+          title: "Workout Added",
+          description: `${workout.name} added to your calendar.`,
+        });
+      } catch (e) {
+        console.error("Error saving personal workout", e);
+        toast({
+          title: "Error",
+          description: "Failed to save workout.",
+          variant: "destructive",
+        });
+      }
+    }
+    setIsAddWorkoutOpen(false);
+  };
+
+  // Add workout to team plan (Supervisors only)
+  const handleAddWorkoutToTeam = async (workout: any) => {
+    if (!userAccount?.teamId || !firestore) return;
+    
+    // For team plans, we need to update the specific day in the plan
+    // This is more complex as it requires modifying the plan structure
+    toast({
+      title: "Coming Soon",
+      description: "Team plan editing will be available in the plan editor.",
+    });
+    setIsAddWorkoutOpen(false);
   };
 
   // Register for Push Notifications
@@ -206,7 +308,7 @@ export default function PlanPage() {
           // If notification payload indicates a schedule update, show indicator
           if (notification.data.type === 'schedule_update') {
             setHasChanges(true);
-            haptics.notification();
+            haptics.success();
           }
         });
 
@@ -270,93 +372,64 @@ export default function PlanPage() {
     );
   }
 
+  const effectiveWorkout = todaysWorkout || personalWorkouts[selectedDate.toISOString().split('T')[0]];
+  const shouldShowTracking = isWorkoutInProgress && effectiveWorkout;
+
   // NATIVE LAYOUT: Compact calendar-first view
   if (isNative) {
     return (
-      <>
+      <div className="fixed inset-0 flex flex-col bg-background">
+        {/* Print only view */}
         <div className="hidden print-only">
           {teamPlan && <PlanPrintView plan={teamPlan} viewMode="daily" selectedDate={selectedDate} />}
         </div>
 
-        <div className="flex flex-col h-full bg-background">
-          {/* Native Header with WeekSelector and Profile */}
-          <div className="flex items-center justify-between border-b border-border/40 bg-background sticky top-0 z-10">
-             <div className="flex-1 overflow-hidden">
+        {/* Fixed Header with Title - Hidden during workout */}
+        {!shouldShowTracking && (
+          <div className="shrink-0 bg-card/80 border-b border-border/50 shadow-sm">
+            <div className="pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 pb-2">
+              <h1 className="text-2xl font-bold tracking-tight">Training Calendar</h1>
+            </div>
+            <div className="px-4 pb-2">
                 <WeekSelector
                     selectedDate={selectedDate}
                     onDateChange={setSelectedDate}
-                    className="flex-shrink-0"
+                    className="flex-shrink-0 bg-transparent"
                     isNative={true}
                     hasChanges={hasChanges}
                     onAcknowledgeChanges={handleAcknowledgeChanges}
                     completedDates={completedDates}
                 />
-             </div>
-             <div className="pr-2 pl-1 flex-shrink-0 self-center">
-                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center cursor-pointer">
-                        <Avatar className="h-9 w-9">
-                            <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-                        </Avatar>
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>{userAccount?.firstName} {userAccount?.lastName}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/history">
-                        <History className="mr-2 h-4 w-4" />
-                        Completed Workouts
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/teams/create">
-                        <Sword className="mr-2 h-4 w-4" />
-                        Create New Team
-                      </Link>
-                    </DropdownMenuItem>
-                    {userAccount?.accountType === 'Commander' && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/dashboard/manage-teams">
-                          <ShieldCheck className="mr-2 h-4 w-4" />
-                          Manage Teams
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                     <DropdownMenuItem onClick={() => {
-                        // Handle logout if needed, passed from props or context?
-                        // For now just redirect to login if auth context available, but we are inside component.
-                        // Ideally pass a handler. Using simple href for now or just standard signout.
-                         import('@/firebase').then(({ auth }) => {
-                             auth.signOut();
-                             // Router replace is handled by auth listener usually, or we can force it
-                             window.location.href = '/login';
-                         });
-                    }}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-             </div>
+            </div>
           </div>
+        )}
 
-          {/* Compact Exercise List */}
-          <CompactExerciseList
-            workout={todaysWorkout}
-            dayOfWeek={dayOfWeek}
-            weekNumber={currentWeekInCycle + 1}
-            onFinishWorkout={handleFinishWorkout}
-          />
-        </div>
+          {/* Scrollable Content - Full height during workout */}
+          <div 
+            className={cn(
+              "flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))]",
+              shouldShowTracking ? "pt-[calc(env(safe-area-inset-top)+0.5rem)]" : "px-4 pt-4"
+            )} 
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+          {/* Conditional Rendering: Overview vs Tracking */}
+          {!shouldShowTracking ? (
+            <WorkoutOverview 
+                workout={effectiveWorkout} 
+                dayOfWeek={dayOfWeek} 
+                onStart={handleStartWorkout}
+                onAddWorkout={() => setIsAddWorkoutOpen(true)}
+            />
+          ) : (
+            <CompactExerciseList
+                workout={effectiveWorkout}
+                dayOfWeek={dayOfWeek}
+                weekNumber={currentWeekInCycle + 1}
+                onFinishWorkout={handleFinishWorkout}
+                onCancel={handleCancelWorkout}
+            />
+          )}
+          </div>
 
         {showSummary && workoutStats && (
           <WorkoutSummary
@@ -366,7 +439,18 @@ export default function PlanPage() {
             onClose={() => setShowSummary(false)}
           />
         )}
-      </>
+
+        {/* Add Workout Dialog */}
+        <AddWorkoutDialog
+          isOpen={isAddWorkoutOpen}
+          onClose={() => setIsAddWorkoutOpen(false)}
+          onAddToPersonal={handleAddWorkoutToPersonal}
+          onAddToTeam={handleAddWorkoutToTeam}
+          isSupervisor={userAccount?.accountType === 'Supervisor' || userAccount?.accountType === 'Commander'}
+          dayOfWeek={dayOfWeek}
+          selectedDate={selectedDate}
+        />
+      </div>
     );
   }
 
@@ -376,15 +460,15 @@ export default function PlanPage() {
       <div className="hidden print-only">
         {teamPlan && <PlanPrintView plan={teamPlan} viewMode="daily" selectedDate={selectedDate} />}
       </div>
-
-      <div className="container mx-auto p-6 no-print pb-24 md:pb-4">
+      <div className="pb-24 md:pb-4">
         {teamPlan ? (
-          <FiveDayCalendar
-            plan={teamPlan}
-            userId={user?.uid || ''}
-            teamId={userAccount?.teamId || ''}
-            daysToShow={10}
-          />
+          <Card>
+            <FiveDayCalendar
+              plan={teamPlan}
+              userId={user?.uid || ''}
+              teamId={userAccount?.teamId || ''}
+            />
+          </Card>
         ) : (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">

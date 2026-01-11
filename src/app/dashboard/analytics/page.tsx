@@ -540,7 +540,14 @@ export default function AnalyticsPage() {
 
 
     return (
-        <div className="pb-24 md:pb-4 space-y-6">
+        <div className="flex flex-col h-full">
+          {/* Fixed Header */}
+          <div className="shrink-0 pt-[calc(env(safe-area-inset-top)+0.75rem)] px-4 pb-3 bg-card/80 border-b border-border/50 shadow-sm">
+            <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+          </div>
+          
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] px-4 pt-4 space-y-6" style={{ WebkitOverflowScrolling: 'touch' }}>
             {/* Dashboard Overview Section (Only for Commander/Supervisor/Admin?) - checking accountType for now */}
             {/* Actually, user said migrate dashboard content. The original dashboard showed this for everyone, but data depends on permissions. */}
             {(account?.accountType === 'Commander' || account?.accountType === 'Supervisor' || account?.accountType === 'Admin') && (
@@ -775,6 +782,7 @@ export default function AnalyticsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+          </div>
         </div>
     );
 }

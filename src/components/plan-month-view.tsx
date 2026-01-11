@@ -214,7 +214,7 @@ export function PlanMonthView({ plan, onUpdateWorkout, canEdit, teamId, userId }
           
           let content = null;
           let hasWorkout = false;
-          let workout = null;
+          let workout: any = null;
           let isDragging = false;
           
           if (indices) {

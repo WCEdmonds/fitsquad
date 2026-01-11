@@ -169,6 +169,15 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    /**
+     * @description Controls access to user personal workout plans.
+     * Users can add/modify their own personal plan overrides.
+     */
+    match /users/{userId}/personalPlan/{dateId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
+
     // Helper functions
     function isSignedIn() {
       return request.auth != null;

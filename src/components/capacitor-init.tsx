@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard, KeyboardResize } from '@capacitor/keyboard';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { Capacitor } from '@capacitor/core';
 
 export function CapacitorInit() {
@@ -30,8 +31,17 @@ export function CapacitorInit() {
           // Prevent scroll chaining to prevent body scroll
           document.body.style.overscrollBehaviorY = 'contain';
 
+          // Hide the native splash screen after a short delay to allow app to render
+          setTimeout(async () => {
+            await SplashScreen.hide({ fadeOutDuration: 300 });
+          }, 500);
+
         } catch (error) {
           console.error('Error initializing Capacitor:', error);
+          // Still try to hide splash if there's an error
+          try {
+            await SplashScreen.hide();
+          } catch {}
         }
       };
 

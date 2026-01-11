@@ -206,7 +206,7 @@ export function FitnessDataDialog({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold border-b pb-2 mb-4">ACFT Event Scores (0-100)</h3>
+              <h3 className="text-sm font-semibold border-b pb-2 mb-4">AFT Event Scores (0-100)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}

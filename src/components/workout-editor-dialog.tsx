@@ -264,7 +264,7 @@ export function WorkoutEditorDialog({
     setActiveTab('custom');
   }, [workout, isOpen]);
 
-  function handleSelectTemplate(template: typeof WORKOUT_TEMPLATES[0]) {
+  function handleSelectTemplate(template: WorkoutTemplate) {
     onSave({
       name: template.name,
       focus: template.focus,

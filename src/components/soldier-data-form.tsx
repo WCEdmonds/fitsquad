@@ -189,7 +189,7 @@ export function SoldierDataForm({ soldierId, onSave, defaultValues }: SoldierDat
             )}
           />
         </div>
-        <h3 className="text-lg font-semibold border-b pb-2">ACFT Event Scores (0-100)</h3>
+        <h3 className="text-lg font-semibold border-b pb-2">AFT Event Scores (0-100)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
